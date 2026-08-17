@@ -43,6 +43,11 @@ export type SearchDatasetDataProps = {
     }
   */
   collectionFilterMatch?: string;
+  /**
+   * 仅供可信服务端调用方收窄 collection 范围。不得映射为工作流节点输入或公开 API 参数；
+   * 空数组表示明确禁止召回，undefined 保持现有 FastGPT 搜索行为。
+   */
+  collectionIdWhitelist?: string[];
 };
 
 export type SearchDatasetDataResponse = {

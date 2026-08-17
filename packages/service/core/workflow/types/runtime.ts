@@ -100,6 +100,11 @@ export type ChatDispatchProps = {
   workflowStreamResponse?: WorkflowResponseType;
   apiVersion?: 'v1' | 'v2';
 
+  /** 可信客服入口生成的 collection 白名单；普通工作流和外部变量不能设置。 */
+  customerServiceCollectionIdWhitelist?: string[];
+  /** 仅由可信客服上下文开启 v1 的服务端停止标记轮询。 */
+  customerServiceStopEnabled?: boolean;
+
   workflowDispatchDeep: number;
 
   responseAllData?: boolean;

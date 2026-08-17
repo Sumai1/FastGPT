@@ -1,6 +1,8 @@
 import { getForbidCollectionIdList, filterCollectionByMetadata } from './collectionFilter';
 import { embeddingRecall } from './embeddingRecall';
 import { fullTextRecall } from './fullTextRecall';
+import { computeFilterIntersection } from '../utils';
+import { getCustomerServiceGovernedCollectionIds } from '../../../customerService/knowledge/guard';
 
 /**
  * 默认召回的并行调度层。
@@ -13,6 +15,7 @@ export const multiQueryRecall = async ({
   model,
   imageQueries,
   collectionFilterMatch,
+  collectionIdWhitelist,
   embeddingLimit,
   fullTextLimit,
   textQueries,
@@ -23,21 +26,35 @@ export const multiQueryRecall = async ({
   model: string;
   imageQueries: string[];
   collectionFilterMatch?: string;
+  collectionIdWhitelist?: string[];
   embeddingLimit: number;
   fullTextLimit: number;
   textQueries: string[];
   imageCaptionQueries: string[];
 }) => {
-  const [forbidCollectionIdList, filterCollectionIdList] = await Promise.all([
-    getForbidCollectionIdList({
-      teamId,
-      datasetIds
-    }),
-    filterCollectionByMetadata({
-      teamId,
-      datasetIds,
-      collectionFilterMatch
-    })
+  const [forbidCollectionIdList, metadataCollectionIdList, governedCollectionIdList] =
+    await Promise.all([
+      getForbidCollectionIdList({
+        teamId,
+        datasetIds
+      }),
+      filterCollectionByMetadata({
+        teamId,
+        datasetIds,
+        collectionFilterMatch
+      }),
+      collectionIdWhitelist === undefined
+        ? getCustomerServiceGovernedCollectionIds({ teamId, datasetIds })
+        : Promise.resolve([])
+    ]);
+  // 已纳入客服治理的知识只能由可信客服上下文白名单放行，普通 App 默认拒绝。
+  const finalForbidCollectionIdList = Array.from(
+    new Set([...forbidCollectionIdList, ...governedCollectionIdList])
+  );
+  // metadata 和客服白名单均为允许集合；任意显式空集合都必须 fail-closed。
+  const filterCollectionIdList = computeFilterIntersection([
+    metadataCollectionIdList,
+    collectionIdWhitelist
   ]);
 
   const [
@@ -57,7 +74,7 @@ export const multiQueryRecall = async ({
       textQueries,
       imageCaptionQueries,
       limit: embeddingLimit,
-      forbidCollectionIdList,
+      forbidCollectionIdList: finalForbidCollectionIdList,
       filterCollectionIdList
     }),
     fullTextRecall({
@@ -69,7 +86,7 @@ export const multiQueryRecall = async ({
       ],
       limit: fullTextLimit,
       filterCollectionIdList,
-      forbidCollectionIdList
+      forbidCollectionIdList: finalForbidCollectionIdList
     })
   ]);
 

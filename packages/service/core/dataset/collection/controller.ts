@@ -37,6 +37,7 @@ import type {
   CreateCollectionWithResultResponseType,
   ApiCreateDatasetCollectionParams
 } from '@fastgpt/global/openapi/core/dataset/collection/createApi';
+import { assertCustomerServiceCollectionsMutable } from '../../customerService/knowledge/guard';
 
 export const createCollectionAndInsertData = async ({
   dataset,
@@ -379,9 +380,17 @@ export async function delCollection({
 
   if (!teamId) return Promise.reject('teamId is not exist');
 
+  const collectionIds = collections.map((item) => String(item._id));
+  // Keep the invariant at the shared deletion service as well as the HTTP route so
+  // scheduled sync/retraining callers cannot bypass governance.
+  await assertCustomerServiceCollectionsMutable({
+    teamId: String(teamId),
+    collectionIds,
+    session
+  });
+
   const s3DatasetSource = getS3DatasetSource();
   const datasetIds = Array.from(new Set(collections.map((item) => String(item.datasetId))));
-  const collectionIds = collections.map((item) => String(item._id));
 
   const imageCollectionIds = collections
     .filter((item) => item.type === DatasetCollectionTypeEnum.images)

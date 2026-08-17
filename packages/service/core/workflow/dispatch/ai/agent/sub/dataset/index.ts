@@ -37,6 +37,7 @@ type DatasetSearchParams = {
   llmModel: string;
   userKey?: OpenaiAccountType;
   datasetParams?: AppFormEditFormType['dataset'];
+  collectionIdWhitelist?: string[];
 };
 
 /**
@@ -170,7 +171,8 @@ export const dispatchAgentDatasetSearch = async ({
   teamId,
   tmbId,
   llmModel,
-  userKey
+  userKey,
+  collectionIdWhitelist
 }: DatasetSearchParams): Promise<DispatchSubAppResponse> => {
   if (!datasetParams || datasetParams.datasets.length === 0) {
     return {
@@ -237,7 +239,8 @@ export const dispatchAgentDatasetSearch = async ({
       datasetSearchUsingExtensionQuery: datasetParams.datasetSearchUsingExtensionQuery ?? false,
       datasetSearchExtensionModel: datasetParams.datasetSearchExtensionModel,
       datasetSearchExtensionBg: datasetParams.datasetSearchExtensionBg,
-      userKey
+      userKey,
+      collectionIdWhitelist
     };
     const {
       searchRes,

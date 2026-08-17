@@ -12,6 +12,7 @@ const mockCreateLLMResponse = vi.hoisted(() => vi.fn());
 const mockMongoDatasetCollectionFind = vi.hoisted(() => vi.fn());
 const mockMongoDatasetDataFind = vi.hoisted(() => vi.fn());
 const mockMongoDatasetDataTextAggregate = vi.hoisted(() => vi.fn());
+const mockGetCustomerServiceGovernedCollectionIds = vi.hoisted(() => vi.fn());
 const mockGetImageBase64 = vi.hoisted(() => vi.fn());
 const mockCountPromptTokens = vi.hoisted(() => vi.fn(async (prompt: string) => prompt.length));
 const mockCountPromptTokensBatch = vi.hoisted(() =>
@@ -80,6 +81,10 @@ vi.mock('@fastgpt/service/core/dataset/data/dataTextSchema', () => ({
   }
 }));
 
+vi.mock('@fastgpt/service/core/customerService/knowledge/guard', () => ({
+  getCustomerServiceGovernedCollectionIds: mockGetCustomerServiceGovernedCollectionIds
+}));
+
 import { searchDatasetData } from '../../../../core/dataset/search/defaultRecall';
 
 afterEach(() => {
@@ -107,13 +112,10 @@ describe('default recall dataset search', () => {
       vision: true
     });
     mockIsImageEmbeddingModel.mockReturnValue(false);
-    mockGetVectors.mockResolvedValue({
+    mockGetVectors.mockImplementation(async ({ inputs }) => ({
       tokens: 10,
-      vectors: [
-        [0.1, 0.2],
-        [0.3, 0.4]
-      ]
-    });
+      vectors: inputs.map((_: unknown, index: number) => [index + 0.1, index + 0.2])
+    }));
     mockRecallFromVectorStore.mockResolvedValue({
       results: []
     });
@@ -127,6 +129,7 @@ describe('default recall dataset search', () => {
       lean: vi.fn().mockResolvedValue([])
     });
     mockMongoDatasetDataTextAggregate.mockResolvedValue([]);
+    mockGetCustomerServiceGovernedCollectionIds.mockResolvedValue([]);
   });
 
   it('should ignore failed image caption and continue dataset search', async () => {
@@ -377,6 +380,117 @@ describe('default recall dataset search', () => {
     expect(mockGetVectors).not.toHaveBeenCalled();
     expect(mockMongoDatasetDataTextAggregate).not.toHaveBeenCalled();
     expect(result.searchRes).toEqual([]);
+  });
+
+  it('should keep the existing collection filter behavior when no whitelist is provided', async () => {
+    mockGetLLMModel.mockReturnValue(undefined);
+
+    await searchDatasetData({
+      histories: [],
+      teamId: 'team-1',
+      model: 'mock-embedding-model',
+      datasetIds: ['dataset-1'],
+      reRankQuery: 'query',
+      textQueries: ['query'],
+      imageQueries: [],
+      limit: 5000,
+      searchMode: DatasetSearchModeEnum.embedding,
+      usingReRank: false
+    });
+
+    expect(mockRecallFromVectorStore).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filterCollectionIdList: undefined
+      })
+    );
+  });
+
+  it('should deny governed collections for ordinary App recall by default', async () => {
+    mockGetLLMModel.mockReturnValue(undefined);
+    mockGetCustomerServiceGovernedCollectionIds.mockResolvedValue(['governed-collection']);
+
+    await searchDatasetData({
+      histories: [],
+      teamId: 'team-1',
+      model: 'mock-embedding-model',
+      datasetIds: ['dataset-1'],
+      reRankQuery: 'query',
+      textQueries: ['query'],
+      imageQueries: [],
+      limit: 5000,
+      searchMode: DatasetSearchModeEnum.embedding,
+      usingReRank: false
+    });
+
+    expect(mockGetCustomerServiceGovernedCollectionIds).toHaveBeenCalledWith({
+      teamId: 'team-1',
+      datasetIds: ['dataset-1']
+    });
+    expect(mockRecallFromVectorStore).toHaveBeenCalledWith(
+      expect.objectContaining({
+        forbidCollectionIdList: ['governed-collection']
+      })
+    );
+  });
+
+  it('should apply one server whitelist to embedding and full-text recall', async () => {
+    mockGetLLMModel.mockReturnValue(undefined);
+    const teamId = '64b000000000000000000001';
+    const datasetId = '64b000000000000000000002';
+    const collectionId = '64b000000000000000000003';
+
+    await searchDatasetData({
+      histories: [],
+      teamId,
+      model: 'mock-embedding-model',
+      datasetIds: [datasetId],
+      reRankQuery: 'query',
+      textQueries: ['query'],
+      imageQueries: [],
+      collectionIdWhitelist: [collectionId],
+      limit: 5000,
+      searchMode: DatasetSearchModeEnum.mixedRecall,
+      usingReRank: false
+    });
+
+    expect(mockRecallFromVectorStore).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filterCollectionIdList: [collectionId]
+      })
+    );
+    expect(mockMongoDatasetDataTextAggregate).toHaveBeenCalledTimes(1);
+    expect(
+      mockMongoDatasetDataTextAggregate.mock.calls[0][0][0].$match.collectionId.$in.map(String)
+    ).toEqual([collectionId]);
+  });
+
+  it('should fail closed in every recall path when the server whitelist is empty', async () => {
+    mockGetLLMModel.mockReturnValue(undefined);
+    const teamId = '64b000000000000000000001';
+    const datasetId = '64b000000000000000000002';
+
+    await searchDatasetData({
+      histories: [],
+      teamId,
+      model: 'mock-embedding-model',
+      datasetIds: [datasetId],
+      reRankQuery: 'query',
+      textQueries: ['query'],
+      imageQueries: [],
+      collectionIdWhitelist: [],
+      limit: 5000,
+      searchMode: DatasetSearchModeEnum.mixedRecall,
+      usingReRank: false
+    });
+
+    expect(mockRecallFromVectorStore).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filterCollectionIdList: []
+      })
+    );
+    expect(mockMongoDatasetDataTextAggregate.mock.calls[0][0][0].$match.collectionId.$in).toEqual(
+      []
+    );
   });
 
   it('should only batch-sign S3 keys from results that survive score filtering', async () => {

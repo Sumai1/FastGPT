@@ -24,6 +24,7 @@ import type dashboard_mcp from './zh-CN/dashboard_mcp.json';
 import type dashboard_evaluation from './zh-CN/dashboard_evaluation.json';
 import type admin_plugin from './zh-CN/admin_plugin.json';
 import type skill from './zh-CN/skill.json';
+import type customer_service from './zh-CN/customer_service.json';
 import type { I18N_NAMESPACES } from './constants';
 
 export interface I18nNamespaces {
@@ -52,6 +53,7 @@ export interface I18nNamespaces {
   dashboard_evaluation: typeof dashboard_evaluation;
   admin_plugin: typeof admin_plugin;
   skill: typeof skill;
+  customer_service: typeof customer_service;
 }
 
 export type I18nNsType = (keyof I18nNamespaces)[];

@@ -7,7 +7,9 @@ import {
   dispatchWorkFlow,
   runWorkflow,
   WorkflowQueue,
-  filterToolCallNodeResponses
+  filterToolCallNodeResponses,
+  shouldPollRuntimeStop,
+  shouldClearRuntimeStopAtStart
 } from '@fastgpt/service/core/workflow/dispatch/index';
 import { getWorkflowNodeRunParams } from '@fastgpt/service/core/workflow/dispatch/utils/runtime';
 import { createClientAbortTracker } from '@fastgpt/service/core/workflow/dispatch/utils/clientAbort';
@@ -59,6 +61,40 @@ const createWorkflowVariableState = (
   toRuntimeRecord: () => ({ ...variables }),
   toStoreRecord: () => ({ ...variables }),
   clone: () => createWorkflowVariableState({ ...variables })
+});
+
+describe('shouldPollRuntimeStop', () => {
+  it('always polls the runtime stop marker for v2', () => {
+    expect(shouldPollRuntimeStop({ apiVersion: 'v2' })).toBe(true);
+    expect(shouldPollRuntimeStop({ apiVersion: 'v2', customerServiceStopEnabled: false })).toBe(
+      true
+    );
+  });
+
+  it('only enables v1 polling for a trusted customer-service request', () => {
+    expect(shouldPollRuntimeStop({ apiVersion: 'v1', customerServiceStopEnabled: true })).toBe(
+      true
+    );
+    expect(shouldPollRuntimeStop({ apiVersion: 'v1', customerServiceStopEnabled: false })).toBe(
+      false
+    );
+    expect(shouldPollRuntimeStop({ apiVersion: 'v1' })).toBe(false);
+  });
+
+  it('does not enable polling for debug or unspecified API versions', () => {
+    expect(shouldPollRuntimeStop({ customerServiceStopEnabled: true })).toBe(false);
+  });
+});
+
+describe('shouldClearRuntimeStopAtStart', () => {
+  it('keeps the marker for trusted customer-service requests', () => {
+    expect(shouldClearRuntimeStopAtStart({ customerServiceStopEnabled: true })).toBe(false);
+  });
+
+  it('clears the marker for ordinary workflows', () => {
+    expect(shouldClearRuntimeStopAtStart({ customerServiceStopEnabled: false })).toBe(true);
+    expect(shouldClearRuntimeStopAtStart({})).toBe(true);
+  });
 });
 
 describe('filterToolCallNodeResponses', () => {

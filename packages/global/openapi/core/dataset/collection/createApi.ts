@@ -13,6 +13,7 @@ import { APIFileItemSchema } from '../../../../core/dataset/apiDataset/type';
 const DatasetCollectionStoreDataSchema = ChunkSettingsSchema.extend({
   parentId: ParentIdSchema.optional().meta({ description: '父级目录 ID' }),
   metadata: z.record(z.string(), z.any()).optional().meta({ description: '元数据' }),
+  forbid: z.boolean().optional().meta({ description: '创建后是否禁止参与检索' }),
   customPdfParse: z.boolean().optional().meta({ description: '自定义 PDF 解析' })
 });
 

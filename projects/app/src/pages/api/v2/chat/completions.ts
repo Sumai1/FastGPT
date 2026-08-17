@@ -85,9 +85,10 @@ import {
   getCompletionStartHookText,
   normalizeCompletionMessages
 } from '@fastgpt/service/core/chat/completionMessage';
+import { getCustomerServiceRequestContext } from '@/service/customerService/context';
 const logger = getLogger(LogCategories.MODULE.CHAT.ITEM);
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+export async function handler(req: NextApiRequest, res: NextApiResponse) {
   const completionBody = parseApiInput({ req, bodySchema: CompletionsPropsSchema }).body;
   const {
     chatId,
@@ -108,6 +109,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const outLinkUid = outLinkAuthData?.outLinkUid;
 
   const originIp = getIpFromRequest(req);
+  const customerServiceContext = getCustomerServiceRequestContext(req);
 
   const startTime = Date.now();
   let streamResponseContext: WorkflowStreamResponseContext | undefined;
@@ -404,6 +406,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       workflowStreamResponse: streamResponseContext.responseWrite,
       responseAllData,
       responseDetail: showCite,
+      customerServiceCollectionIdWhitelist: customerServiceContext?.collectionIdWhitelist,
+      customerServiceStopEnabled: customerServiceContext?.customerServiceStopEnabled,
       nodeResponseWriteConfig: {
         persistToDb: preparedRound.shouldPersistChatRound,
         retainInMemory: shouldCollectFinalResponseData

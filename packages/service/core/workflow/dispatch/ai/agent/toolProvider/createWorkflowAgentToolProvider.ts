@@ -39,7 +39,8 @@ export const createWorkflowAgentToolProvider = ({
           teamId: context.runningUserInfo.teamId,
           tmbId: context.runningUserInfo.tmbId,
           llmModel: context.params.model,
-          userKey: context.externalProvider.openaiAccount
+          userKey: context.externalProvider.openaiAccount,
+          collectionIdWhitelist: context.customerServiceCollectionIdWhitelist
         });
         const usages = result.usages ?? [];
         const datasetSearchInfo = context.getSubAppInfo(SubAppIds.datasetSearch);

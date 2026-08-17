@@ -80,6 +80,28 @@ import { prepareWorkflowFileContext } from '../utils/fileContext';
 
 const logger = getLogger(LogCategories.MODULE.WORKFLOW.DISPATCH);
 
+/**
+ * 判断当前工作流是否需要轮询服务端停止标记。
+ *
+ * v2 原生聊天一直依赖 Redis 停止标记；v1 默认只监听客户端断开，避免给普通
+ * OpenAPI 请求增加 Redis 轮询。只有经过客服可信上下文显式授权的 v1 请求，才
+ * 可以使用客服停止接口写入的同一标记。
+ */
+export const shouldPollRuntimeStop = ({
+  apiVersion,
+  customerServiceStopEnabled
+}: Pick<ChatDispatchProps, 'apiVersion' | 'customerServiceStopEnabled'>): boolean =>
+  apiVersion === 'v2' || (apiVersion === 'v1' && customerServiceStopEnabled === true);
+
+/**
+ * 客服入口会在进入通用 completions 前清理旧标记，因此 dispatch 不能再次清理。
+ * 这样 stop API 在入口清理完成后写入的标记不会被工作流初始化阶段误删。
+ */
+export const shouldClearRuntimeStopAtStart = ({
+  customerServiceStopEnabled
+}: Pick<ChatDispatchProps, 'customerServiceStopEnabled'>): boolean =>
+  customerServiceStopEnabled !== true;
+
 type Props = Omit<
   ChatDispatchProps,
   | 'checkIsStopping'
@@ -264,15 +286,21 @@ export async function dispatchWorkFlow({
     })(),
     // 复用 Context 的鉴权和请求级签名缓存，刷新 history 里其它服务端文件引用。
     addPreviewUrlToChatItems(preparedHistories, 'chatFlow', getHistoryPreviewUrl),
-    // Remove stopping sign
-    delAgentRuntimeStopSign({
-      ...chatSource,
-      chatId
-    })
+    // 客服入口已在调用 completions 前清理旧标记，避免删除 stop API 随后写入的新标记。
+    shouldClearRuntimeStopAtStart({ customerServiceStopEnabled: data.customerServiceStopEnabled })
+      ? delAgentRuntimeStopSign({
+          ...chatSource,
+          chatId
+        })
+      : Promise.resolve()
   ]);
 
   const clientAbortTracker =
     apiVersion === 'v1' ? createClientAbortTracker({ req: data.req, res }) : undefined;
+  const pollRuntimeStop = shouldPollRuntimeStop({
+    apiVersion,
+    customerServiceStopEnabled: data.customerServiceStopEnabled
+  });
 
   const variableState = await WorkflowVariableState.create({
     timezone,
@@ -298,28 +326,24 @@ export async function dispatchWorkFlow({
   // Stop sign(没有 apiVersion，说明不会有暂停)
   let stopping = false;
   const checkIsStopping = (): boolean => {
-    if (apiVersion === 'v2') {
-      return stopping;
-    }
     if (apiVersion === 'v1') {
-      return clientAbortTracker?.isClientAborted() ?? false;
+      return (pollRuntimeStop && stopping) || (clientAbortTracker?.isClientAborted() ?? false);
     }
-    return false;
+    return pollRuntimeStop && stopping;
   };
-  const checkStoppingTimer =
-    apiVersion === 'v2'
-      ? setInterval(async () => {
-          if (stopping) return;
+  const checkStoppingTimer = pollRuntimeStop
+    ? setInterval(async () => {
+        if (stopping) return;
 
-          const shouldStop = await shouldWorkflowStop({
-            ...chatSource,
-            chatId
-          });
-          if (shouldStop) {
-            stopping = true;
-          }
-        }, 100)
-      : undefined;
+        const shouldStop = await shouldWorkflowStop({
+          ...chatSource,
+          chatId
+        });
+        if (shouldStop) {
+          stopping = true;
+        }
+      }, 100)
+    : undefined;
 
   const nodeResponseSink = await createWorkflowEntryNodeResponseSink({
     teamId: data.runningAppInfo.teamId,
@@ -1075,9 +1099,8 @@ export class WorkflowQueue {
             formatResponseData
           : nodeResponsesForDisplay.find((item) => item.id === formatResponseData?.id);
       const childResponsesForQueue = this.data.nodeResponseSink
-        ? childResponsesForDisplay.flatMap(
-            (item) =>
-              persistedNodeResponses.filter((persistedItem) => persistedItem.id === item.id)
+        ? childResponsesForDisplay.flatMap((item) =>
+            persistedNodeResponses.filter((persistedItem) => persistedItem.id === item.id)
           )
         : childResponsesForDisplay;
       const shouldDropPersistedNodeResponses = !!this.data.nodeResponseSink;

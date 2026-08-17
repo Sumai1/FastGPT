@@ -1,4 +1,5 @@
 import { isProduction } from '@fastgpt/global/common/system/constants';
+import { customerServiceStandardAppTemplate } from '@fastgpt/global/core/customerService/workflowTemplate';
 import { AppToolSourceEnum } from '@fastgpt/global/core/app/tool/constants';
 import { type AppTemplateSchemaType } from '@fastgpt/global/core/app/type';
 import { MongoAppTemplate } from './templateSchema';
@@ -83,6 +84,11 @@ const getAppTemplates = async () => {
 
   const dbTemplates = await MongoAppTemplate.find().lean();
 
+  const bundledSystemTemplates = [customerServiceStandardAppTemplate];
+  const bundledSystemTemplateIds = new Set(
+    bundledSystemTemplates.map((template) => template.templateId)
+  );
+
   // Merge db data to community templates
   const communityTemplateConfig = communityTemplates.map((template) => {
     const config = dbTemplates.find((t) => t.templateId === template.templateId);
@@ -97,9 +103,27 @@ const getAppTemplates = async () => {
 
     return template;
   });
+  const bundledSystemTemplateConfig = bundledSystemTemplates.map((template) => {
+    const config = dbTemplates.find((item) => item.templateId === template.templateId);
+
+    if (config) {
+      return {
+        ...config,
+        ...template,
+        ...pickPluginSystemTemplateEditableConfig(config)
+      };
+    }
+
+    return template;
+  });
   const res = [
     ...communityTemplateConfig,
-    ...dbTemplates.filter((t) => isCommercialTemaplte(t.templateId))
+    ...bundledSystemTemplateConfig,
+    ...dbTemplates.filter(
+      (template) =>
+        isCommercialTemaplte(template.templateId) &&
+        !bundledSystemTemplateIds.has(template.templateId)
+    )
   ].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return res;

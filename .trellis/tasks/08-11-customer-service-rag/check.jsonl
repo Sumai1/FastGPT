@@ -1,0 +1,7 @@
+{"file":".trellis/spec/guides/fastgpt-development.md","reason":"检查仓库强制规范和质量门禁"}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"检查是否重复实现现有训练、Key、聊天或日志能力"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"检查跨层合约、权限和数据流闭环"}
+{"file":".trellis/spec/global/frontend/index.md","reason":"检查 Zod/OpenAPI 合约"}
+{"file":".trellis/spec/service/backend/index.md","reason":"检查 schema、索引、权限和服务端测试"}
+{"file":".trellis/spec/app/frontend/index.md","reason":"检查 API 与 UI 集成"}
+{"file":".trellis/spec/web/frontend/index.md","reason":"检查共享 UI 复用"}

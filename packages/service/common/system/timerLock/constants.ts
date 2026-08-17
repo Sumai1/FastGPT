@@ -19,7 +19,8 @@ export enum TimerIdEnum {
   recoverStaleSandboxOperations = 'recoverStaleSandboxOperations',
   enterpriseAuthTaskCleanup = 'enterpriseAuthTaskCleanup',
   /** 纠正长时间卡在 generating 的会话状态 */
-  cleanStaleGeneratingChat = 'cleanStaleGeneratingChat'
+  cleanStaleGeneratingChat = 'cleanStaleGeneratingChat',
+  customerServiceSessionCleanup = 'customerServiceSessionCleanup'
 }
 
 export enum LockNotificationEnum {

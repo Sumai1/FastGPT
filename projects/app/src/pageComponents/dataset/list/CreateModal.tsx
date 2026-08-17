@@ -31,10 +31,12 @@ export type CreateDatasetType =
 
 const CreateModal = ({
   onClose,
+  onSuccess,
   parentId,
   type
 }: {
   onClose: () => void;
+  onSuccess?: (datasetId: string) => void | Promise<void>;
   parentId?: string;
   type: CreateDatasetType;
 }) => {
@@ -77,13 +79,17 @@ const CreateModal = ({
       }
     });
 
-  /* create a new kb and router to it */
+  /** 创建知识库；业务向导可接管成功回调，原生入口仍跳转知识库详情。 */
   const { runAsync: onclickCreate, loading: creating } = useRequest(
     async (data: CreateDatasetBody) => await postCreateDataset(data),
     {
       successToast: t('common:create_success'),
       errorToast: t('common:create_failed'),
-      onSuccess(id) {
+      async onSuccess(id) {
+        if (onSuccess) {
+          await onSuccess(id);
+          return;
+        }
         router.push(`/dataset/detail?datasetId=${id}`);
       }
     }

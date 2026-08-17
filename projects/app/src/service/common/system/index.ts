@@ -98,13 +98,13 @@ export async function getInitConfig() {
 
 const defaultFeConfigs: FastGPTFeConfigsType = {
   show_emptyChat: true,
-  show_git: true,
+  show_git: false,
   docUrl: 'https://doc.fastgpt.io',
   openAPIDocUrl: 'https://doc.fastgpt.io/openapi/intro',
   submitPluginRequestUrl: 'https://github.com/labring/fastgpt-plugin/issues',
   appTemplateCourse:
     'https://fael3z0zfze.feishu.cn/wiki/CX9wwMGyEi5TL6koiLYcg7U0nWb?fromScene=spaceOverview',
-  systemTitle: 'FastGPT',
+  systemTitle: '企业产品智能客服',
   concatMd:
     '项目开源地址: [FastGPT GitHub](https://github.com/labring/FastGPT)\n交流群: ![](https://oss.laf.run/otnvvf-imgs/fastgpt-feishu1.png)',
   limit: {
@@ -118,7 +118,7 @@ const defaultFeConfigs: FastGPTFeConfigsType = {
     maxFolderDepth: serviceEnv.MAX_FOLDER_DEPTH
   },
   scripts: [],
-  favicon: '/favicon.ico',
+  favicon: '/icon/customer-service-logo.svg',
   chineseRedirectUrl: appEnv.CHINESE_IP_REDIRECT_URL,
   uploadFileMaxSize: serviceEnv.UPLOAD_FILE_MAX_SIZE,
   uploadFileMaxAmount: serviceEnv.UPLOAD_FILE_MAX_AMOUNT

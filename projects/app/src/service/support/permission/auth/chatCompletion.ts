@@ -14,6 +14,8 @@ import { MongoUser } from '@fastgpt/service/support/user/schema';
 import { MongoTeamMember } from '@fastgpt/service/support/user/team/teamMemberSchema';
 import { ChatSourceTypeEnum } from '@fastgpt/global/core/chat/constants';
 import { UserError } from '@fastgpt/global/common/error/utils';
+import { hasActiveCustomerServiceBindingByApiKey } from '@fastgpt/service/core/customerService/project/service';
+import { getCustomerServiceRequestContext } from '@/service/customerService/context';
 
 /**
  * 解析 Chat Completions 请求最终应归属的团队成员。
@@ -122,12 +124,23 @@ export const authChatCompletionHeaderRequest = async ({
   authProxy?: ChatCompletionAuthProxy;
   showSkillReferences?: boolean;
 }): Promise<AuthResponseType> => {
+  const customerServiceContext = getCustomerServiceRequestContext(req);
+  if (customerServiceContext) return customerServiceContext.auth;
+
   const { legacyAppId, parsedAppId, apiKeyAuthProxy, teamId, tmbId, authType, sourceName, apikey } =
     await authCert({
       req,
       authToken: true,
       authApiKey: true
     });
+
+  // 客服 Key 必须经过客服入口生成受众和 collection 白名单，不能复用通用 completions 绕过。
+  if (
+    authType === AuthUserTypeEnum.apikey &&
+    (await hasActiveCustomerServiceBindingByApiKey({ teamId, apiKey: apikey }))
+  ) {
+    return Promise.reject(ChatErrEnum.unAuthChat);
+  }
 
   const { tmbId: effectiveTmbId } = await resolveChatCompletionEffectiveTmbId({
     authType,

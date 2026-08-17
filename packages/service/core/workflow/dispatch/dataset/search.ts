@@ -11,6 +11,7 @@ import { type ChatNodeUsageType } from '@fastgpt/global/support/wallet/bill/type
 import { MongoDataset } from '../../../dataset/schema';
 import { i18nT } from '@fastgpt/global/common/i18n/utils';
 import { filterDatasetsByTmbId } from '../../../dataset/utils';
+import { getCustomerServiceGovernedCollectionIds } from '../../../customerService/knowledge/guard';
 import { getDatasetSearchToolResponsePrompt } from '@fastgpt/global/core/ai/prompt/dataset.const';
 import { getNodeErrResponse } from '../utils';
 import { getLogger, LogCategories } from '../../../../common/logger';
@@ -59,6 +60,7 @@ export async function dispatchDatasetSearch(
     runningAppInfo: { teamId },
     runningUserInfo: { tmbId },
     externalProvider,
+    customerServiceCollectionIdWhitelist,
     histories,
     node,
     params: {
@@ -151,9 +153,23 @@ export async function dispatchDatasetSearch(
       usingReRank,
       rerankModel: rerankModelData,
       rerankWeight,
-      collectionFilterMatch
+      collectionFilterMatch,
+      collectionIdWhitelist: customerServiceCollectionIdWhitelist
     };
-    const useDeepSearch = datasetDeepSearch && textQueries.length > 0;
+    // Plus Deep RAG 的远端合约不认识客服白名单；客服请求强制使用本地默认召回以保持边界。
+    const hasGovernedCustomerServiceKnowledge =
+      customerServiceCollectionIdWhitelist === undefined &&
+      (
+        await getCustomerServiceGovernedCollectionIds({
+          teamId,
+          datasetIds
+        })
+      ).length > 0;
+    const useDeepSearch =
+      datasetDeepSearch &&
+      textQueries.length > 0 &&
+      customerServiceCollectionIdWhitelist === undefined &&
+      !hasGovernedCustomerServiceKnowledge;
     const {
       searchRes,
       embeddingTokens,

@@ -15,6 +15,7 @@ import { readDatasetSourceRawText } from '../read';
 import { hashStr } from '@fastgpt/global/common/string/tools';
 import { mongoSessionRun } from '../../../common/mongo/sessionRun';
 import { createCollectionAndInsertData, delCollection } from './controller';
+import { assertCustomerServiceCollectionsMutable } from '../../customerService/knowledge/guard';
 import { collectionCanSync } from '@fastgpt/global/core/dataset/collection/utils';
 
 /**
@@ -134,6 +135,13 @@ export const collectionTagsToTagLabel = async ({
 export const syncCollection = async (collection: CollectionWithDatasetType) => {
   const dataset = collection.dataset;
 
+  // This helper is also called by scheduled sync workers, so the HTTP
+  // collection permission check alone is insufficient for governed knowledge.
+  await assertCustomerServiceCollectionsMutable({
+    teamId: String(collection.teamId),
+    collectionIds: [String(collection._id)]
+  });
+
   if (!collectionCanSync(collection.type)) {
     return Promise.reject(DatasetErrEnum.notSupportSync);
   }
@@ -202,7 +210,10 @@ export const syncCollection = async (collection: CollectionWithDatasetType) => {
 
     return DatasetCollectionSyncResultEnum.success;
   } else if (title && collection.name !== title) {
-    await MongoDatasetCollection.updateOne({ _id: collection._id }, { $set: { name: title } });
+    await MongoDatasetCollection.updateOne(
+      { _id: collection._id, teamId: collection.teamId },
+      { $set: { name: title } }
+    );
     return DatasetCollectionSyncResultEnum.success;
   }
   return DatasetCollectionSyncResultEnum.sameRaw;

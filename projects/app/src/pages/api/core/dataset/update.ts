@@ -40,6 +40,7 @@ import { getS3AvatarSource } from '@fastgpt/service/common/s3/sources/avatar';
 import { isInternalAddress, PRIVATE_URL_TEXT } from '@fastgpt/service/common/system/utils';
 import { checkMoveFolderDepth } from '@fastgpt/service/common/parentFolder/depth';
 import { parseApiInput } from '@fastgpt/service/common/zod/requestParseError';
+import { assertCustomerServiceCollectionsMutable } from '@fastgpt/service/core/customerService/knowledge/guard';
 
 // 更新知识库接口
 // 包括如下功能：
@@ -89,6 +90,15 @@ async function handler(req: ApiRequestProps<UpdateDatasetBody>) {
     per: ReadPermissionVal
   });
 
+  // 这些 Dataset 级配置会重建/重训 collection，或改变后续自动同步来源。
+  // 展示字段和目录移动仍保持原生行为；涉及知识内容的配置必须遵守客服治理约束。
+  const requiresCustomerServiceMutableCheck =
+    agentModel !== undefined ||
+    vlmModel !== undefined ||
+    websiteConfig !== undefined ||
+    apiDatasetServer !== undefined ||
+    autoSync !== undefined ||
+    rawChunkSettings !== undefined;
   let targetName = '';
 
   const chunkSettings = rawChunkSettings
@@ -134,6 +144,15 @@ async function handler(req: ApiRequestProps<UpdateDatasetBody>) {
   } else {
     // is not move
     if (!permission.hasWritePer) return Promise.reject(DatasetErrEnum.unAuthDataset);
+  }
+
+  // 先完成原生资源鉴权，避免向无写权限调用者泄露客服知识治理状态。
+  if (requiresCustomerServiceMutableCheck) {
+    await assertCustomerServiceCollectionsMutable({
+      teamId,
+      collectionIds: [],
+      datasetIds: [String(dataset._id)]
+    });
   }
 
   if (isMove) {

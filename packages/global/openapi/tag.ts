@@ -59,6 +59,7 @@ export const DevApiTagsMap = {
   apiKey: 'API Key 管理',
   customDomain: '自定义域名',
   chatAgentHelper: 'Chat Agent 辅助生成',
+  customerService: '智能客服',
 
   /* 辅助-团队管理 */
   teamManage: '团队管理',
@@ -101,5 +102,6 @@ export const SystemOpenApiTagMap = {
   datasetCollectionCreate: 'systemOpenAPI:datasetCollectionCreate',
   datasetData: 'systemOpenAPI:datasetData',
   datasetDataIndex: 'systemOpenAPI:datasetDataIndex',
-  datasetOther: 'systemOpenAPI:datasetOther'
+  datasetOther: 'systemOpenAPI:datasetOther',
+  customerService: 'systemOpenAPI:customerService'
 };

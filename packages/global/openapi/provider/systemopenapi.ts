@@ -16,10 +16,15 @@ const ApiKeyTagNameMap: Record<string, string> = {
   [SystemOpenApiTagMap.datasetCollectionCreate]: '集合创建',
   [SystemOpenApiTagMap.datasetData]: '数据管理',
   [SystemOpenApiTagMap.datasetDataIndex]: '索引管理',
-  [SystemOpenApiTagMap.datasetOther]: '其他'
+  [SystemOpenApiTagMap.datasetOther]: '其他',
+  [SystemOpenApiTagMap.customerService]: '智能客服'
 };
 
 export const tagGroups = [
+  {
+    name: '智能客服',
+    tags: [ApiKeyTagNameMap[SystemOpenApiTagMap.customerService]]
+  },
   {
     name: '应用管理',
     tags: [ApiKeyTagNameMap[SystemOpenApiTagMap.appLog]]

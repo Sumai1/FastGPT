@@ -7,7 +7,6 @@ import {
   beforeUpdateAppFormat,
   validatePublishAppAgentSkillReadPermissions
 } from '@fastgpt/service/core/app/controller';
-import { getNextTimeByCronStringAndTimezone } from '@fastgpt/global/common/string/time';
 import { type PostPublishAppProps } from '@/global/core/app/api';
 import { WritePermissionVal } from '@fastgpt/global/support/permission/constant';
 import { type ApiRequestProps } from '@fastgpt/next/type';
@@ -23,6 +22,7 @@ import {
   PublishAppQuerySchema,
   PublishAppResponseSchema
 } from '@fastgpt/global/openapi/core/app/version/api';
+import { publishAppVersionSnapshot } from '@fastgpt/service/core/app/version/publish';
 
 async function handler(req: ApiRequestProps<PostPublishAppProps>) {
   const {
@@ -107,53 +107,17 @@ async function handler(req: ApiRequestProps<PostPublishAppProps>) {
   }
 
   await mongoSessionRun(async (session) => {
-    // create version histories
-    const [{ _id }] = await MongoAppVersion.create(
-      [
-        {
-          appId,
-          nodes: nodes,
-          edges,
-          chatConfig,
-          isPublish,
-          versionName,
-          tmbId,
-          resourceRefs
-        }
-      ],
-      { session, ordered: true }
-    );
-
-    // update app
-    const setUpdate = {
-      modules: nodes,
+    await publishAppVersionSnapshot({
+      app,
+      tmbId,
+      nodes,
       edges,
       chatConfig,
-      updateTime: new Date(),
-      version: 'v2',
-      ...(isPublish && { resourceRefs }),
-      ...(isPublish && chatConfig?.scheduledTriggerConfig?.cronString
-        ? {
-            scheduledTriggerConfig: chatConfig.scheduledTriggerConfig,
-            scheduledTriggerNextTime: getNextTimeByCronStringAndTimezone(
-              chatConfig.scheduledTriggerConfig
-            )
-          }
-        : {}),
-      'pluginData.nodeVersion': _id
-    };
-    await MongoApp.updateOne(
-      { _id: appId },
-      {
-        $set: setUpdate,
-        ...(isPublish && !chatConfig?.scheduledTriggerConfig?.cronString
-          ? { $unset: { scheduledTriggerConfig: '', scheduledTriggerNextTime: '' } }
-          : {})
-      },
-      {
-        session
-      }
-    );
+      resourceRefs,
+      isPublish,
+      versionName,
+      session
+    });
   });
 
   (async () => {

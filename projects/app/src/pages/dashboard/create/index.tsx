@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Box,
   Flex,
@@ -49,6 +49,7 @@ import {
   type HttpToolType,
   HttpToolTypeEnum
 } from '@fastgpt/global/core/app/tool/httpTool/constants';
+import { CUSTOMER_SERVICE_STANDARD_TEMPLATE_ID } from '@fastgpt/global/core/customerService/workflowTemplate';
 
 type FormType = {
   avatar: string;
@@ -74,10 +75,13 @@ const CreateAppsPage = () => {
   const router = useRouter();
   const { isPc } = useSystem();
   const { query } = router;
-  const { parentId, appType } = query;
+  const { parentId, appType, scene } = query;
+  const isCustomerServiceScene = scene === 'customerService';
 
   const [selectedAppType, setSelectedAppType] = useState<CreateAppType>(
-    (appType as CreateAppType) || AppTypeEnum.chatAgent
+    isCustomerServiceScene
+      ? AppTypeEnum.workflow
+      : (appType as CreateAppType) || AppTypeEnum.chatAgent
   );
   const [creatingTemplateId, setCreatingTemplateId] = useState<string | null>(null);
   const isToolType = ToolTypeList.includes(selectedAppType);
@@ -89,6 +93,16 @@ const CreateAppsPage = () => {
       refreshDeps: [selectedAppType]
     }
   );
+  const templateList = useMemo(() => {
+    const list = templateData?.list || [];
+    if (!isCustomerServiceScene) return list;
+
+    return [...list].sort(
+      (first, second) =>
+        Number(second.templateId === CUSTOMER_SERVICE_STANDARD_TEMPLATE_ID) -
+        Number(first.templateId === CUSTOMER_SERVICE_STANDARD_TEMPLATE_ID)
+    );
+  }, [isCustomerServiceScene, templateData?.list]);
 
   const { register, setValue, watch, handleSubmit } = useForm<FormType>({
     defaultValues: {
@@ -203,7 +217,9 @@ const CreateAppsPage = () => {
           }
           fontSize={'20px'}
         >
-          {t('common:Create') + (isToolType ? t('app:type.Tool') : ' Agent')}
+          {isCustomerServiceScene
+            ? t('app:create_customer_service')
+            : t('common:Create') + (isToolType ? t('app:type.Tool') : ' Agent')}
         </Button>
       </Flex>
       <Flex bg={'white'} flex={1} gap={7} p={6} h={'calc(100vh - 60px)'}>
@@ -240,9 +256,11 @@ const CreateAppsPage = () => {
             <SimpleGrid columns={3} gap={2.5} pb={5}>
               {Object.values(createAppTypeMap)
                 .filter((option) =>
-                  isToolType
-                    ? ToolTypeList.includes(option.type as CreateAppType)
-                    : !ToolTypeList.includes(option.type as CreateAppType)
+                  isCustomerServiceScene
+                    ? option.type === AppTypeEnum.workflow
+                    : isToolType
+                      ? ToolTypeList.includes(option.type as CreateAppType)
+                      : !ToolTypeList.includes(option.type as CreateAppType)
                 )
                 .map((option) => (
                   <AppTypeCard
@@ -294,7 +312,12 @@ const CreateAppsPage = () => {
               {selectedAppType !== AppTypeEnum.mcpToolSet && (
                 <Button
                   isLoading={isCreating}
-                  onClick={handleSubmit((data) => onClickCreate(data))}
+                  onClick={handleSubmit((data) =>
+                    onClickCreate(
+                      data,
+                      isCustomerServiceScene ? CUSTOMER_SERVICE_STANDARD_TEMPLATE_ID : undefined
+                    )
+                  )}
                   h={'34px'}
                 >
                   {t('common:Create')}
@@ -302,11 +325,13 @@ const CreateAppsPage = () => {
               )}
             </Flex>
           </Box>
-          {templateData?.list && templateData.list.length > 0 && (
+          {templateList.length > 0 && (
             <Box>
               <Flex justifyContent={'space-between'} mb={2.5}>
                 <Box color={'myGray.900'} fontWeight={'medium'}>
-                  {t('app:create_by_template')}
+                  {isCustomerServiceScene
+                    ? t('app:customer_service_template')
+                    : t('app:create_by_template')}
                 </Box>
                 <Flex
                   alignItems={'center'}
@@ -324,9 +349,9 @@ const CreateAppsPage = () => {
                   />
                 </Flex>
               </Flex>
-              <Fade in={!isLoadingTemplates && templateData?.list && templateData.list.length > 0}>
+              <Fade in={!isLoadingTemplates && templateList.length > 0}>
                 <SimpleGrid columns={[1, 3]} gridGap={2.5}>
-                  {templateData.list.map((item) => (
+                  {templateList.map((item) => (
                     <MyBox
                       key={item.templateId}
                       p={4}
@@ -388,7 +413,22 @@ const CreateAppsPage = () => {
                         </Box>
                       </Box>
 
-                      <Box color={'myGray.900'}>{t(item.name as any)}</Box>
+                      <Flex alignItems={'center'} gap={2}>
+                        <Box color={'myGray.900'}>{t(item.name as any)}</Box>
+                        {isCustomerServiceScene &&
+                          item.templateId === CUSTOMER_SERVICE_STANDARD_TEMPLATE_ID && (
+                            <Box
+                              px={2}
+                              py={0.5}
+                              borderRadius={'md'}
+                              bg={'green.50'}
+                              color={'green.700'}
+                              fontSize={'10px'}
+                            >
+                              {t('app:customer_service_template_recommended')}
+                            </Box>
+                          )}
+                      </Flex>
                       <Box fontSize={'mini'} color={'myGray.500'} flex={1} noOfLines={2} mt={1}>
                         {t(item.intro as any)}
                       </Box>

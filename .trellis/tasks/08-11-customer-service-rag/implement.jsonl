@@ -1,0 +1,7 @@
+{"file":".trellis/spec/guides/fastgpt-development.md","reason":"FastGPT 分层、API、MongoDB、代码风格和测试规则"}
+{"file":".trellis/spec/guides/code-reuse-thinking-guide.md","reason":"本任务必须优先复用 FastGPT 现有能力"}
+{"file":".trellis/spec/guides/cross-layer-thinking-guide.md","reason":"功能跨 global、service、API 和 UI，需要校验数据流"}
+{"file":".trellis/spec/global/frontend/index.md","reason":"共享类型与 OpenAPI 合约归属"}
+{"file":".trellis/spec/service/backend/index.md","reason":"服务端 schema、权限、检索与业务逻辑归属"}
+{"file":".trellis/spec/app/frontend/index.md","reason":"Next.js API、页面和应用编排约定"}
+{"file":".trellis/spec/web/frontend/index.md","reason":"复用 Chakra UI 组件和 hooks"}

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Box, Grid, IconButton, HStack, Flex, VStack } from '@chakra-ui/react';
+import { Box, Grid, IconButton, HStack, Flex, VStack, Button } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 import { delAppById, putAppById, resumeInheritPer, changeOwner } from '@/web/core/app/api';
 import { useConfirm } from '@fastgpt/web/hooks/useConfirm';
@@ -77,13 +77,14 @@ const List = () => {
   const hasCreatePer = folderDetail
     ? folderDetail.permission.hasWritePer && folderDetail?.type !== AppTypeEnum.httpPlugin
     : userInfo?.team.permission.hasAppCreatePer;
+  const showCustomerServiceCreate = router.pathname.includes('/dashboard/agent');
 
   const [editedApp, setEditedApp] = useState<EditResourceInfoFormType>();
   const [editPerAppId, setEditPerAppId] = useState<string>();
   const { gridRef, renderVirtualGridItems } = useVirtualGridList({
     list: myApps,
     listKey: `${router.pathname}-${appType}-${parentId || ''}-${searchKey}`,
-    reservedSlotCount: 1,
+    reservedSlotCount: showCustomerServiceCreate ? 2 : 1,
     estimatedRowHeight: 160,
     estimatedRowGap: 20
   });
@@ -423,7 +424,7 @@ const List = () => {
         searchKey ? (
           <EmptyTip />
         ) : isPc && hasCreatePer ? (
-          <CreateButton appType={appType} />
+          <CreateButton appType={appType} showCustomerServiceCreate={showCustomerServiceCreate} />
         ) : (
           <Grid
             py={4}
@@ -435,7 +436,14 @@ const List = () => {
             gridGap={5}
             alignItems={'stretch'}
           >
-            {hasCreatePer ? <ListCreateButton appType={appType} /> : <ForbiddenCreateButton />}
+            {hasCreatePer ? (
+              <>
+                <ListCreateButton appType={appType} />
+                {showCustomerServiceCreate && <CustomerServiceCreateButton />}
+              </>
+            ) : (
+              <ForbiddenCreateButton />
+            )}
           </Grid>
         )
       ) : (
@@ -451,7 +459,14 @@ const List = () => {
             gridGap={5}
             alignItems={'stretch'}
           >
-            {hasCreatePer ? <ListCreateButton appType={appType} /> : <ForbiddenCreateButton />}
+            {hasCreatePer ? (
+              <>
+                <ListCreateButton appType={appType} />
+                {showCustomerServiceCreate && <CustomerServiceCreateButton />}
+              </>
+            ) : (
+              <ForbiddenCreateButton />
+            )}
             {renderVirtualGridItems(renderAppCard)}
           </Grid>
         </>
@@ -514,7 +529,13 @@ const List = () => {
   );
 };
 
-const CreateButton = ({ appType }: { appType: AppTypeEnum | 'all' }) => {
+const CreateButton = ({
+  appType,
+  showCustomerServiceCreate
+}: {
+  appType: AppTypeEnum | 'all';
+  showCustomerServiceCreate: boolean;
+}) => {
   const { t } = useTranslation();
   const [isHoverCreateButton, setIsHoverCreateButton] = useState(false);
   const router = useRouter();
@@ -586,6 +607,24 @@ const CreateButton = ({ appType }: { appType: AppTypeEnum | 'all' }) => {
         >
           <MyIcon name={'common/addLight'} w={8} color={'#7895FE'} />
         </Box>
+        {showCustomerServiceCreate && (
+          <Button
+            mt={2}
+            size={'sm'}
+            variant={'whitePrimary'}
+            leftIcon={<MyIcon name={'core/app/type/workflowFill'} w={4} />}
+            onClick={(event) => {
+              event.stopPropagation();
+              router.push(
+                `/dashboard/create?appType=${AppTypeEnum.workflow}&scene=customerService${
+                  parentId ? `&parentId=${parentId}` : ''
+                }`
+              );
+            }}
+          >
+            {t('app:create_customer_service')}
+          </Button>
+        )}
       </VStack>
     </Box>
   );
@@ -605,6 +644,28 @@ const ListCreateButton = ({ appType }: { appType: AppTypeEnum | 'all' }) => {
       onClick={() => {
         router.push(
           `/dashboard/create?appType=${createAppType}${parentId ? `&parentId=${parentId}` : ''}`
+        );
+      }}
+    />
+  );
+};
+
+const CustomerServiceCreateButton = () => {
+  const { t } = useTranslation();
+  const router = useRouter();
+  const parentId = router.query.parentId;
+
+  return (
+    <ListCreateCard
+      label={t('app:create_customer_service')}
+      icon={'core/app/type/workflowFill'}
+      accentColor={'#18A058'}
+      hoverBg={'green.50'}
+      onClick={() => {
+        router.push(
+          `/dashboard/create?appType=${AppTypeEnum.workflow}&scene=customerService${
+            parentId ? `&parentId=${parentId}` : ''
+          }`
         );
       }}
     />

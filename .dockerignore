@@ -5,6 +5,7 @@ npm-debug.log
 README.md
 .next
 .git
+.deploy-backups
 projects/volume-manager/dist
 
 .yalc/

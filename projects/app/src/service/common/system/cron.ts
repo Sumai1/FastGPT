@@ -10,6 +10,7 @@ import { cronRefreshModels } from '@fastgpt/service/core/ai/config/utils';
 import { runSandboxArchiveCron as sandboxCronJob } from '@fastgpt/service/core/ai/sandbox/interface/admin';
 import { clearExpiredS3FilesCron } from '@fastgpt/service/common/s3/lifecycle/cleanup';
 import { cleanStaleGeneratingChats } from '@fastgpt/service/core/chat/cleanStaleGeneratingChats';
+import { cleanupCustomerServiceExpiredSessions } from '@fastgpt/service/core/customerService/request/retention';
 
 // Try to run train every minute
 const setTrainingQueueCron = () => {
@@ -79,6 +80,20 @@ const cleanStaleGeneratingChatCron = () => {
   });
 };
 
+/** 每日清理超过项目保留期的完整客服会话，多实例由 timer lock 保证只执行一次。 */
+const cleanupCustomerServiceSessionsCron = () => {
+  setCron('20 3 * * *', async () => {
+    if (
+      await checkTimerLock({
+        timerId: TimerIdEnum.customerServiceSessionCleanup,
+        lockMinuted: 23 * 60
+      })
+    ) {
+      await cleanupCustomerServiceExpiredSessions();
+    }
+  });
+};
+
 export const startCron = () => {
   setTrainingQueueCron();
   setClearTmpUploadFilesCron();
@@ -88,4 +103,5 @@ export const startCron = () => {
   clearExpiredS3FilesCron();
   sandboxCronJob();
   cleanStaleGeneratingChatCron();
+  cleanupCustomerServiceSessionsCron();
 };

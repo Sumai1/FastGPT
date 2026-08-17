@@ -85,6 +85,19 @@ export const AppQGConfigTypeSchema = z.preprocess(
 export type AppQGConfigType = z.infer<typeof AppQGConfigTypeSchema>;
 
 // question guide text
+const preprocessChatInputGuide = (val: unknown) => {
+  if (
+    val &&
+    typeof val === 'object' &&
+    !Array.isArray(val) &&
+    (Object.keys(val as Record<string, unknown>).length === 0 ||
+      !(val as Record<string, unknown>).customUrl)
+  ) {
+    return undefined;
+  }
+  return val;
+};
+
 export const ChatInputGuideConfigTypeSchema = z.object({
   open: BoolSchema.meta({
     description: '是否开启对话输入引导'
@@ -96,6 +109,19 @@ export const ChatInputGuideConfigTypeSchema = z.object({
 export type ChatInputGuideConfigType = z.infer<typeof ChatInputGuideConfigTypeSchema>;
 
 // interval timer
+const preprocessScheduledTriggerConfig = (val: unknown) => {
+  if (
+    val &&
+    typeof val === 'object' &&
+    !Array.isArray(val) &&
+    (Object.keys(val as Record<string, unknown>).length === 0 ||
+      !(val as Record<string, unknown>).cronString)
+  ) {
+    return undefined;
+  }
+  return val;
+};
+
 export const AppScheduledTriggerConfigTypeSchema = z.object({
   cronString: z.string().meta({
     description: '定时触发表达式'
@@ -139,12 +165,16 @@ export const AppChatConfigTypeSchema = z.object({
   whisperConfig: AppWhisperConfigTypeSchema.optional().meta({
     description: '语音输入配置'
   }),
-  scheduledTriggerConfig: AppScheduledTriggerConfigTypeSchema.optional().meta({
-    description: '定时触发配置'
-  }),
-  chatInputGuide: ChatInputGuideConfigTypeSchema.optional().meta({
-    description: '对话输入引导配置'
-  }),
+  scheduledTriggerConfig: z
+    .preprocess(preprocessScheduledTriggerConfig, AppScheduledTriggerConfigTypeSchema.optional())
+    .meta({
+      description: '定时触发配置'
+    }),
+  chatInputGuide: z
+    .preprocess(preprocessChatInputGuide, ChatInputGuideConfigTypeSchema.optional())
+    .meta({
+      description: '对话输入引导配置'
+    }),
   fileSelectConfig: AppFileSelectConfigTypeSchema.optional().meta({
     description: '对话文件选择配置'
   }),
@@ -201,7 +231,10 @@ export const AppSchemaTypeSchema = z.object({
 
   // App system config
   chatConfig: AppChatConfigTypeSchema,
-  scheduledTriggerConfig: AppScheduledTriggerConfigTypeSchema.optional(),
+  scheduledTriggerConfig: z.preprocess(
+    preprocessScheduledTriggerConfig,
+    AppScheduledTriggerConfigTypeSchema.optional()
+  ),
   scheduledTriggerNextTime: z.coerce.date().optional(),
   resourceRefs: AppResourceRefsSchema.optional(),
   inheritPermission: BoolSchema.optional(),

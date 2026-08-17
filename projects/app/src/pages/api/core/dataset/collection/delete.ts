@@ -14,6 +14,7 @@ import {
   DeleteCollectionBodySchema,
   DeleteCollectionQuerySchema
 } from '@fastgpt/global/openapi/core/dataset/collection/api';
+import { assertCustomerServiceCollectionsMutable } from '@fastgpt/service/core/customerService/knowledge/guard';
 
 async function handler(req: ApiRequestProps) {
   const { id } = parseApiInput({ req, querySchema: DeleteCollectionQuerySchema }).query;
@@ -55,6 +56,11 @@ async function handler(req: ApiRequestProps) {
         arr.findIndex((item) => item._id.toString() === collection._id.toString()) === index
     );
     return uniqueCollections;
+  });
+
+  await assertCustomerServiceCollectionsMutable({
+    teamId,
+    collectionIds: collections.map((item) => String(item._id))
   });
 
   // delete

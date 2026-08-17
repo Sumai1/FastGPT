@@ -1,0 +1,15 @@
+services:
+  fastgpt-app:
+    image: fastgpt-customer-service:20260813-1231
+    ports: !override
+      - '127.0.0.1:3001:3000'
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://localhost:3000/api/common/system/getInitData').then((res)=>{if(!res.ok)throw new Error(String(res.status))})
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 60s

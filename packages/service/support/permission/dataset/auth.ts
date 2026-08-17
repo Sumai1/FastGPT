@@ -8,9 +8,11 @@ import {
 import { getTmbInfoByTmbId } from '../../user/team/controller';
 import { MongoDataset } from '../../../core/dataset/schema';
 import {
+  ManagePermissionVal,
   NullPermissionVal,
   NullRoleVal,
-  PerResourceTypeEnum
+  PerResourceTypeEnum,
+  WritePermissionVal
 } from '@fastgpt/global/support/permission/constant';
 import { DatasetErrEnum } from '@fastgpt/global/common/error/code/dataset';
 import { DatasetPermission } from '@fastgpt/global/support/permission/dataset/controller';
@@ -24,6 +26,7 @@ import { parseHeaderCert } from '../auth/common';
 import { sumPer } from '@fastgpt/global/support/permission/utils';
 import { getS3DatasetSource } from '../../../common/s3/sources/dataset';
 import { isS3ObjectKey } from '../../../common/s3/utils';
+import { assertCustomerServiceCollectionsMutable } from '../../../core/customerService/knowledge/guard';
 
 export const authDatasetByTmbId = async ({
   tmbId,
@@ -164,6 +167,13 @@ export async function authDatasetCollection({
   // collection 与 dataset 必须属于同一团队；否则说明对象归属已经损坏，不能继续按 datasetId 授权。
   if (String(collection.teamId) !== String(dataset.teamId)) {
     return Promise.reject(DatasetErrEnum.unAuthDataset);
+  }
+
+  if ((per & (WritePermissionVal | ManagePermissionVal)) !== 0) {
+    await assertCustomerServiceCollectionsMutable({
+      teamId,
+      collectionIds: [String(collection._id)]
+    });
   }
 
   return {

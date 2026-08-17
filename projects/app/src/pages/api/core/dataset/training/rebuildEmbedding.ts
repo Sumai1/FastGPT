@@ -17,6 +17,7 @@ import { TrainingModeEnum } from '@fastgpt/global/core/dataset/constants';
 import { type ApiRequestProps } from '@fastgpt/next/type';
 import { OwnerPermissionVal } from '@fastgpt/global/support/permission/constant';
 import { parseApiInput } from '@fastgpt/service/common/zod/requestParseError';
+import { assertCustomerServiceCollectionsMutable } from '@fastgpt/service/core/customerService/knowledge/guard';
 import {
   RebuildEmbeddingBodySchema,
   RebuildEmbeddingResponseSchema,
@@ -35,6 +36,14 @@ async function handler(req: ApiRequestProps): Promise<RebuildEmbeddingResponse> 
     authApiKey: true,
     datasetId,
     per: OwnerPermissionVal
+  });
+
+  // 重建会改写整个 Dataset 下的 collection、chunk 和训练队列；不能让它绕过
+  // 客服知识治理对 pending/published/offline 版本的不可变约束。
+  await assertCustomerServiceCollectionsMutable({
+    teamId,
+    collectionIds: [],
+    datasetIds: [String(dataset._id)]
   });
 
   // check vector model

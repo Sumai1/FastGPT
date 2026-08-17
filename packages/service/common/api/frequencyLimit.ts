@@ -21,6 +21,48 @@ const _FrequencyLimitOptionSchema = z.union([
 ]);
 type FrequencyLimitOption = z.infer<typeof _FrequencyLimitOptionSchema>;
 
+/** 使用 Redis 原子计数执行固定窗口限流，并写入统一限流响应头。 */
+const frequencyLimitByKey = async ({
+  key,
+  limit,
+  seconds,
+  scopeDescription,
+  res
+}: {
+  key: string;
+  limit: number;
+  seconds: number;
+  scopeDescription: string;
+  res: NodeApiResponse;
+}) => {
+  const redis = getGlobalRedisConnection();
+  const result = await redis.multi().incr(key).expire(key, seconds, 'NX').exec();
+  if (!result) return true;
+
+  const currentCount = result[0][1] as number;
+  if (currentCount > limit) {
+    const remainingTime = await redis.ttl(key);
+    logger.info('Frequency limit exceeded', {
+      key,
+      currentCount,
+      limit,
+      ttlSeconds: remainingTime
+    });
+    jsonRes(res, {
+      code: 429,
+      error: new UserError(
+        `Rate limit exceeded. Maximum ${limit} requests per ${seconds} seconds for ${scopeDescription}. Please try again in ${remainingTime} seconds.`
+      )
+    });
+    return false;
+  }
+
+  res.setHeader('X-RateLimit-Limit', limit);
+  res.setHeader('X-RateLimit-Remaining', Math.max(0, limit - currentCount));
+  res.setHeader('X-RateLimit-Reset', Date.now() + seconds * 1000);
+  return true;
+};
+
 const getLimitData = async (data: FrequencyLimitOption) => {
   if (data.type === LimitTypeEnum.chat) {
     const qpm = await teamQPM.getTeamQPMLimit(data.teamId);
@@ -50,41 +92,36 @@ export const teamFrequencyLimit = async ({
 
   const { limit, seconds } = data;
 
-  const redis = getGlobalRedisConnection();
   const key = `frequency:${type}:${teamId}`;
-
-  const result = await redis
-    .multi()
-    .incr(key)
-    .expire(key, seconds, 'NX') // 只在key不存在时设置过期时间
-    .exec();
-
-  if (!result) {
-    return true;
-  }
-
-  const currentCount = result[0][1] as number;
-
-  if (currentCount > limit) {
-    const remainingTime = await redis.ttl(key);
-    logger.info('Completion QPM limit exceeded', {
-      teamId,
-      currentCount,
-      limit,
-      ttlSeconds: remainingTime
-    });
-    jsonRes(res, {
-      code: 429,
-      error: new UserError(
-        `Rate limit exceeded. Maximum ${limit} requests per ${seconds} seconds for this team. Please try again in ${remainingTime} seconds.`
-      )
-    });
-    return false;
-  }
-
-  // 在响应头中添加限流信息
-  res.setHeader('X-RateLimit-Limit', limit);
-  res.setHeader('X-RateLimit-Remaining', Math.max(0, limit - currentCount));
-  res.setHeader('X-RateLimit-Reset', Date.now() + seconds * 1000);
-  return true;
+  return frequencyLimitByKey({
+    key,
+    limit,
+    seconds,
+    scopeDescription: 'this team',
+    res
+  });
 };
+
+/** 客服项目和 Key 绑定维度限流；未配置覆盖值时由调用方继续使用现有团队限流。 */
+export const customerServiceFrequencyLimit = ({
+  teamId,
+  projectId,
+  openApiKeyId,
+  limit,
+  seconds,
+  res
+}: {
+  teamId: string;
+  projectId: string;
+  openApiKeyId: string;
+  limit: number;
+  seconds: number;
+  res: NodeApiResponse;
+}) =>
+  frequencyLimitByKey({
+    key: `frequency:customerService:${teamId}:${projectId}:${openApiKeyId}`,
+    limit,
+    seconds,
+    scopeDescription: 'this customer service project',
+    res
+  });

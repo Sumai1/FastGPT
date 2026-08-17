@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatasetErrEnum } from '@fastgpt/global/common/error/code/dataset';
-import { OwnerPermissionVal, ReadPermissionVal } from '@fastgpt/global/support/permission/constant';
+import {
+  OwnerPermissionVal,
+  ReadPermissionVal,
+  WritePermissionVal
+} from '@fastgpt/global/support/permission/constant';
 
 const {
   mockParseHeaderCert,
@@ -8,14 +12,16 @@ const {
   mockFindDataset,
   mockGetTmbInfoByTmbId,
   mockGetTmbPermission,
-  mockIsObjectExists
+  mockIsObjectExists,
+  mockAssertCustomerServiceCollectionsMutable
 } = vi.hoisted(() => ({
   mockParseHeaderCert: vi.fn(),
   mockGetCollectionWithDataset: vi.fn(),
   mockFindDataset: vi.fn(),
   mockGetTmbInfoByTmbId: vi.fn(),
   mockGetTmbPermission: vi.fn(),
-  mockIsObjectExists: vi.fn()
+  mockIsObjectExists: vi.fn(),
+  mockAssertCustomerServiceCollectionsMutable: vi.fn()
 }));
 
 vi.mock('@fastgpt/service/support/permission/auth/common', () => ({
@@ -44,6 +50,10 @@ vi.mock('@fastgpt/service/core/dataset/data/schema', () => ({
   MongoDatasetData: {
     findById: vi.fn()
   }
+}));
+
+vi.mock('@fastgpt/service/core/customerService/knowledge/guard', () => ({
+  assertCustomerServiceCollectionsMutable: mockAssertCustomerServiceCollectionsMutable
 }));
 
 vi.mock('@fastgpt/service/common/s3/sources/dataset', () => ({
@@ -119,6 +129,27 @@ describe('authDatasetCollection', () => {
     });
 
     expect(result.collection._id).toBe(collectionId);
+    expect(mockAssertCustomerServiceCollectionsMutable).not.toHaveBeenCalled();
+  });
+
+  it('checks customer service governance before granting collection write access', async () => {
+    mockGetCollectionWithDataset.mockResolvedValue({
+      _id: collectionId,
+      teamId: 'team-a',
+      datasetId
+    });
+
+    await authDatasetCollection({
+      req: {} as any,
+      authToken: true,
+      collectionId,
+      per: WritePermissionVal
+    });
+
+    expect(mockAssertCustomerServiceCollectionsMutable).toHaveBeenCalledWith({
+      teamId: 'team-a',
+      collectionIds: [collectionId]
+    });
   });
 });
 

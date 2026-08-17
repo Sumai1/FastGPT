@@ -20,6 +20,7 @@ import { AuditEventEnum } from '@fastgpt/global/support/user/audit/constants';
 import { getI18nDatasetType } from '@fastgpt/service/support/user/audit/util';
 import { UpdateDatasetCollectionBodySchema } from '@fastgpt/global/openapi/core/dataset/collection/api';
 import { parseApiInput } from '@fastgpt/service/common/zod/requestParseError';
+import { assertCustomerServiceCollectionsMutable } from '@fastgpt/service/core/customerService/knowledge/guard';
 
 // Set folder collection children forbid status
 const updateFolderChildrenForbid = async ({
@@ -51,6 +52,12 @@ const updateFolderChildrenForbid = async ({
   };
 
   const allChildrenIdList = await find(collection._id);
+
+  await assertCustomerServiceCollectionsMutable({
+    teamId: String(collection.teamId),
+    collectionIds: allChildrenIdList,
+    session
+  });
 
   await MongoDatasetCollection.updateMany(
     {
@@ -111,6 +118,12 @@ async function handler(req: ApiRequestProps) {
   });
 
   await mongoSessionRun(async (session) => {
+    await assertCustomerServiceCollectionsMutable({
+      teamId: String(collection.teamId),
+      collectionIds: [String(collection._id)],
+      session
+    });
+
     const collectionTags = await createOrGetCollectionTags({
       tags,
       teamId,

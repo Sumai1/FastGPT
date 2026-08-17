@@ -23,7 +23,8 @@ export const I18N_NAMESPACES = [
   'dashboard_mcp',
   'dashboard_evaluation',
   'admin_plugin',
-  'skill'
+  'skill',
+  'customer_service'
 ];
 
 export const I18N_NAMESPACES_MAP = I18N_NAMESPACES.reduce(

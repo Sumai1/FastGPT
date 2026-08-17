@@ -14,6 +14,7 @@ import {
 } from '@fastgpt/global/openapi/core/dataset/training/api';
 import { parseApiInput } from '@fastgpt/service/common/zod/requestParseError';
 import { finalErrorTrainingMatch } from '@fastgpt/service/core/dataset/training/query';
+import { assertCustomerServiceCollectionsMutable } from '@fastgpt/service/core/customerService/knowledge/guard';
 
 async function handler(req: ApiRequestProps): Promise<UpdateTrainingDataResponse> {
   const body = parseApiInput({ req, bodySchema: UpdateTrainingDataBodySchema }).body;
@@ -43,6 +44,14 @@ async function handler(req: ApiRequestProps): Promise<UpdateTrainingDataResponse
         authApiKey: true,
         datasetId: body.datasetId!,
         per: WritePermissionVal
+      });
+
+      // Dataset-level retry changes native training state for every collection;
+      // it must not be a back door around governance locks.
+      await assertCustomerServiceCollectionsMutable({
+        teamId,
+        collectionIds: [],
+        datasetIds: [String(dataset._id)]
       });
 
       return {

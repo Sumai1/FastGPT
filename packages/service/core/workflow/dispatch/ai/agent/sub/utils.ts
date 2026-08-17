@@ -91,6 +91,7 @@ export type ToolDispatchContext = Pick<
   | 'params'
   | 'stream'
   | 'nodeResponseSink'
+  | 'customerServiceCollectionIdWhitelist'
 > & {
   nodeResponseParentId?: string;
   systemPrompt?: string;

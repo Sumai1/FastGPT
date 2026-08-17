@@ -22,12 +22,16 @@ vi.mock('@fastgpt/service/core/dataset/search', () => ({
   deepRagSearch: deepRagSearchMock
 }));
 
-vi.mock('@fastgpt/service/core/dataset/schema', () => ({
-  DatasetCollectionName: 'datasets',
-  MongoDataset: {
-    findById: findDatasetByIdMock
-  }
-}));
+vi.mock('@fastgpt/service/core/dataset/schema', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@fastgpt/service/core/dataset/schema')>();
+  return {
+    ...actual,
+    DatasetCollectionName: 'datasets',
+    MongoDataset: {
+      findById: findDatasetByIdMock
+    }
+  };
+});
 
 vi.mock('@fastgpt/service/core/dataset/utils', () => ({
   filterDatasetsByTmbId: vi.fn()

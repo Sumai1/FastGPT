@@ -24,6 +24,14 @@ const NavbarPhone = ({ unread }: { unread: number }) => {
         unread: 0
       },
       {
+        label: t('customer_service:title'),
+        icon: 'core/chat/chatLight',
+        activeIcon: 'core/chat/chatFill',
+        link: '/customer-service/console',
+        activeLink: ['/customer-service', '/customer-service/console', '/customer-service/admin'],
+        unread: 0
+      },
+      {
         label: t('common:navbar.Studio'),
         icon: 'core/app/aiLight',
         activeIcon: 'core/app/aiFill',
@@ -78,7 +86,7 @@ const NavbarPhone = ({ unread }: { unread: number }) => {
           ]
         : [])
     ],
-    [lastChatAppId, lastPane, t, userInfo?.username]
+    [lastChatAppId, lastPane, t, unread, userInfo?.username]
   );
 
   return (

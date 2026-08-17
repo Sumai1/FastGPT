@@ -50,7 +50,8 @@ export async function searchDatasetData(
     rerankModel,
     rerankWeight = 0.5,
     datasetIds = [],
-    collectionFilterMatch
+    collectionFilterMatch,
+    collectionIdWhitelist
   } = props;
 
   const searchMode = DatasetSearchModeMap[inputSearchMode]
@@ -99,6 +100,7 @@ export async function searchDatasetData(
     model,
     imageQueries,
     collectionFilterMatch,
+    collectionIdWhitelist,
     embeddingLimit,
     fullTextLimit,
     textQueries,

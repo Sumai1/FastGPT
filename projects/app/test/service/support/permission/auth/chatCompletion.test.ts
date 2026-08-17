@@ -15,6 +15,16 @@ import { MongoTeamMember } from '@fastgpt/service/support/user/team/teamMemberSc
 import { getUser } from '@test/datas/users';
 import { authCert } from '@fastgpt/service/support/permission/auth/common';
 import { MongoResourcePermission } from '@fastgpt/service/support/permission/schema';
+import { MongoOpenApi } from '@fastgpt/service/support/openapi/schema';
+import {
+  MongoCustomerServiceKeyBinding,
+  MongoCustomerServiceProject
+} from '@fastgpt/service/core/customerService/project/schema';
+import {
+  CustomerServiceAudienceEnum,
+  CustomerServiceProjectStatusEnum,
+  CustomerServiceResourceStatusEnum
+} from '@fastgpt/global/core/customerService/constants';
 import {
   authChatCompletionHeaderRequest,
   resolveChatCompletionEffectiveTmbId
@@ -36,20 +46,22 @@ const createApiKeyAuth = ({
   appId,
   legacyAppId,
   parsedAppId,
-  apiKeyAuthProxy = true
+  apiKeyAuthProxy = true,
+  apiKey = 'test-api-key'
 }: {
   owner: TestUser;
   appId?: string;
   legacyAppId?: string;
   parsedAppId?: string;
   apiKeyAuthProxy?: boolean;
+  apiKey?: string;
 }) => ({
   ...owner,
   appId: appId || '',
   legacyAppId: legacyAppId || '',
   parsedAppId: parsedAppId || '',
   authType: AuthUserTypeEnum.apikey,
-  apikey: 'test-api-key',
+  apikey: apiKey,
   apiKeyAuthProxy
 });
 
@@ -294,6 +306,48 @@ describe('authChatCompletionHeaderRequest', () => {
         authApiKey: true
       })
     );
+  });
+
+  it('rejects an active customer service key from generic completions', async () => {
+    const owner = await getUser('completion-header-owner-customer-service-key');
+    const app = await createApiApp(owner);
+    const apiKey = 'customer-service-bound-key';
+    const openApiKey = await MongoOpenApi.create({
+      teamId: owner.teamId,
+      tmbId: owner.tmbId,
+      apiKey,
+      name: 'Customer service test key'
+    });
+    const project = await MongoCustomerServiceProject.create({
+      teamId: owner.teamId,
+      appId: app._id,
+      projectCode: 'CUSTOMER_SERVICE_BOUND_KEY',
+      name: 'Customer service bound key project',
+      status: CustomerServiceProjectStatusEnum.active,
+      modelIds: [],
+      defaultAudience: CustomerServiceAudienceEnum.public,
+      humanContact: { name: '人工客服' },
+      tmbId: owner.tmbId,
+      updateTmbId: owner.tmbId
+    });
+    await MongoCustomerServiceKeyBinding.create({
+      teamId: owner.teamId,
+      projectId: project._id,
+      openApiKeyId: openApiKey._id,
+      maxAudience: CustomerServiceAudienceEnum.public,
+      status: CustomerServiceResourceStatusEnum.active,
+      tmbId: owner.tmbId,
+      updateTmbId: owner.tmbId
+    });
+
+    await expect(
+      authChatCompletionHeaderRequest({
+        req: {
+          auth: createApiKeyAuth({ owner, apiKey })
+        } as any,
+        appId: String(app._id)
+      })
+    ).rejects.toBe(ChatErrEnum.unAuthChat);
   });
 
   it('allows a proxied caller to continue their own chat', async () => {

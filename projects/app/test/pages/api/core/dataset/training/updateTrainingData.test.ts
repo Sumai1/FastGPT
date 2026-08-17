@@ -6,6 +6,7 @@ import {
   authDatasetCollection
 } from '@fastgpt/service/support/permission/dataset/auth';
 import { TrainingModeEnum } from '@fastgpt/global/core/dataset/constants';
+import { assertCustomerServiceCollectionsMutable } from '@fastgpt/service/core/customerService/knowledge/guard';
 
 const datasetId = '507f1f77bcf86cd799439011';
 const collectionId = '507f1f77bcf86cd799439012';
@@ -23,6 +24,10 @@ vi.mock('@fastgpt/service/core/dataset/training/schema', () => ({
 vi.mock('@fastgpt/service/support/permission/dataset/auth', () => ({
   authDataset: vi.fn(),
   authDatasetCollection: vi.fn()
+}));
+
+vi.mock('@fastgpt/service/core/customerService/knowledge/guard', () => ({
+  assertCustomerServiceCollectionsMutable: vi.fn()
 }));
 
 describe('updateTrainingData', () => {
@@ -82,6 +87,11 @@ describe('updateTrainingData', () => {
         datasetId
       })
     );
+    expect(assertCustomerServiceCollectionsMutable).toHaveBeenCalledWith({
+      teamId: 'team1',
+      collectionIds: [],
+      datasetIds: [datasetId]
+    });
     expect(MongoDatasetTraining.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         teamId: 'team1',

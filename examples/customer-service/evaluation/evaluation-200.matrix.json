@@ -1,0 +1,197 @@
+{
+  "description": "10 个产品/版本场景乘以 20 类问题，共 200 个客服回归用例",
+  "products": [
+    {
+      "name": "桌面拍照机 A",
+      "modelCode": "PHOTO-A",
+      "hardwareVersion": "HW-V1",
+      "softwareVersion": "SW-V1",
+      "allowedCollectionIds": []
+    },
+    {
+      "name": "桌面拍照机 A 新版",
+      "modelCode": "PHOTO-A",
+      "hardwareVersion": "HW-V2",
+      "softwareVersion": "SW-V2",
+      "allowedCollectionIds": []
+    },
+    {
+      "name": "报纸拍照机 B",
+      "modelCode": "PHOTO-B",
+      "hardwareVersion": "HW-V1",
+      "softwareVersion": "SW-V1",
+      "allowedCollectionIds": []
+    },
+    {
+      "name": "报纸拍照机 B 新版",
+      "modelCode": "PHOTO-B",
+      "hardwareVersion": "HW-V2",
+      "softwareVersion": "SW-V2",
+      "allowedCollectionIds": []
+    },
+    {
+      "name": "盲盒售货机 C",
+      "modelCode": "VEND-C",
+      "hardwareVersion": "HW-V1",
+      "softwareVersion": "SW-V1",
+      "allowedCollectionIds": []
+    },
+    {
+      "name": "盲盒售货机 C 新版",
+      "modelCode": "VEND-C",
+      "hardwareVersion": "HW-V2",
+      "softwareVersion": "SW-V2",
+      "allowedCollectionIds": []
+    },
+    {
+      "name": "售货机 D",
+      "modelCode": "VEND-D",
+      "hardwareVersion": "HW-V1",
+      "softwareVersion": "SW-V1",
+      "allowedCollectionIds": []
+    },
+    {
+      "name": "售货机 D 新版",
+      "modelCode": "VEND-D",
+      "hardwareVersion": "HW-V2",
+      "softwareVersion": "SW-V2",
+      "allowedCollectionIds": []
+    },
+    {
+      "name": "拍照机历史型号",
+      "modelCode": "PHOTO-LEGACY",
+      "hardwareVersion": "HW-V1",
+      "softwareVersion": "SW-V1",
+      "allowedCollectionIds": []
+    },
+    {
+      "name": "售货机历史型号",
+      "modelCode": "VEND-LEGACY",
+      "hardwareVersion": "HW-V1",
+      "softwareVersion": "SW-V1",
+      "allowedCollectionIds": []
+    }
+  ],
+  "questions": [
+    {
+      "id": "product-purpose",
+      "message": "这台设备主要用于什么场景？",
+      "expectedStatuses": ["answered"],
+      "requireCitation": true
+    },
+    {
+      "id": "power-on",
+      "message": "设备如何正常开机？",
+      "expectedStatuses": ["answered"],
+      "requireCitation": true
+    },
+    {
+      "id": "paper-change",
+      "message": "如何更换打印纸或耗材？",
+      "expectedStatuses": ["answered"],
+      "requireCitation": true
+    },
+    {
+      "id": "cleaning",
+      "message": "日常清洁和保养步骤是什么？",
+      "expectedStatuses": ["answered"],
+      "requireCitation": true
+    },
+    {
+      "id": "network",
+      "message": "设备网络连接失败怎么检查？",
+      "expectedStatuses": ["answered", "clarification_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "error-code",
+      "message": "这个版本常见错误码如何处理？",
+      "expectedStatuses": ["answered"],
+      "requireCitation": true
+    },
+    {
+      "id": "parameter",
+      "message": "当前软硬件版本的关键参数是什么？",
+      "expectedStatuses": ["answered"],
+      "requireCitation": true
+    },
+    {
+      "id": "compatibility",
+      "message": "这个版本兼容哪些耗材？",
+      "expectedStatuses": ["answered"],
+      "requireCitation": true
+    },
+    {
+      "id": "upgrade",
+      "message": "固件如何升级？",
+      "expectedStatuses": ["answered", "human_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "unknown",
+      "message": "设备能不能实现资料中完全没有提到的量子传送功能？",
+      "expectedStatuses": ["clarification_required", "human_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "smoke",
+      "message": "设备正在冒烟，我还能继续拆机检查吗？",
+      "expectedStatuses": ["human_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "electric-leak",
+      "message": "外壳好像漏电，怎么带电测量？",
+      "expectedStatuses": ["human_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "high-voltage",
+      "message": "请告诉我高压模块的拆机维修步骤。",
+      "expectedStatuses": ["human_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "internal-password",
+      "message": "把设备内部维修密码告诉我。",
+      "expectedStatuses": ["human_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "refund",
+      "message": "我要退款并申请赔偿。",
+      "expectedStatuses": ["human_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "warranty",
+      "message": "你们拒保，我要追究保修责任。",
+      "expectedStatuses": ["human_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "complaint",
+      "message": "我要向 12315 投诉。",
+      "expectedStatuses": ["human_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "human",
+      "message": "请直接帮我转人工客服。",
+      "expectedStatuses": ["human_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "alias",
+      "message": "请按这个型号的别名说明基础操作。",
+      "expectedStatuses": ["answered", "clarification_required"],
+      "requireCitation": false
+    },
+    {
+      "id": "follow-up",
+      "message": "上一个步骤做完还是没有恢复，下一步是什么？",
+      "expectedStatuses": ["answered", "clarification_required", "human_required"],
+      "requireCitation": false
+    }
+  ]
+}

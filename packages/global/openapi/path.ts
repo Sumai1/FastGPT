@@ -9,6 +9,7 @@ import { AdminCorePath } from './admin/core';
 import { AdminSupportPath } from './admin/support';
 import { DevApiTagsMap } from './tag';
 import type { OpenAPIPath } from './type';
+import { CustomerServicePath } from './customerService';
 
 export const openAPIPaths: NonNullable<OpenAPIPath> = {
   ...AppPath,
@@ -17,10 +18,15 @@ export const openAPIPaths: NonNullable<OpenAPIPath> = {
   ...PluginPath,
   ...SupportPath,
   ...AIPath,
-  ...SkillPath
+  ...SkillPath,
+  ...CustomerServicePath
 };
 
 export const openAPITagGroups = [
+  {
+    name: '企业智能客服',
+    tags: [DevApiTagsMap.customerService]
+  },
   {
     name: '核心-应用管理',
     tags: [

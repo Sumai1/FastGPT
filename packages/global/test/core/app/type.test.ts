@@ -47,4 +47,15 @@ describe('AppChatConfigTypeSchema', () => {
       { label: 'legacy-option', value: 'legacy-option' }
     ]);
   });
+
+  it('should gracefully handle empty scheduledTriggerConfig and chatInputGuide objects', () => {
+    const result = AppChatConfigTypeSchema.parse({
+      scheduledTriggerConfig: {},
+      chatInputGuide: {}
+    });
+
+    expect(result.scheduledTriggerConfig).toBeUndefined();
+    expect(result.chatInputGuide).toBeUndefined();
+  });
 });
+

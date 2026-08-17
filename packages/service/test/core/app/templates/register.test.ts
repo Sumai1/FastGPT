@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppTypeEnum } from '@fastgpt/global/core/app/constants';
 import { AppToolSourceEnum } from '@fastgpt/global/core/app/tool/constants';
 import { FlowNodeTypeEnum } from '@fastgpt/global/core/workflow/node/constant';
+import {
+  CUSTOMER_SERVICE_STANDARD_TEMPLATE_ID,
+  customerServiceStandardAppTemplate
+} from '@fastgpt/global/core/customerService/workflowTemplate';
 
 const mocks = vi.hoisted(() => ({
   listWorkflows: vi.fn(),
@@ -107,7 +111,10 @@ describe('getAppTemplatesAndLoadThem', () => {
       ])
     });
 
-    const [template] = await getAppTemplatesAndLoadThem(true);
+    const templates = await getAppTemplatesAndLoadThem(true);
+    const template = templates.find(
+      (item) => item.templateId === `${AppToolSourceEnum.community}-githubIssue`
+    );
 
     expect(template).toMatchObject({
       templateId: `${AppToolSourceEnum.community}-githubIssue`,
@@ -126,5 +133,66 @@ describe('getAppTemplatesAndLoadThem', () => {
       type: 'link',
       content: 'https://plugin.example.com'
     });
+  });
+
+  it('keeps bundled customer service workflow authoritative without duplicating database config', async () => {
+    const staleDbWorkflow = {
+      nodes: [],
+      edges: [],
+      chatConfig: {
+        welcomeText: 'stale bundled workflow'
+      }
+    };
+
+    mocks.listWorkflows.mockResolvedValue([]);
+    mocks.findTemplates.mockReturnValue({
+      lean: vi.fn().mockResolvedValue([
+        {
+          templateId: CUSTOMER_SERVICE_STANDARD_TEMPLATE_ID,
+          name: 'Old bundled name',
+          intro: 'Old bundled intro',
+          avatar: 'old-avatar',
+          tags: ['old-tag'],
+          type: AppTypeEnum.simple,
+          isActive: false,
+          order: -200,
+          workflow: staleDbWorkflow
+        },
+        {
+          templateId: `${AppToolSourceEnum.commercial}-custom-template`,
+          name: 'Custom commercial template',
+          intro: '',
+          avatar: '',
+          tags: [],
+          type: AppTypeEnum.workflow,
+          workflow: {
+            nodes: [],
+            edges: []
+          }
+        }
+      ])
+    });
+
+    const templates = await getAppTemplatesAndLoadThem(true);
+    const bundledTemplates = templates.filter(
+      (template) => template.templateId === CUSTOMER_SERVICE_STANDARD_TEMPLATE_ID
+    );
+
+    expect(bundledTemplates).toHaveLength(1);
+    expect(bundledTemplates[0]).toMatchObject({
+      name: customerServiceStandardAppTemplate.name,
+      intro: customerServiceStandardAppTemplate.intro,
+      avatar: customerServiceStandardAppTemplate.avatar,
+      tags: customerServiceStandardAppTemplate.tags,
+      type: AppTypeEnum.workflow,
+      isActive: false,
+      order: -200
+    });
+    expect(bundledTemplates[0]?.workflow).toEqual(customerServiceStandardAppTemplate.workflow);
+    expect(
+      templates.some(
+        (template) => template.templateId === `${AppToolSourceEnum.commercial}-custom-template`
+      )
+    ).toBe(true);
   });
 });
