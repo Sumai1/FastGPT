@@ -1,6 +1,8 @@
 @import './variables.css';
 
-/* 基础重置 */
+/* ============================================================================
+ * 基础重置与全局排版
+ * ============================================================================ */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -36,9 +38,12 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  position: relative;
 }
 
-/* 桌面端侧边栏 */
+/* ============================================================================
+ * 桌面端侧边栏 (产品选择与型号树)
+ * ============================================================================ */
 .cs-sidebar {
   width: 320px;
   flex-shrink: 0;
@@ -78,7 +83,7 @@ html, body, #root {
   justify-content: center;
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+  box-shadow: var(--cs-primary-shadow);
 }
 
 .cs-brand-text {
@@ -86,7 +91,7 @@ html, body, #root {
 }
 
 .cs-brand-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--cs-text-primary);
   white-space: nowrap;
@@ -161,73 +166,9 @@ html, body, #root {
   box-shadow: 0 0 0 3px var(--cs-primary-light);
 }
 
-/* 人工客服卡片 */
-.cs-human-contact-card {
-  margin-top: auto;
-  padding: 16px;
-  border-radius: var(--cs-radius-md);
-  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-  border: 1px solid var(--cs-warning-border);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.cs-human-contact-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #92400e;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.cs-human-contact-time {
-  font-size: 12px;
-  color: #b45309;
-}
-
-.cs-human-contact-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-
-.cs-contact-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  border-radius: var(--cs-radius-sm);
-  font-size: 12px;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all var(--cs-transition-fast);
-}
-
-.cs-contact-btn-primary {
-  background-color: #d97706;
-  color: #ffffff;
-  border: none;
-}
-
-.cs-contact-btn-primary:hover {
-  background-color: #b45309;
-}
-
-.cs-contact-btn-outline {
-  background-color: #ffffff;
-  color: #92400e;
-  border: 1px solid var(--cs-warning-border);
-}
-
-.cs-contact-btn-outline:hover {
-  background-color: #fffbeb;
-}
-
-/* 右侧主聊天区 */
+/* ============================================================================
+ * 右侧主聊天区与顶部导航栏
+ * ============================================================================ */
 .cs-main {
   flex: 1;
   display: flex;
@@ -238,10 +179,9 @@ html, body, #root {
   position: relative;
 }
 
-/* 顶部导航栏 */
 .cs-header {
   height: 60px;
-  padding: 0 24px;
+  padding: 0 20px;
   background-color: var(--cs-surface-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -249,25 +189,34 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  z-index: 5;
+  gap: 12px;
+  z-index: 20;
 }
 
 .cs-header-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--cs-text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+}
+
+.cs-header-title-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cs-header-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
+/* 通用按钮 */
 .cs-btn {
   display: inline-flex;
   align-items: center;
@@ -282,6 +231,7 @@ html, body, #root {
   outline: none;
   border: 1px solid transparent;
   transition: all var(--cs-transition-fast);
+  white-space: nowrap;
 }
 
 .cs-btn-secondary {
@@ -296,15 +246,21 @@ html, body, #root {
   border-color: var(--cs-border-dark);
 }
 
+.cs-btn-secondary.active {
+  background-color: var(--cs-primary-light);
+  border-color: var(--cs-primary-border);
+  color: var(--cs-primary);
+}
+
 .cs-btn-primary {
   background: var(--cs-primary-gradient);
   color: var(--cs-text-inverse);
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
 }
 
 .cs-btn-primary:hover:not(:disabled) {
   opacity: 0.95;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
 }
 
 .cs-btn-primary:disabled {
@@ -319,27 +275,1388 @@ html, body, #root {
 }
 
 .cs-btn-danger:hover {
-  background-color: #dc2626;
+  background-color: var(--cs-danger-hover);
 }
 
 .cs-btn-sm {
-  height: 28px;
+  height: 30px;
   padding: 0 10px;
   font-size: 12px;
 }
 
 .cs-btn-icon {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border-radius: var(--cs-radius-sm);
 }
 
-/* 聊天滚动消息流 */
+/* ============================================================================
+ * 受众身份切换器 (AudienceSwitcher)
+ * ============================================================================ */
+.cs-audience-switcher-root {
+  position: relative;
+  display: inline-flex;
+}
+
+.cs-audience-trigger-group {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-sm);
+  background-color: var(--cs-surface);
+  overflow: hidden;
+}
+
+.cs-audience-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-audience-btn.cs-audience-public {
+  color: var(--cs-audience-public-text);
+  background-color: var(--cs-audience-public-bg);
+}
+
+.cs-audience-btn.cs-audience-dealer {
+  color: var(--cs-audience-dealer-text);
+  background-color: var(--cs-audience-dealer-bg);
+}
+
+.cs-audience-btn.cs-audience-internal {
+  color: var(--cs-audience-internal-text);
+  background-color: var(--cs-audience-internal-bg);
+}
+
+.cs-audience-icon {
+  display: flex;
+  align-items: center;
+}
+
+.cs-audience-chevron {
+  transition: transform var(--cs-transition-fast);
+}
+
+.cs-audience-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+.cs-audience-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 30px;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--cs-border-light);
+  color: var(--cs-text-muted);
+  cursor: pointer;
+  transition: color var(--cs-transition-fast);
+}
+
+.cs-audience-info-btn:hover {
+  color: var(--cs-primary);
+}
+
+/* 权限说明气泡 */
+.cs-audience-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  padding: 12px 14px;
+  background-color: var(--cs-surface);
+  border-radius: var(--cs-radius-md);
+  box-shadow: var(--cs-shadow-lg);
+  border: 1px solid var(--cs-border);
+  z-index: 100;
+  animation: cs-fade-in 0.2s ease-out;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cs-audience-tooltip-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-audience-tooltip-body {
+  font-size: 12px;
+  color: var(--cs-text-secondary);
+  line-height: 1.5;
+}
+
+.cs-audience-tooltip-hint {
+  font-size: 11px;
+  color: var(--cs-text-muted);
+  border-top: 1px dashed var(--cs-border-light);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+/* 下拉菜单 */
+.cs-audience-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  background-color: var(--cs-surface);
+  border-radius: var(--cs-radius-lg);
+  box-shadow: var(--cs-shadow-xl);
+  border: 1px solid var(--cs-border);
+  padding: 10px;
+  z-index: 100;
+  animation: cs-slide-up 0.2s ease-out;
+}
+
+.cs-audience-dropdown-header {
+  padding: 6px 8px 10px;
+  border-bottom: 1px solid var(--cs-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cs-text-secondary);
+}
+
+.cs-audience-badge-sub {
+  font-size: 11px;
+  color: var(--cs-text-muted);
+}
+
+.cs-audience-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.cs-audience-option-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--cs-radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-audience-option-item:hover {
+  background-color: var(--cs-surface-alt);
+}
+
+.cs-audience-option-item.selected {
+  border-color: var(--cs-border-dark);
+}
+
+.cs-audience-option-item.cs-audience-public.selected {
+  background-color: var(--cs-audience-public-bg);
+  border-color: var(--cs-audience-public-border);
+}
+
+.cs-audience-option-item.cs-audience-dealer.selected {
+  background-color: var(--cs-audience-dealer-bg);
+  border-color: var(--cs-audience-dealer-border);
+}
+
+.cs-audience-option-item.cs-audience-internal.selected {
+  background-color: var(--cs-audience-internal-bg);
+  border-color: var(--cs-audience-internal-border);
+}
+
+.cs-audience-option-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--cs-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+}
+
+.cs-audience-option-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-audience-option-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-audience-option-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+}
+
+.cs-audience-tag {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: var(--cs-radius-xs);
+  background-color: var(--cs-surface-alt);
+  color: var(--cs-text-muted);
+}
+
+.cs-audience-option-desc {
+  font-size: 12px;
+  color: var(--cs-text-secondary);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.cs-audience-option-check {
+  color: var(--cs-primary);
+  margin-top: 4px;
+}
+
+/* ============================================================================
+ * 场景化诊断引导树 (DiagnosticGuideTree)
+ * ============================================================================ */
+.cs-guide-tree-card {
+  background: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--cs-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: cs-fade-in 0.3s ease-out;
+}
+
+.cs-guide-tree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cs-guide-tree-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cs-guide-tree-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--cs-radius-md);
+  background: var(--cs-primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.cs-guide-tree-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+}
+
+.cs-guide-tree-sub {
+  font-size: 12px;
+  color: var(--cs-text-muted);
+  margin-top: 2px;
+}
+
+.cs-guide-tree-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--cs-text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--cs-radius-xs);
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-guide-tree-toggle-btn:hover {
+  background-color: var(--cs-surface-alt);
+  color: var(--cs-text-primary);
+}
+
+.cs-guide-tree-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cs-guide-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cs-guide-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--cs-radius-full);
+  border: 1px solid var(--cs-border);
+  background-color: var(--cs-surface-alt);
+  color: var(--cs-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-guide-tab:hover {
+  border-color: var(--cs-border-dark);
+  color: var(--cs-text-primary);
+}
+
+.cs-guide-tab.active {
+  background-color: var(--cs-primary-light);
+  border-color: var(--cs-primary-border);
+  color: var(--cs-primary);
+  font-weight: 600;
+}
+
+.cs-guide-capsules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.cs-guide-capsule {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--cs-radius-md);
+  border: 1px solid var(--cs-border);
+  background-color: var(--cs-surface);
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+  text-align: left;
+}
+
+.cs-guide-capsule:hover {
+  border-color: var(--cs-primary-border);
+  background-color: var(--cs-primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--cs-shadow-sm);
+}
+
+.cs-guide-capsule-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--cs-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: var(--cs-surface-alt);
+  color: var(--cs-primary);
+}
+
+.cs-guide-capsule:hover .cs-guide-capsule-icon {
+  background-color: var(--cs-surface);
+}
+
+.cs-guide-capsule-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-guide-capsule-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.cs-guide-capsule-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+}
+
+.cs-guide-capsule-badge {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: var(--cs-radius-xs);
+  background-color: var(--cs-danger-light);
+  color: var(--cs-danger-text);
+  font-weight: 600;
+}
+
+.cs-guide-capsule-desc {
+  display: block;
+  font-size: 11px;
+  color: var(--cs-text-muted);
+  margin-top: 3px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================================
+ * 错误码速查小工具 (ErrorCodeQuickSearch)
+ * ============================================================================ */
+.cs-error-search-card {
+  background-color: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--cs-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cs-error-search-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cs-error-search-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-error-search-sub {
+  font-size: 12px;
+  color: var(--cs-text-muted);
+}
+
+.cs-error-search-form {
+  width: 100%;
+}
+
+.cs-error-search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-md);
+  background-color: var(--cs-surface-alt);
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-error-search-input-wrap:focus-within {
+  border-color: var(--cs-primary);
+  background-color: var(--cs-surface);
+  box-shadow: 0 0 0 3px var(--cs-primary-light);
+}
+
+.cs-error-search-icon {
+  color: var(--cs-text-muted);
+  flex-shrink: 0;
+}
+
+.cs-error-search-input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--cs-text-primary);
+}
+
+.cs-error-search-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--cs-radius-xs);
+  background-color: var(--cs-primary);
+  color: #fff;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.cs-error-chips-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cs-error-chips-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cs-text-muted);
+  white-space: nowrap;
+}
+
+.cs-error-chips-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cs-error-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--cs-radius-sm);
+  background-color: var(--cs-surface-alt);
+  border: 1px solid var(--cs-border);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+  color: var(--cs-text-secondary);
+}
+
+.cs-error-chip:hover {
+  border-color: var(--cs-primary);
+  color: var(--cs-primary);
+  background-color: var(--cs-primary-light);
+}
+
+.cs-error-chip-code {
+  font-family: var(--cs-font-mono);
+  color: var(--cs-primary);
+}
+
+.cs-error-chip-arrow {
+  color: var(--cs-text-muted);
+}
+
+/* ============================================================================
+ * 交互式排查步骤清单 (TroubleshootCard)
+ * ============================================================================ */
+.cs-troubleshoot-card {
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--cs-radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  box-shadow: var(--cs-shadow-sm);
+}
+
+.cs-troubleshoot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cs-troubleshoot-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs-troubleshoot-badge-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--cs-radius-xs);
+  background-color: var(--cs-primary-light);
+  color: var(--cs-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cs-troubleshoot-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+}
+
+.cs-troubleshoot-progress-text {
+  font-size: 12px;
+  color: var(--cs-text-secondary);
+  margin-top: 1px;
+}
+
+.cs-troubleshoot-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: var(--cs-text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--cs-radius-xs);
+}
+
+.cs-troubleshoot-reset-btn:hover {
+  background-color: #e2e8f0;
+  color: var(--cs-text-primary);
+}
+
+.cs-troubleshoot-progress-bar-track {
+  width: 100%;
+  height: 6px;
+  background-color: #e2e8f0;
+  border-radius: var(--cs-radius-full);
+  overflow: hidden;
+}
+
+.cs-troubleshoot-progress-bar-fill {
+  height: 100%;
+  background: var(--cs-primary-gradient);
+  border-radius: var(--cs-radius-full);
+  transition: width var(--cs-transition-base);
+}
+
+.cs-troubleshoot-progress-bar-fill.completed {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.cs-troubleshoot-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cs-troubleshoot-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--cs-radius-md);
+  background-color: #ffffff;
+  border: 1px solid var(--cs-border);
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-troubleshoot-step-item:hover {
+  border-color: var(--cs-primary-border);
+  box-shadow: var(--cs-shadow-xs);
+}
+
+.cs-troubleshoot-step-item.done {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.cs-troubleshoot-step-item.danger {
+  border-color: var(--cs-danger-border);
+  background-color: #fff1f2;
+}
+
+.cs-troubleshoot-checkbox {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.cs-troubleshoot-unchecked-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--cs-border-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cs-text-secondary);
+}
+
+.cs-troubleshoot-checked-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--cs-success);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: cs-scale-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cs-scale-in {
+  from { transform: scale(0.6); }
+  to { transform: scale(1); }
+}
+
+.cs-troubleshoot-step-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-troubleshoot-step-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cs-troubleshoot-step-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cs-text-primary);
+  line-height: 1.4;
+}
+
+.cs-troubleshoot-step-item.done .cs-troubleshoot-step-title {
+  color: #166534;
+  text-decoration: line-through;
+}
+
+.cs-troubleshoot-danger-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: var(--cs-radius-xs);
+  background-color: var(--cs-danger-light);
+  color: var(--cs-danger-text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cs-troubleshoot-detail-wrap {
+  margin-top: 4px;
+}
+
+.cs-troubleshoot-detail-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--cs-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.cs-troubleshoot-detail-content {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: var(--cs-radius-xs);
+  background-color: #f1f5f9;
+  font-size: 12px;
+  color: var(--cs-text-secondary);
+  line-height: 1.5;
+}
+
+.cs-troubleshoot-result-box {
+  padding: 12px;
+  border-radius: var(--cs-radius-md);
+  background-color: #ffffff;
+  border: 1px dashed var(--cs-border-dark);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cs-troubleshoot-result-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-troubleshoot-result-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cs-troubleshoot-success-note {
+  padding: 10px 12px;
+  border-radius: var(--cs-radius-sm);
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-troubleshoot-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.cs-troubleshoot-footer-tip {
+  font-size: 11px;
+  color: var(--cs-text-muted);
+}
+
+.cs-troubleshoot-handoff-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cs-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.cs-troubleshoot-handoff-link:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================================
+ * 阻断级高危安全警示卡片 (SafetyAlertCard)
+ * ============================================================================ */
+.cs-safety-alert-card {
+  background: var(--cs-danger-gradient);
+  border: 2px solid var(--cs-danger);
+  border-radius: var(--cs-radius-lg);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.18);
+  animation: cs-slide-up 0.25s ease-out;
+}
+
+.cs-safety-alert-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cs-safety-alert-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs-safety-hazard-pulsing-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--cs-danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35);
+  animation: cs-pulse-hazard 1.4s infinite;
+}
+
+@keyframes cs-pulse-hazard {
+  0% { transform: scale(0.9); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.4); }
+  50% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.1); }
+  100% { transform: scale(0.9); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.4); }
+}
+
+.cs-safety-shield-icon {
+  color: var(--cs-danger);
+}
+
+.cs-safety-alert-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cs-danger-text);
+  letter-spacing: 0.3px;
+}
+
+.cs-safety-hazard-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--cs-radius-xs);
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.cs-safety-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cs-safety-alert-message {
+  font-size: 13px;
+  color: #7f1d1d;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.cs-safety-prohibited-box {
+  background-color: #ffffff;
+  border: 1px solid #fecaca;
+  border-radius: var(--cs-radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cs-safety-prohibited-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #991b1b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-safety-prohibited-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cs-safety-prohibited-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  color: #7f1d1d;
+}
+
+.cs-safety-cross-icon {
+  color: var(--cs-danger);
+  font-weight: bold;
+}
+
+.cs-safety-alert-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid #fecaca;
+}
+
+.cs-safety-ack-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--cs-radius-sm);
+  background-color: #ffffff;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-safety-ack-btn:hover {
+  background-color: #fef2f2;
+}
+
+.cs-safety-ack-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--cs-success-text);
+  font-weight: 600;
+}
+
+.cs-safety-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ============================================================================
+ * 转接人工客服弹窗 (HumanHandoffModal)
+ * ============================================================================ */
+.cs-handoff-modal-card {
+  max-width: 540px !important;
+}
+
+.cs-handoff-badge-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--cs-radius-md);
+  background: var(--cs-primary-gradient);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cs-handoff-contact-banner {
+  padding: 14px 16px;
+  border-radius: var(--cs-radius-md);
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid var(--cs-warning-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cs-handoff-contact-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.cs-handoff-contact-time {
+  font-size: 12px;
+  color: #b45309;
+  display: flex;
+  align-items: center;
+}
+
+.cs-handoff-contact-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.cs-handoff-ticket-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cs-handoff-ticket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cs-handoff-ticket-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cs-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-handoff-ticket-preview {
+  background-color: #0f172a;
+  color: #e2e8f0;
+  border-radius: var(--cs-radius-md);
+  padding: 14px;
+  font-family: var(--cs-font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  max-height: 220px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cs-handoff-hint {
+  font-size: 12px;
+  color: var(--cs-text-muted);
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  line-height: 1.4;
+}
+
+/* ============================================================================
+ * 会话历史管理抽屉 (SessionDrawer)
+ * ============================================================================ */
+.cs-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-start;
+  animation: cs-fade-in 0.2s ease-out;
+}
+
+.cs-drawer-card {
+  width: 380px;
+  max-width: 85vw;
+  height: 100%;
+  background-color: var(--cs-surface);
+  box-shadow: var(--cs-shadow-xl);
+  display: flex;
+  flex-direction: column;
+  animation: cs-slide-right 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+@keyframes cs-slide-right {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.cs-drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--cs-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cs-drawer-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs-drawer-count-badge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: var(--cs-radius-full);
+  background-color: var(--cs-surface-alt);
+  color: var(--cs-text-muted);
+  font-weight: 600;
+}
+
+.cs-drawer-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cs-drawer-empty {
+  margin: auto 0;
+  text-align: center;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cs-drawer-empty-icon {
+  color: var(--cs-text-muted);
+  margin-bottom: 12px;
+}
+
+.cs-drawer-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+  margin-bottom: 4px;
+}
+
+.cs-drawer-empty-desc {
+  font-size: 12px;
+  color: var(--cs-text-muted);
+  line-height: 1.5;
+}
+
+.cs-drawer-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cs-drawer-group-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cs-drawer-group-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cs-text-muted);
+  padding-left: 4px;
+}
+
+.cs-drawer-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cs-drawer-session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--cs-radius-md);
+  background-color: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-drawer-session-item:hover {
+  background-color: var(--cs-surface-hover);
+  border-color: var(--cs-border-dark);
+}
+
+.cs-drawer-session-item.active {
+  background-color: var(--cs-primary-light);
+  border-color: var(--cs-primary-border);
+}
+
+.cs-drawer-session-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cs-drawer-session-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.cs-drawer-session-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cs-drawer-session-time {
+  font-size: 11px;
+  color: var(--cs-text-muted);
+  flex-shrink: 0;
+}
+
+.cs-drawer-session-preview {
+  font-size: 12px;
+  color: var(--cs-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cs-drawer-session-model-tag {
+  font-size: 10px;
+  color: var(--cs-primary);
+  margin-top: 2px;
+}
+
+.cs-drawer-session-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cs-drawer-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--cs-radius-xs);
+  background: none;
+  border: none;
+  color: var(--cs-text-muted);
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-drawer-delete-btn:hover {
+  background-color: var(--cs-danger-light);
+  color: var(--cs-danger);
+}
+
+.cs-drawer-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--cs-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background-color: var(--cs-surface-alt);
+}
+
+.cs-drawer-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-drawer-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--cs-danger);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--cs-radius-xs);
+}
+
+.cs-drawer-clear-btn:hover {
+  background-color: var(--cs-danger-light);
+}
+
+/* ============================================================================
+ * 聊天滚动消息流与气泡
+ * ============================================================================ */
 .cs-chat-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -347,12 +1664,12 @@ html, body, #root {
 }
 
 .cs-chat-container {
-  max-width: 840px;
+  max-width: 860px;
   width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 /* 欢迎语与推荐问题区 */
@@ -360,7 +1677,7 @@ html, body, #root {
   background-color: var(--cs-surface);
   border: 1px solid var(--cs-border);
   border-radius: var(--cs-radius-lg);
-  padding: 28px;
+  padding: 24px 26px;
   box-shadow: var(--cs-shadow-sm);
   display: flex;
   flex-direction: column;
@@ -369,7 +1686,7 @@ html, body, #root {
 }
 
 .cs-welcome-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--cs-text-primary);
   display: flex;
@@ -380,28 +1697,28 @@ html, body, #root {
 .cs-welcome-desc {
   font-size: 14px;
   color: var(--cs-text-secondary);
+  line-height: 1.6;
 }
 
 .cs-recommended-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--cs-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-top: 4px;
 }
 
 .cs-recommended-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .cs-recommended-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 7px 14px;
   border-radius: var(--cs-radius-full);
   background-color: var(--cs-surface-alt);
   border: 1px solid var(--cs-border);
@@ -534,19 +1851,6 @@ html, body, #root {
 @keyframes cs-blink {
   0%, 100% { opacity: 0; }
   50% { opacity: 1; }
-}
-
-/* 安全告警卡片 */
-.cs-safety-warning {
-  padding: 12px 14px;
-  border-radius: var(--cs-radius-sm);
-  background-color: var(--cs-danger-light);
-  border: 1px solid var(--cs-danger-border);
-  color: #991b1b;
-  font-size: 13px;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
 }
 
 /* 候选型号选择卡片 */
@@ -706,7 +2010,9 @@ html, body, #root {
   border-color: var(--cs-warning-border);
 }
 
-/* Markdown 内部排版 */
+/* ============================================================================
+ * Markdown 内部排版
+ * ============================================================================ */
 .cs-markdown-root {
   font-size: 14px;
   line-height: 1.7;
@@ -820,14 +2126,16 @@ html, body, #root {
   font-weight: 600;
 }
 
-/* 底部输入交互区 */
+/* ============================================================================
+ * 底部输入交互区 (ChatInput)
+ * ============================================================================ */
 .cs-input-area {
-  padding: 16px 24px 24px;
+  padding: 14px 24px 20px;
   background-color: var(--cs-surface);
   border-top: 1px solid var(--cs-border);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .cs-input-box {
@@ -857,7 +2165,7 @@ html, body, #root {
   font-size: 14px;
   line-height: 1.5;
   color: var(--cs-text-primary);
-  min-height: 40px;
+  min-height: 38px;
   max-height: 160px;
 }
 
@@ -868,12 +2176,18 @@ html, body, #root {
   flex-shrink: 0;
 }
 
-.cs-char-counter {
+.cs-input-footer-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 11px;
   color: var(--cs-text-muted);
+  padding: 0 4px;
 }
 
-/* 弹窗遮罩与对话框 */
+/* ============================================================================
+ * 弹窗遮罩与对话框
+ * ============================================================================ */
 .cs-modal-overlay {
   position: fixed;
   top: 0;
@@ -892,7 +2206,7 @@ html, body, #root {
 
 .cs-modal-card {
   width: 100%;
-  max-width: 460px;
+  max-width: 480px;
   background-color: var(--cs-surface);
   border-radius: var(--cs-radius-lg);
   box-shadow: var(--cs-shadow-xl);
@@ -903,7 +2217,7 @@ html, body, #root {
 }
 
 .cs-modal-header {
-  padding: 18px 20px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--cs-border-light);
   display: flex;
   align-items: center;
@@ -924,7 +2238,7 @@ html, body, #root {
 }
 
 .cs-modal-footer {
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-top: 1px solid var(--cs-border-light);
   display: flex;
   align-items: center;
@@ -972,7 +2286,9 @@ html, body, #root {
   border-color: var(--cs-primary);
 }
 
-/* 移动端与响应式适配 */
+/* ============================================================================
+ * 移动端与响应式适配
+ * ============================================================================ */
 @media (max-width: 768px) {
   .cs-layout {
     flex-direction: column;
@@ -991,19 +2307,27 @@ html, body, #root {
   }
 
   .cs-header {
-    padding: 0 16px;
+    padding: 0 14px;
     height: 54px;
   }
 
   .cs-chat-scroll {
-    padding: 16px;
+    padding: 14px;
   }
 
   .cs-input-area {
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
   }
 
   .cs-bubble-wrapper {
     max-width: 92%;
+  }
+
+  .cs-guide-capsules-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cs-hide-mobile {
+    display: none;
   }
 }

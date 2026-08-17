@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Send, Square } from 'lucide-react';
+import { Send, Square } from './icons';
 
 interface ChatInputProps {
   input: string;
@@ -18,11 +18,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onStop,
   loading,
   disabled,
-  placeholder = '请输入您的问题（按 Enter 发送，Shift+Enter 换行）...'
+  placeholder = '描述设备故障现象或输入错误代码（按 Enter 发送，Shift+Enter 换行）...'
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // 自动调整高度
+  // 自动根据内容伸缩高度
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -53,7 +53,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           disabled={disabled}
           maxLength={20000}
           rows={1}
-          aria-label="输入咨询问题"
+          aria-label="输入设备咨询问题"
         />
 
         <div className="cs-input-actions">
@@ -62,7 +62,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               type="button"
               className="cs-btn cs-btn-danger cs-btn-sm"
               onClick={onStop}
-              title="中止生成"
+              title="中止本次回答生成"
             >
               <Square size={13} fill="currentColor" />
               <span>停止</span>
@@ -73,13 +73,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               className="cs-btn cs-btn-primary cs-btn-sm"
               disabled={disabled || !input.trim()}
               onClick={onSend}
-              title="发送问题"
+              title="发送问题 (Enter)"
             >
               <Send size={13} />
               <span>发送</span>
             </button>
           )}
         </div>
+      </div>
+
+      <div className="cs-input-footer-hint cs-hide-mobile">
+        <span>💡 快捷操作：输入故障现象（如“拍照机卡纸”、“售货机未出货”）可快速调取排障流程</span>
+        {input.length > 0 && <span>{input.length} 字</span>}
       </div>
     </div>
   );

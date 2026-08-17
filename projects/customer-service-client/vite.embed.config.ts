@@ -13,9 +13,15 @@ export default defineConfig({
   define: {
     'process.env.NODE_ENV': JSON.stringify('production')
   },
+  esbuild: {
+    drop: ['console', 'debugger'],
+    legalComments: 'none'
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: false,
+    target: 'es2020',
+    minify: 'esbuild',
     lib: {
       entry: path.resolve(__dirname, 'src/embed/index.tsx'),
       name: 'FastGPTCustomerService',
@@ -24,6 +30,10 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [],
+      treeshake: {
+        preset: 'recommended',
+        moduleSideEffects: false
+      },
       output: {
         inlineDynamicImports: true,
         extend: true

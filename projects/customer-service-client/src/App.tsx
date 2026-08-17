@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CustomerServiceApp } from './components/CustomerServiceApp';
-import { Bot, ArrowRight } from 'lucide-react';
+import { Bot, ArrowRight } from './components/icons';
 import './styles/index.css';
 
 export const App: React.FC = () => {

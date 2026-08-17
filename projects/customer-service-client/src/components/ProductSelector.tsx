@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Bot, Layers, Cpu, Code2, Headphones, PhoneCall, ExternalLink, Clock } from 'lucide-react';
+import { Bot, Layers, Cpu, Code2, Headphones, PhoneCall, ExternalLink, Clock } from './icons';
 import type {
   CustomerServicePublicBootstrapResponse,
   CustomerServicePublicProductCatalogResponse,

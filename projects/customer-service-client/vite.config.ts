@@ -10,6 +10,10 @@ export default defineConfig({
       '@fastgpt/global': path.resolve(__dirname, '../../packages/global')
     }
   },
+  esbuild: {
+    drop: ['console', 'debugger'],
+    legalComments: 'none'
+  },
   server: {
     port: 3000,
     proxy: {
@@ -22,9 +26,15 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: false,
+    target: 'es2020',
+    minify: 'esbuild',
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html')
+      },
+      treeshake: {
+        preset: 'recommended',
+        moduleSideEffects: false
       }
     }
   }

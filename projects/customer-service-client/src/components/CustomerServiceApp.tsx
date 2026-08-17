@@ -3,12 +3,20 @@ import {
   fetchPublicBootstrap,
   sendPublicChatMessageStream,
   stopPublicChatMessage,
-  submitPublicFeedback,
-  getSessionId,
-  getStoredMessages,
-  setStoredMessages,
-  clearConversationStorage
+  submitPublicFeedback
 } from '../services/api';
+import {
+  getActiveSessionId,
+  setActiveSessionId,
+  generateSessionId,
+  getSessionList,
+  getSessionMessages,
+  saveSessionMessages,
+  deleteSession,
+  clearAllSessions,
+  exportMessagesToMarkdown,
+  downloadMarkdownFile
+} from '../services/session';
 import type {
   ActiveRequest,
   ChatMessage,
@@ -16,14 +24,19 @@ import type {
   CustomerServiceFeedbackBody,
   CustomerServicePublicBootstrapResponse,
   FeedbackModalState,
-  ProductSelection
+  HumanHandoffData,
+  ProductSelection,
+  SessionSummary
 } from '../types';
+import { CustomerServiceAudienceEnum } from '../types';
 import { Header } from './Header';
 import { ProductSelector } from './ProductSelector';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { FeedbackModal } from './FeedbackModal';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { SessionDrawer } from './SessionDrawer';
+import { HumanHandoffModal } from './HumanHandoffModal';
+import { AlertCircle, RefreshCw } from './icons';
 
 interface CustomerServiceAppProps {
   access: CustomerServiceAccess;
@@ -44,6 +57,29 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
   const [input, setInput] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isSessionDrawerOpen, setIsSessionDrawerOpen] = useState<boolean>(false);
+
+  // 受众身份状态（客户 / 运营 / 售后）
+  const [audience, setAudience] = useState<CustomerServiceAudienceEnum>(
+    CustomerServiceAudienceEnum.public
+  );
+
+  // 会话状态
+  const [currentSessionId, setCurrentSessionId] = useState<string>(() =>
+    publicId ? getActiveSessionId(publicId) : ''
+  );
+  const [sessions, setSessions] = useState<SessionSummary[]>(() =>
+    publicId ? getSessionList(publicId) : []
+  );
+
+  // 转人工工单状态
+  const [handoffModalState, setHandoffModalState] = useState<{
+    isOpen: boolean;
+    data: HumanHandoffData;
+  }>({
+    isOpen: false,
+    data: {}
+  });
 
   const [selection, setSelection] = useState<ProductSelection>({
     seriesCode: '',
@@ -60,7 +96,7 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
   const activeRequestRef = useRef<ActiveRequest | undefined>(undefined);
   const requestTokenRef = useRef<number>(0);
 
-  // 初始化加载 Bootstrap 配置
+  // 初始化加载 Bootstrap 配置与历史会话
   useEffect(() => {
     let isMounted = true;
     if (!publicId) return;
@@ -69,7 +105,8 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
       .then((data) => {
         if (!isMounted) return;
         setBootstrap(data);
-        const stored = getStoredMessages(publicId);
+        const sid = getActiveSessionId(publicId);
+        const stored = getSessionMessages(publicId, sid);
         setMessages(stored);
       })
       .catch((err: any) => {
@@ -85,34 +122,140 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
   const handleRetryBootstrap = useCallback(() => {
     if (!publicId) return;
     setLoadError('');
+    const sid = getActiveSessionId(publicId);
+    setCurrentSessionId(sid);
+
     fetchPublicBootstrap({ publicId, apiHost })
       .then((data) => {
         setBootstrap(data);
-        const stored = getStoredMessages(publicId);
-        setMessages(stored);
+        setSessions(getSessionList(publicId));
+        setMessages(getSessionMessages(publicId, sid));
       })
       .catch((err: any) => {
         setLoadError(err?.message || '加载客服配置失败');
       });
   }, [publicId, apiHost]);
 
-  // 同步消息记录到 sessionStorage
+  // 同步消息记录到持久化存储
   useEffect(() => {
-    if (publicId && messages.length > 0) {
-      setStoredMessages(publicId, messages);
+    if (publicId && currentSessionId && messages.length > 0) {
+      saveSessionMessages({
+        projectKey: publicId,
+        sessionId: currentSessionId,
+        messages,
+        selection
+      });
     }
-  }, [messages, publicId]);
+  }, [messages, publicId, currentSessionId, selection]);
 
-  // 开启新对话
+  // 开启新会话
   const handleNewConversation = useCallback(() => {
     if (activeRequestRef.current) {
       activeRequestRef.current.controller.abort();
       activeRequestRef.current = undefined;
     }
-    clearConversationStorage(publicId);
+    const newSessionId = generateSessionId();
+    setCurrentSessionId(newSessionId);
+    setActiveSessionId(publicId, newSessionId);
     setMessages([]);
     setLoading(false);
   }, [publicId]);
+
+  // 切换历史会话
+  const handleSelectSession = useCallback(
+    (targetSessionId: string) => {
+      if (targetSessionId === currentSessionId) return;
+      if (activeRequestRef.current) {
+        activeRequestRef.current.controller.abort();
+        activeRequestRef.current = undefined;
+      }
+      setCurrentSessionId(targetSessionId);
+      setActiveSessionId(publicId, targetSessionId);
+
+      const targetMessages = getSessionMessages(publicId, targetSessionId);
+      setMessages(targetMessages);
+      setLoading(false);
+
+      // 恢复该会话的产品型号
+      const targetSession = sessions.find((s) => s.id === targetSessionId);
+      if (targetSession?.selection) {
+        setSelection(targetSession.selection);
+      }
+    },
+    [currentSessionId, publicId, sessions]
+  );
+
+  // 删除单个历史会话
+  const handleDeleteSession = useCallback(
+    (targetSessionId: string) => {
+      deleteSession(publicId, targetSessionId);
+      setSessions(getSessionList(publicId));
+      if (targetSessionId === currentSessionId) {
+        handleNewConversation();
+      }
+    },
+    [publicId, currentSessionId, handleNewConversation]
+  );
+
+  // 清空所有历史会话
+  const handleClearAllSessions = useCallback(() => {
+    clearAllSessions(publicId);
+    setSessions([]);
+    handleNewConversation();
+  }, [publicId, handleNewConversation]);
+
+  // 导出 Markdown 文件
+  const handleExportMarkdown = useCallback(() => {
+    const md = exportMessagesToMarkdown({
+      projectName: bootstrap?.project.name,
+      sessionId: currentSessionId,
+      messages,
+      selection
+    });
+    const filename = `customer-service-${selection.modelCode || 'session'}-${Date.now()}.md`;
+    downloadMarkdownFile(filename, md);
+  }, [bootstrap?.project.name, currentSessionId, messages, selection]);
+
+  // 复制全量对话文本
+  const handleCopyAllText = useCallback(() => {
+    const md = exportMessagesToMarkdown({
+      projectName: bootstrap?.project.name,
+      sessionId: currentSessionId,
+      messages,
+      selection
+    });
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(md).then(() => {
+        alert('已复制完整对话记录到剪贴板！');
+      });
+    }
+  }, [bootstrap?.project.name, currentSessionId, messages, selection]);
+
+  // 打开人工客服工单摘要弹窗
+  const handleOpenHumanHandoff = useCallback(
+    (faultSummary?: string, steps?: { title: string; completed: boolean }[]) => {
+      const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user');
+
+      const handoffData: HumanHandoffData = {
+        projectName: bootstrap?.project.name,
+        productModel: selection.modelCode,
+        hardwareVersion: selection.hardwareVersionCode,
+        softwareVersion: selection.softwareVersionCode,
+        faultSummary: faultSummary || lastUserMsg?.content || '设备故障排查与人工协助',
+        troubleshootSteps: steps,
+        audience,
+        sessionId: currentSessionId,
+        timestamp: Date.now(),
+        humanContact: bootstrap?.project.humanContact
+      };
+
+      setHandoffModalState({
+        isOpen: true,
+        data: handoffData
+      });
+    },
+    [bootstrap, selection, audience, currentSessionId, messages]
+  );
 
   // 中止当前生成
   const handleStopGeneration = useCallback(() => {
@@ -143,8 +286,7 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
     const requestId =
       retryAssistant?.requestId ||
       (window.crypto?.randomUUID ? window.crypto.randomUUID() : `req-${Date.now()}`);
-    const sessionId =
-      retryAssistant?.sessionId || previousUserMsg?.sessionId || getSessionId(publicId);
+    const sessionId = currentSessionId || getActiveSessionId(publicId);
     const assistantIndex = isRetry ? retryAssistantIndex : messages.length + 1;
 
     const controller = new AbortController();
@@ -310,7 +452,7 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
         prev.map((item, idx) => (idx === messageIndex ? { ...item, feedback: type } : item))
       );
     } catch {
-      // 提交失败静默处理或保留状态
+      // 提交失败静默处理
     }
   };
 
@@ -346,7 +488,7 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
   return (
     <div className="cs-app-root">
       <div className="cs-layout">
-        {/* 桌面端与移动端侧边栏 */}
+        {/* 桌面端侧边栏 */}
         {!isWidget && (
           <aside className={`cs-sidebar ${!isSidebarOpen ? 'collapsed' : ''}`}>
             <div className="cs-sidebar-header">
@@ -381,11 +523,16 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
           <Header
             projectName={bootstrap?.project.name || '产品客服'}
             humanContact={bootstrap?.project.humanContact}
+            audience={audience}
+            onAudienceChange={setAudience}
             onNewConversation={handleNewConversation}
+            onOpenSessionDrawer={() => setIsSessionDrawerOpen(true)}
+            onOpenHumanHandoff={() => handleOpenHumanHandoff()}
             onToggleProductSelector={!isWidget ? () => setIsSidebarOpen((v) => !v) : undefined}
             isSidebarOpen={isSidebarOpen}
             isWidget={isWidget}
             onCloseWidget={onCloseWidget}
+            sessionCount={sessions.length}
           />
 
           <MessageList
@@ -403,6 +550,7 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
                 defaultType: type
               })
             }
+            onOpenHumanHandoff={handleOpenHumanHandoff}
             onRetryMessage={(idx) => handleSendMessage(undefined, idx)}
             loading={loading}
           />
@@ -417,6 +565,27 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
           />
         </main>
       </div>
+
+      {/* 历史会话管理抽屉 */}
+      <SessionDrawer
+        isOpen={isSessionDrawerOpen}
+        onClose={() => setIsSessionDrawerOpen(false)}
+        sessions={sessions}
+        currentSessionId={currentSessionId}
+        onSelectSession={handleSelectSession}
+        onNewSession={handleNewConversation}
+        onDeleteSession={handleDeleteSession}
+        onClearAllSessions={handleClearAllSessions}
+        onExportMarkdown={handleExportMarkdown}
+        onCopyAllText={handleCopyAllText}
+      />
+
+      {/* 结构化转人工工单弹窗 */}
+      <HumanHandoffModal
+        isOpen={handoffModalState.isOpen}
+        onClose={() => setHandoffModalState({ isOpen: false, data: {} })}
+        handoffData={handoffModalState.data}
+      />
 
       {/* 反馈对话框 */}
       <FeedbackModal

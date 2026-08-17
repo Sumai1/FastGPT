@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, MessageSquareWarning } from 'lucide-react';
+import { X, MessageSquareWarning } from './icons';
 import type { CustomerServiceFeedbackBody } from '../types';
 
 interface FeedbackModalProps {

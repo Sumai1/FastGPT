@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { MessageSquare, X } from 'lucide-react';
+import { MessageSquare, X } from '../components/icons';
 import { CustomerServiceApp } from '../components/CustomerServiceApp';
 import type { WidgetOptions } from '../types';
 
