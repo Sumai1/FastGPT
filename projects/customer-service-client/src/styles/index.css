@@ -1,0 +1,1009 @@
+@import './variables.css';
+
+/* 基础重置 */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  font-family: var(--cs-font-family);
+  font-size: 14px;
+  line-height: var(--cs-line-height);
+  color: var(--cs-text-primary);
+  background-color: var(--cs-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 主布局容器 */
+.cs-app-root {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  background-color: var(--cs-bg);
+  overflow: hidden;
+  position: relative;
+}
+
+.cs-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 桌面端侧边栏 */
+.cs-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  background-color: var(--cs-surface);
+  border-right: 1px solid var(--cs-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  z-index: 10;
+  transition: transform var(--cs-transition-base);
+}
+
+.cs-sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--cs-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cs-brand-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cs-brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--cs-radius-md);
+  background: var(--cs-primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+.cs-brand-text {
+  min-width: 0;
+}
+
+.cs-brand-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cs-online-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--cs-success);
+  margin-top: 2px;
+}
+
+.cs-online-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--cs-success);
+  box-shadow: 0 0 0 2px var(--cs-success-light);
+  animation: cs-pulse 2s infinite;
+}
+
+@keyframes cs-pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.cs-sidebar-body {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cs-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cs-form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cs-text-secondary);
+}
+
+.cs-select {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-sm);
+  background-color: var(--cs-surface);
+  color: var(--cs-text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--cs-transition-fast), box-shadow var(--cs-transition-fast);
+  cursor: pointer;
+}
+
+.cs-select:hover {
+  border-color: var(--cs-border-dark);
+}
+
+.cs-select:focus {
+  border-color: var(--cs-primary);
+  box-shadow: 0 0 0 3px var(--cs-primary-light);
+}
+
+/* 人工客服卡片 */
+.cs-human-contact-card {
+  margin-top: auto;
+  padding: 16px;
+  border-radius: var(--cs-radius-md);
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid var(--cs-warning-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cs-human-contact-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-human-contact-time {
+  font-size: 12px;
+  color: #b45309;
+}
+
+.cs-human-contact-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.cs-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--cs-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-contact-btn-primary {
+  background-color: #d97706;
+  color: #ffffff;
+  border: none;
+}
+
+.cs-contact-btn-primary:hover {
+  background-color: #b45309;
+}
+
+.cs-contact-btn-outline {
+  background-color: #ffffff;
+  color: #92400e;
+  border: 1px solid var(--cs-warning-border);
+}
+
+.cs-contact-btn-outline:hover {
+  background-color: #fffbeb;
+}
+
+/* 右侧主聊天区 */
+.cs-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  background-color: var(--cs-bg);
+  position: relative;
+}
+
+/* 顶部导航栏 */
+.cs-header {
+  height: 60px;
+  padding: 0 24px;
+  background-color: var(--cs-surface-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--cs-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  z-index: 5;
+}
+
+.cs-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--cs-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid transparent;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-btn-secondary {
+  background-color: var(--cs-surface);
+  border-color: var(--cs-border);
+  color: var(--cs-text-secondary);
+}
+
+.cs-btn-secondary:hover {
+  background-color: var(--cs-surface-hover);
+  color: var(--cs-text-primary);
+  border-color: var(--cs-border-dark);
+}
+
+.cs-btn-primary {
+  background: var(--cs-primary-gradient);
+  color: var(--cs-text-inverse);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.cs-btn-primary:hover:not(:disabled) {
+  opacity: 0.95;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+}
+
+.cs-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.cs-btn-danger {
+  background-color: var(--cs-danger);
+  color: var(--cs-text-inverse);
+}
+
+.cs-btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.cs-btn-sm {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.cs-btn-icon {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: var(--cs-radius-sm);
+}
+
+/* 聊天滚动消息流 */
+.cs-chat-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scroll-behavior: smooth;
+}
+
+.cs-chat-container {
+  max-width: 840px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 欢迎语与推荐问题区 */
+.cs-welcome-hero {
+  background-color: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-lg);
+  padding: 28px;
+  box-shadow: var(--cs-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: cs-fade-in 0.3s ease-out;
+}
+
+.cs-welcome-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cs-welcome-desc {
+  font-size: 14px;
+  color: var(--cs-text-secondary);
+}
+
+.cs-recommended-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cs-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+.cs-recommended-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cs-recommended-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--cs-radius-full);
+  background-color: var(--cs-surface-alt);
+  border: 1px solid var(--cs-border);
+  color: var(--cs-text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-recommended-pill:hover {
+  background-color: var(--cs-primary-light);
+  border-color: var(--cs-primary-border);
+  color: var(--cs-primary);
+  transform: translateY(-1px);
+}
+
+/* 消息气泡体系 */
+.cs-message-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  animation: cs-slide-up 0.25s ease-out;
+}
+
+@keyframes cs-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cs-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cs-message-user {
+  justify-content: flex-end;
+}
+
+.cs-message-assistant {
+  justify-content: flex-start;
+}
+
+.cs-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--cs-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cs-avatar-assistant {
+  background: var(--cs-primary-gradient);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+}
+
+.cs-avatar-user {
+  background-color: #64748b;
+}
+
+.cs-bubble-wrapper {
+  max-width: 85%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cs-bubble-user {
+  background: var(--cs-primary-gradient);
+  color: #ffffff;
+  padding: 12px 16px;
+  border-radius: var(--cs-radius-lg) var(--cs-radius-xs) var(--cs-radius-lg) var(--cs-radius-lg);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-shadow: var(--cs-shadow-sm);
+}
+
+.cs-bubble-assistant {
+  background-color: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+  color: var(--cs-text-primary);
+  padding: 16px 20px;
+  border-radius: var(--cs-radius-xs) var(--cs-radius-lg) var(--cs-radius-lg) var(--cs-radius-lg);
+  box-shadow: var(--cs-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  word-break: break-word;
+}
+
+/* 思考中加载态 */
+.cs-thinking-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--cs-text-secondary);
+  font-size: 13px;
+}
+
+.cs-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--cs-border);
+  border-top-color: var(--cs-primary);
+  border-radius: 50%;
+  animation: cs-spin 0.8s linear infinite;
+}
+
+@keyframes cs-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 打字光标 */
+.cs-typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 14px;
+  background-color: var(--cs-primary);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: cs-blink 0.9s infinite;
+}
+
+@keyframes cs-blink {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+/* 安全告警卡片 */
+.cs-safety-warning {
+  padding: 12px 14px;
+  border-radius: var(--cs-radius-sm);
+  background-color: var(--cs-danger-light);
+  border: 1px solid var(--cs-danger-border);
+  color: #991b1b;
+  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* 候选型号选择卡片 */
+.cs-candidates-box {
+  padding: 12px;
+  border-radius: var(--cs-radius-md);
+  background-color: var(--cs-surface-alt);
+  border: 1px dashed var(--cs-border-dark);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cs-candidates-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cs-text-secondary);
+}
+
+.cs-candidates-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cs-candidate-chip {
+  padding: 6px 12px;
+  border-radius: var(--cs-radius-sm);
+  background-color: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-candidate-chip:hover {
+  border-color: var(--cs-primary);
+  color: var(--cs-primary);
+  background-color: var(--cs-primary-light);
+}
+
+/* 知识库引用卡片折叠 */
+.cs-citations-accordion {
+  border-top: 1px solid var(--cs-border-light);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.cs-citations-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cs-text-secondary);
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.cs-citations-trigger:hover {
+  color: var(--cs-primary);
+}
+
+.cs-citations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cs-citation-item {
+  padding: 10px 12px;
+  border-radius: var(--cs-radius-sm);
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cs-citation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cs-citation-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #166534;
+}
+
+.cs-citation-score {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--cs-radius-xs);
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.cs-citation-summary {
+  font-size: 12px;
+  color: #14532d;
+  line-height: 1.5;
+}
+
+/* 助手气泡底部操作区 */
+.cs-bubble-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--cs-border-light);
+  padding-top: 10px;
+  margin-top: 4px;
+}
+
+.cs-feedback-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cs-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--cs-radius-xs);
+  font-size: 12px;
+  color: var(--cs-text-muted);
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-action-btn:hover {
+  color: var(--cs-text-primary);
+  background-color: var(--cs-surface-alt);
+}
+
+.cs-action-btn.active {
+  color: var(--cs-primary);
+  background-color: var(--cs-primary-light);
+  border-color: var(--cs-primary-border);
+}
+
+.cs-action-btn-warning.active {
+  color: var(--cs-warning);
+  background-color: var(--cs-warning-light);
+  border-color: var(--cs-warning-border);
+}
+
+/* Markdown 内部排版 */
+.cs-markdown-root {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--cs-text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cs-markdown-h1 { font-size: 18px; font-weight: 700; margin-top: 6px; }
+.cs-markdown-h2 { font-size: 16px; font-weight: 600; margin-top: 4px; }
+.cs-markdown-h3 { font-size: 15px; font-weight: 600; }
+.cs-markdown-p { margin: 0; }
+.cs-markdown-quote {
+  border-left: 3px solid var(--cs-primary-border);
+  padding-left: 12px;
+  color: var(--cs-text-secondary);
+  font-style: italic;
+}
+
+.cs-markdown-ul, .cs-markdown-ol {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cs-inline-code {
+  padding: 2px 6px;
+  border-radius: var(--cs-radius-xs);
+  background-color: var(--cs-surface-alt);
+  color: #be185d;
+  font-family: var(--cs-font-mono);
+  font-size: 12px;
+  border: 1px solid var(--cs-border-light);
+}
+
+.cs-link {
+  color: var(--cs-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cs-link:hover {
+  color: var(--cs-primary-hover);
+}
+
+.cs-code-block {
+  border-radius: var(--cs-radius-sm);
+  background-color: #0f172a;
+  color: #e2e8f0;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.cs-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background-color: #1e293b;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.cs-code-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--cs-radius-xs);
+}
+
+.cs-code-copy-btn:hover {
+  color: #f8fafc;
+  background-color: #334155;
+}
+
+.cs-code-content {
+  padding: 12px;
+  overflow-x: auto;
+  font-family: var(--cs-font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cs-table-wrapper {
+  overflow-x: auto;
+  margin: 6px 0;
+}
+
+.cs-markdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.cs-markdown-table th, .cs-markdown-table td {
+  border: 1px solid var(--cs-border);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.cs-markdown-table th {
+  background-color: var(--cs-surface-alt);
+  font-weight: 600;
+}
+
+/* 底部输入交互区 */
+.cs-input-area {
+  padding: 16px 24px 24px;
+  background-color: var(--cs-surface);
+  border-top: 1px solid var(--cs-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cs-input-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-md);
+  padding: 8px 12px;
+  background-color: var(--cs-surface);
+  box-shadow: var(--cs-shadow-sm);
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-input-box:focus-within {
+  border-color: var(--cs-primary);
+  box-shadow: 0 0 0 3px var(--cs-primary-light);
+}
+
+.cs-textarea {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: none;
+  resize: none;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--cs-text-primary);
+  min-height: 40px;
+  max-height: 160px;
+}
+
+.cs-input-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.cs-char-counter {
+  font-size: 11px;
+  color: var(--cs-text-muted);
+}
+
+/* 弹窗遮罩与对话框 */
+.cs-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+  animation: cs-fade-in 0.2s ease-out;
+}
+
+.cs-modal-card {
+  width: 100%;
+  max-width: 460px;
+  background-color: var(--cs-surface);
+  border-radius: var(--cs-radius-lg);
+  box-shadow: var(--cs-shadow-xl);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: cs-slide-up 0.25s ease-out;
+}
+
+.cs-modal-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--cs-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cs-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cs-text-primary);
+}
+
+.cs-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cs-modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--cs-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cs-reasons-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cs-reason-btn {
+  padding: 6px 12px;
+  border-radius: var(--cs-radius-sm);
+  border: 1px solid var(--cs-border);
+  background-color: var(--cs-surface);
+  color: var(--cs-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--cs-transition-fast);
+}
+
+.cs-reason-btn.selected {
+  border-color: var(--cs-primary);
+  background-color: var(--cs-primary-light);
+  color: var(--cs-primary);
+  font-weight: 500;
+}
+
+.cs-feedback-textarea {
+  width: 100%;
+  height: 90px;
+  padding: 10px;
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  resize: none;
+}
+
+.cs-feedback-textarea:focus {
+  border-color: var(--cs-primary);
+}
+
+/* 移动端与响应式适配 */
+@media (max-width: 768px) {
+  .cs-layout {
+    flex-direction: column;
+  }
+
+  .cs-sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 50dvh;
+    border-right: none;
+    border-bottom: 1px solid var(--cs-border);
+  }
+
+  .cs-sidebar.collapsed {
+    display: none;
+  }
+
+  .cs-header {
+    padding: 0 16px;
+    height: 54px;
+  }
+
+  .cs-chat-scroll {
+    padding: 16px;
+  }
+
+  .cs-input-area {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .cs-bubble-wrapper {
+    max-width: 92%;
+  }
+}

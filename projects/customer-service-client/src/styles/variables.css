@@ -1,0 +1,63 @@
+:root {
+  /* 品牌核心色彩 */
+  --cs-primary: #2563eb;
+  --cs-primary-hover: #1d4ed8;
+  --cs-primary-active: #1e40af;
+  --cs-primary-light: #eff6ff;
+  --cs-primary-border: #bfdbfe;
+  --cs-primary-gradient: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+
+  /* 中性背景色与表面色 */
+  --cs-bg: #f8fafc;
+  --cs-surface: #ffffff;
+  --cs-surface-glass: rgba(255, 255, 255, 0.88);
+  --cs-surface-alt: #f1f5f9;
+  --cs-surface-hover: #f8fafc;
+
+  /* 边框色 */
+  --cs-border: #e2e8f0;
+  --cs-border-light: #f1f5f9;
+  --cs-border-dark: #cbd5e1;
+
+  /* 文本色彩体系 */
+  --cs-text-primary: #0f172a;
+  --cs-text-secondary: #475569;
+  --cs-text-muted: #94a3b8;
+  --cs-text-inverse: #ffffff;
+
+  /* 功能辅助色彩 */
+  --cs-success: #10b981;
+  --cs-success-light: #ecfdf5;
+  --cs-success-border: #a7f3d0;
+  --cs-warning: #f59e0b;
+  --cs-warning-light: #fffbeb;
+  --cs-warning-border: #fde68a;
+  --cs-danger: #ef4444;
+  --cs-danger-light: #fef2f2;
+  --cs-danger-border: #fecaca;
+
+  /* 圆角 */
+  --cs-radius-xs: 4px;
+  --cs-radius-sm: 8px;
+  --cs-radius-md: 12px;
+  --cs-radius-lg: 16px;
+  --cs-radius-xl: 24px;
+  --cs-radius-full: 9999px;
+
+  /* 阴影 */
+  --cs-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --cs-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --cs-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --cs-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --cs-shadow-float: 0 12px 36px rgba(0, 0, 0, 0.14), 0 4px 12px rgba(0, 0, 0, 0.06);
+
+  /* 字体与排版 */
+  --cs-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --cs-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --cs-line-height: 1.6;
+
+  /* 动效过渡 */
+  --cs-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --cs-transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --cs-transition-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}

@@ -1,0 +1,115 @@
+/* Widget 专属悬浮按钮与外层弹窗定位体系 */
+.cs-widget-host {
+  position: fixed;
+  z-index: 2147483647;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--cs-font-family);
+}
+
+.cs-widget-host.position-left {
+  right: auto;
+  left: 24px;
+  align-items: flex-start;
+}
+
+/* 浮动呼出按钮 (FAB) */
+.cs-widget-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--cs-radius-full);
+  background: var(--cs-primary-gradient);
+  color: #ffffff;
+  border: none;
+  box-shadow: var(--cs-shadow-float);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  transition: transform var(--cs-transition-bounce), box-shadow var(--cs-transition-base);
+  position: relative;
+}
+
+.cs-widget-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 16px 40px rgba(37, 99, 235, 0.35);
+}
+
+.cs-widget-fab:active {
+  transform: scale(0.95);
+}
+
+.cs-widget-fab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--cs-transition-fast), opacity var(--cs-transition-fast);
+}
+
+/* 聊天弹窗窗口容器 */
+.cs-widget-dialog {
+  position: absolute;
+  bottom: 72px;
+  right: 0;
+  width: 400px;
+  height: 640px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 100px);
+  background-color: var(--cs-bg);
+  border-radius: var(--cs-radius-lg);
+  box-shadow: var(--cs-shadow-float);
+  border: 1px solid var(--cs-border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform-origin: bottom right;
+  transition: transform var(--cs-transition-bounce), opacity var(--cs-transition-base), visibility var(--cs-transition-base);
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.9) translateY(20px);
+  pointer-events: none;
+}
+
+.cs-widget-host.position-left .cs-widget-dialog {
+  right: auto;
+  left: 0;
+  transform-origin: bottom left;
+}
+
+.cs-widget-dialog.open {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+}
+
+/* 移动端全屏弹窗适配 */
+@media (max-width: 640px) {
+  .cs-widget-host {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .cs-widget-host.position-left {
+    left: 16px;
+  }
+
+  .cs-widget-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-width: 100vw;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    transform-origin: center bottom;
+  }
+}

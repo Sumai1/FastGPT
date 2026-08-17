@@ -3,6 +3,7 @@ packages:
 
   - projects/app
   - projects/code-sandbox
+  - projects/customer-service-client
   - projects/marketplace
   - projects/mcp_server
   - projects/volume-manager

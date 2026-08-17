@@ -13,3 +13,23 @@ services:
       timeout: 10s
       retries: 8
       start_period: 60s
+
+  customer-service-client:
+    image: fastgpt-customer-service-client:20260813-1231
+    ports: !override
+      - '127.0.0.1:3002:80'
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - -q
+        - http://localhost:80/healthz
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 128M

@@ -129,3 +129,24 @@ services:
     restart: always
     ports: !override
       - 127.0.0.1:3003:3000
+
+  customer-service-client:
+    image: ${CUSTOMER_SERVICE_CLIENT_IMAGE:?CUSTOMER_SERVICE_CLIENT_IMAGE is required}
+    restart: always
+    ports: !override
+      - 127.0.0.1:3002:80
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - -q
+        - http://localhost:80/healthz
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 128M
