@@ -44,7 +44,7 @@ import {
 import type { SelectedDatasetType } from '@fastgpt/global/core/workflow/type/io';
 import { postCreateDatasetTextCollection } from '@/web/core/dataset/api/collection';
 import { DatasetResourceSelect } from '../ResourceSelectors';
-import { useCustomerServiceContext, audienceMap } from '../context';
+import { useCustomerServiceContext, audienceMap, requestAdminApi } from '../context';
 import Markdown from '@/components/Markdown';
 
 interface ProductMasterFormProps {
@@ -54,7 +54,7 @@ interface ProductMasterFormProps {
 
 export const ProductMasterForm: React.FC<ProductMasterFormProps> = ({ isOpen, onClose }) => {
   const toast = useToast();
-  const { catalog, createKnowledge, loadData } = useCustomerServiceContext();
+  const { catalog, seriesMap, createKnowledge, loadData } = useCustomerServiceContext();
   const [submitting, setSubmitting] = useState(false);
 
   // Form State
@@ -186,26 +186,29 @@ export const ProductMasterForm: React.FC<ProductMasterFormProps> = ({ isOpen, on
 
     setSubmitting(true);
     try {
-      // 1. 创建文本集合到知识库
-      const created = await postCreateDatasetTextCollection({
-        datasetId: dataset.datasetId,
-        name: `${finalTitle}.md`,
-        text: generatedMarkdown,
-        metadata: { customerServicePendingRegistration: true },
-        forbid: true
-      });
-
-      // 2. 注册为客服知识治理草稿
-      await createKnowledge({
-        datasetId: dataset.datasetId,
-        collectionId: created.collectionId,
-        title: finalTitle,
-        sourceName: `${finalTitle}.md`,
-        knowledgeType: CustomerServiceKnowledgeTypeEnum.productMaster,
-        audienceLevel: audience,
-        modelIds: modelId ? [modelId] : [],
-        hardwareVersionIds: [],
-        softwareVersionIds: []
+      await requestAdminApi({
+        url: '/api/customer-service/admin/knowledge/createStructured',
+        method: 'POST',
+        body: {
+          datasetId: dataset.datasetId,
+          title: finalTitle,
+          templateType: 'productMaster',
+          audienceLevel: audience,
+          modelIds: modelId ? [modelId] : [],
+          templateData: {
+            brand:
+              (selectedModel ? seriesMap.get(selectedModel.seriesId)?.name : '标准品牌') ||
+              '标准品牌',
+            modelName: selectedModel?.name || '标准型号',
+            category: '无人自助设备',
+            powerSpecs: `${ratedPowerW}W (${voltageRange}, 待机 ${standbyPowerW}W)`,
+            dimensions: `${lengthMm}×${widthMm}×${heightMm}mm, ${weightKg}kg (${housingMaterial})`,
+            operatingEnv: '0℃~40℃, 湿度 20%~80% RH',
+            consumables: `${paperSpec} / ${inkOrRibbon} (${capacityNotes})`,
+            interfaces: `${wifiSupported ? 'Wi-Fi ' : ''}${cellularType} ${rj45Ethernet ? 'RJ45' : ''}`,
+            warrantyPolicy: `整机保修 ${warrantyMonths} 个月 (${freeMaintenanceConditions}, 服务热线: ${supportHotline})`
+          }
+        }
       });
 
       toast({ status: 'success', title: '产品主档标准化知识已登记为草稿' });

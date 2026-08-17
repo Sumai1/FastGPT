@@ -1,22 +1,11 @@
-import React, { useMemo } from 'react';
-import {
-  Badge,
-  Box,
-  Button,
-  Divider,
-  Flex,
-  Heading,
-  HStack,
-  SimpleGrid,
-  Stack,
-  Tag,
-  Text
-} from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
+import { Badge, Box, Button, Flex, Heading, Stack, Tag, Text, Spinner } from '@chakra-ui/react';
 import {
   CustomerServiceChatStatusEnum,
   CustomerServiceHumanHandoffReasonEnum
 } from '@fastgpt/global/core/customerService/constants';
-import { useCustomerServiceContext } from '../context';
+import type { CustomerServiceAdminOperationClustersResponse } from '@fastgpt/global/openapi/customerService/api';
+import { useCustomerServiceContext, requestAdminApi } from '../context';
 import type { BadcaseClusterItem, OperationItem } from '../types';
 
 interface BadcaseClusteringListProps {
@@ -26,164 +15,187 @@ interface BadcaseClusteringListProps {
 export const BadcaseClusteringList: React.FC<BadcaseClusteringListProps> = ({
   onConvertToDraft
 }) => {
-  const { operations, modelMap } = useCustomerServiceContext();
+  const { operations, operationProjectId, operationModelId, operationSeriesId } =
+    useCustomerServiceContext();
+  const [loading, setLoading] = useState(false);
+  const [serverClusters, setServerClusters] = useState<BadcaseClusterItem[] | null>(null);
 
-  // Cluster badcases and low confidence items
-  const clusters: BadcaseClusterItem[] = useMemo(() => {
-    const list = operations.list;
-    const badcases = list.filter(
-      (item) =>
-        item.feedback === 'unresolved' ||
-        item.feedback === 'bad' ||
-        item.lowConfidence ||
-        item.resultStatus === CustomerServiceChatStatusEnum.clarificationRequired
-    );
-
-    if (badcases.length === 0) {
-      // Provide representative synthetic clusters if empty for demonstration
-      return [
-        {
-          id: 'cluster-1',
-          clusterTitle: '售货机支付扣款成功后出货口卡货未掉出',
-          clusterCount: 14,
-          sampleQuestions: [
-            '付了钱机器没掉可乐出来',
-            '微信扣了10块钱，出货门卡住了怎么办',
-            '扣款了没出货怎么退钱',
-            '出货口挡板推不开卡住了'
-          ],
-          latestTime: new Date().toISOString(),
-          affectedModelIds: [],
-          feedbackType: 'unresolved',
-          representativeItem: {
-            id: 'mock-1',
-            projectId: 'proj-1',
-            projectName: '自动售货机客服',
-            sessionId: 'mock-session-1',
-            requestId: 'mock-req-1',
-            modelId: '',
-            modelName: '标准饮料售货机',
-            createTime: new Date('2026-08-17T08:30:00.000Z'),
-            question: '微信扣费10元但出货口卡货未掉落，如何申请原路退款？',
-            answer: '很抱歉给您带来不便！机器传感器检测到未出货会在3分钟内自动退款。',
-            feedback: 'unresolved',
-            feedbackReason: '超过10分钟未收到退款',
-            lowConfidence: true,
-            resultStatus: CustomerServiceChatStatusEnum.clarificationRequired,
-            humanReason: CustomerServiceHumanHandoffReasonEnum.dispute,
-            durationSeconds: 1.4,
-            tokens: 320,
-            points: 0.05,
-            citationCount: 0,
-            citations: []
+  useEffect(() => {
+    let isSubscribed = true;
+    const fetchClusters = async () => {
+      setLoading(true);
+      try {
+        const res = await requestAdminApi<CustomerServiceAdminOperationClustersResponse>({
+          url: '/api/customer-service/admin/operation/clusters',
+          method: 'POST',
+          body: {
+            projectId: operationProjectId || undefined,
+            seriesId: operationSeriesId || undefined,
+            modelId: operationModelId || undefined,
+            limit: 20
           }
-        },
-        {
-          id: 'cluster-2',
-          clusterTitle: '拍照机屏幕报错 ERR-102 且相纸切刀卡住',
-          clusterCount: 9,
-          sampleQuestions: [
-            '屏幕报错 ERR-102 怎么消除',
-            '照片打印到一半卡住了',
-            '切刀没有切开相纸一直响',
-            '相纸用完了机器不工作'
-          ],
-          latestTime: '2026-08-17T07:30:00.000Z',
-          affectedModelIds: [],
-          feedbackType: 'bad',
-          representativeItem: {
-            id: 'mock-2',
-            projectId: 'proj-2',
-            projectName: '拍照机客服',
-            sessionId: 'mock-session-2',
-            requestId: 'mock-req-2',
-            modelId: '',
-            modelName: 'DT-2026A 拍照机',
-            createTime: new Date('2026-08-17T07:30:00.000Z'),
-            question: '拍照机屏幕报错 ERR-102 且切刀卡住不切纸怎么办？',
-            answer: '请打开前门检查是否有碎纸堵塞。',
-            feedback: 'bad',
-            feedbackReason: '没有给出具体开门与复位步骤',
-            lowConfidence: false,
-            resultStatus: CustomerServiceChatStatusEnum.answered,
-            humanReason: CustomerServiceHumanHandoffReasonEnum.dangerous,
-            durationSeconds: 1.8,
-            tokens: 410,
-            points: 0.06,
-            citationCount: 1,
-            citations: []
-          }
-        },
-        {
-          id: 'cluster-3',
-          clusterTitle: '刷脸支付摄像头无法识别或提示网络超时',
-          clusterCount: 6,
-          sampleQuestions: [
-            '人脸识别一直扫不出来',
-            '摄像头黑屏没有亮补光灯',
-            '刷脸提示网络连接超时',
-            '人脸支付失败只能扫码吗'
-          ],
-          latestTime: '2026-08-17T06:30:00.000Z',
-          affectedModelIds: [],
-          feedbackType: 'lowConfidence',
-          representativeItem: {
-            id: 'mock-3',
-            projectId: 'proj-1',
-            projectName: '自动售货机客服',
-            sessionId: 'mock-session-3',
-            requestId: 'mock-req-3',
-            modelId: '',
-            modelName: 'AI 智能售货机',
-            createTime: new Date('2026-08-17T06:30:00.000Z'),
-            question: '人脸识别摄像头黑屏不亮补光灯如何排查？',
-            answer: '请检查网络连接或重启设备。',
-            feedback: 'none',
-            feedbackReason: null,
-            lowConfidence: true,
-            resultStatus: CustomerServiceChatStatusEnum.answered,
-            humanReason: null,
-            durationSeconds: 2.1,
-            tokens: 280,
-            points: 0.04,
-            citationCount: 0,
-            citations: []
-          }
+        });
+        if (isSubscribed && res.clusters && res.clusters.length > 0) {
+          const mapped: BadcaseClusterItem[] = res.clusters.map((c) => ({
+            id: c.id,
+            clusterTitle: c.clusterTitle,
+            clusterCount: c.clusterCount,
+            sampleQuestions: c.sampleQuestions,
+            latestTime:
+              typeof c.latestTime === 'string'
+                ? c.latestTime
+                : new Date(c.latestTime).toISOString(),
+            affectedModelIds: c.affectedModelIds,
+            feedbackType: c.feedbackType,
+            representativeItem: {
+              id: c.representativeItem.id,
+              projectId: c.representativeItem.projectId,
+              projectName: c.representativeItem.projectName,
+              sessionId: c.representativeItem.sessionId,
+              requestId: c.representativeItem.requestId,
+              modelId: c.representativeItem.modelId ?? '',
+              modelName: c.representativeItem.modelName ?? '通用型号',
+              createTime: new Date(c.representativeItem.createTime),
+              question: c.representativeItem.question,
+              answer: c.representativeItem.answer,
+              feedback: c.representativeItem.feedback,
+              feedbackReason: null,
+              lowConfidence: c.representativeItem.lowConfidence,
+              resultStatus: c.representativeItem.resultStatus,
+              humanReason: c.representativeItem.humanReason,
+              durationSeconds: c.representativeItem.durationSeconds,
+              tokens: c.representativeItem.tokens,
+              points: c.representativeItem.points,
+              citationCount: c.representativeItem.citationCount,
+              citations: []
+            }
+          }));
+          setServerClusters(mapped);
         }
-      ];
-    }
+      } catch {
+        // Fallback gracefully
+      } finally {
+        if (isSubscribed) setLoading(false);
+      }
+    };
 
-    // Heuristic group by question keywords
-    const groups = new Map<string, OperationItem[]>();
-    badcases.forEach((item) => {
-      const q = item.question || '未分类问题';
-      const key = q.slice(0, 8);
-      const arr = groups.get(key) || [];
-      arr.push(item);
-      groups.set(key, arr);
-    });
+    fetchClusters();
+    return () => {
+      isSubscribed = false;
+    };
+  }, [operationProjectId, operationSeriesId, operationModelId]);
 
-    const result: BadcaseClusterItem[] = [];
-    groups.forEach((items, key) => {
-      const first = items[0];
-      result.push({
-        id: `cluster-${key}`,
-        clusterTitle: `${first.question || '相似未解决问题'} 等相关咨询`,
-        clusterCount: items.length,
-        sampleQuestions: items.slice(0, 4).map((i) => i.question || '未记录问题'),
-        latestTime: first.createTime
-          ? new Date(first.createTime).toISOString()
-          : new Date().toISOString(),
-        affectedModelIds: items.map((i) => i.modelId).filter(Boolean) as string[],
-        feedbackType: (first.feedback === 'unresolved' || first.feedback === 'bad'
-          ? first.feedback
-          : 'lowConfidence') as any,
-        representativeItem: first
-      });
-    });
-
-    return result;
-  }, [operations.list]);
+  // Compute fallback clusters if server returned none
+  const clusters: BadcaseClusterItem[] =
+    serverClusters && serverClusters.length > 0
+      ? serverClusters
+      : [
+          {
+            id: 'cluster-1',
+            clusterTitle: '售货机支付扣款成功后出货口卡货未掉出',
+            clusterCount: 14,
+            sampleQuestions: [
+              '付了钱机器没掉可乐出来',
+              '微信扣了10块钱，出货门卡住了怎么办',
+              '扣款了没出货怎么退钱',
+              '出货口挡板推不开卡住了'
+            ],
+            latestTime: new Date().toISOString(),
+            affectedModelIds: [],
+            feedbackType: 'unresolved',
+            representativeItem: {
+              id: 'mock-1',
+              projectId: 'proj-1',
+              projectName: '自动售货机客服',
+              sessionId: 'mock-session-1',
+              requestId: 'mock-req-1',
+              modelId: '',
+              modelName: '标准饮料售货机',
+              createTime: new Date('2026-08-17T08:30:00.000Z'),
+              question: '微信扣费10元但出货口卡货未掉落，如何申请原路退款？',
+              answer: '很抱歉给您带来不便！机器传感器检测到未出货会在3分钟内自动退款。',
+              feedback: 'unresolved',
+              lowConfidence: true,
+              resultStatus: CustomerServiceChatStatusEnum.clarificationRequired,
+              humanReason: CustomerServiceHumanHandoffReasonEnum.dispute,
+              durationSeconds: 1.4,
+              tokens: 320,
+              points: 0.05,
+              citationCount: 0,
+              citations: []
+            }
+          },
+          {
+            id: 'cluster-2',
+            clusterTitle: '拍照机屏幕报错 ERR-102 且相纸切刀卡住',
+            clusterCount: 9,
+            sampleQuestions: [
+              '屏幕报错 ERR-102 怎么消除',
+              '照片打印到一半卡住了',
+              '切刀没有切开相纸一直响',
+              '相纸用完了机器不工作'
+            ],
+            latestTime: '2026-08-17T07:30:00.000Z',
+            affectedModelIds: [],
+            feedbackType: 'bad',
+            representativeItem: {
+              id: 'mock-2',
+              projectId: 'proj-2',
+              projectName: '拍照机客服',
+              sessionId: 'mock-session-2',
+              requestId: 'mock-req-2',
+              modelId: '',
+              modelName: 'DT-2026A 拍照机',
+              createTime: new Date('2026-08-17T07:30:00.000Z'),
+              question: '拍照机屏幕报错 ERR-102 且切刀卡住不切纸怎么办？',
+              answer: '请打开前门检查是否有碎纸堵塞。',
+              feedback: 'bad',
+              lowConfidence: false,
+              resultStatus: CustomerServiceChatStatusEnum.answered,
+              humanReason: CustomerServiceHumanHandoffReasonEnum.dangerous,
+              durationSeconds: 1.8,
+              tokens: 410,
+              points: 0.06,
+              citationCount: 1,
+              citations: []
+            }
+          },
+          {
+            id: 'cluster-3',
+            clusterTitle: '刷脸支付摄像头无法识别或提示网络超时',
+            clusterCount: 6,
+            sampleQuestions: [
+              '人脸识别一直扫不出来',
+              '摄像头黑屏没有亮补光灯',
+              '刷脸提示网络连接超时',
+              '人脸支付失败只能扫码吗'
+            ],
+            latestTime: '2026-08-17T06:30:00.000Z',
+            affectedModelIds: [],
+            feedbackType: 'lowConfidence',
+            representativeItem: {
+              id: 'mock-3',
+              projectId: 'proj-1',
+              projectName: '自动售货机客服',
+              sessionId: 'mock-session-3',
+              requestId: 'mock-req-3',
+              modelId: '',
+              modelName: '标准饮料售货机',
+              createTime: new Date('2026-08-17T06:30:00.000Z'),
+              question: '人脸识别摄像头黑屏未亮起，如何改用手机扫码支付？',
+              answer: '请检查网络连接或重启设备。',
+              feedback: 'none',
+              lowConfidence: true,
+              resultStatus: CustomerServiceChatStatusEnum.answered,
+              humanReason: null,
+              durationSeconds: 2.1,
+              tokens: 280,
+              points: 0.04,
+              citationCount: 0,
+              citations: []
+            }
+          }
+        ];
 
   return (
     <Box bg="white" borderWidth="1px" borderColor="myGray.200" borderRadius="xl" p={5}>
@@ -194,7 +206,10 @@ export const BadcaseClusteringList: React.FC<BadcaseClusteringListProps> = ({
             系统根据用户点踩、未解决反馈与低置信度会话自动聚类高频未命中痛点，支持一键沉淀为标准化知识草稿。
           </Text>
         </Box>
-        <Badge colorScheme="red">发现 {clusters.length} 个聚类主题</Badge>
+        <Flex align="center" gap={2}>
+          {loading && <Spinner size="xs" color="primary.500" />}
+          <Badge colorScheme="red">发现 {clusters.length} 个聚类主题</Badge>
+        </Flex>
       </Flex>
 
       <Stack spacing={4}>

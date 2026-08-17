@@ -40,9 +40,8 @@ import {
   CustomerServiceKnowledgeTypeEnum
 } from '@fastgpt/global/core/customerService/constants';
 import type { SelectedDatasetType } from '@fastgpt/global/core/workflow/type/io';
-import { postCreateDatasetTextCollection } from '@/web/core/dataset/api/collection';
 import { DatasetResourceSelect } from '../ResourceSelectors';
-import { useCustomerServiceContext, audienceMap } from '../context';
+import { useCustomerServiceContext, audienceMap, requestAdminApi } from '../context';
 import type { StructuredFaultStep } from '../types';
 import Markdown from '@/components/Markdown';
 
@@ -215,24 +214,29 @@ ${escalationRules}
 
     setSubmitting(true);
     try {
-      const created = await postCreateDatasetTextCollection({
-        datasetId: dataset.datasetId,
-        name: `${finalTitle}.md`,
-        text: generatedMarkdown,
-        metadata: { customerServicePendingRegistration: true },
-        forbid: true
-      });
-
-      await createKnowledge({
-        datasetId: dataset.datasetId,
-        collectionId: created.collectionId,
-        title: finalTitle,
-        sourceName: `${finalTitle}.md`,
-        knowledgeType: CustomerServiceKnowledgeTypeEnum.fault,
-        audienceLevel: audience,
-        modelIds: modelId ? [modelId] : [],
-        hardwareVersionIds: [],
-        softwareVersionIds: []
+      await requestAdminApi({
+        url: '/api/customer-service/admin/knowledge/createStructured',
+        method: 'POST',
+        body: {
+          datasetId: dataset.datasetId,
+          title: finalTitle,
+          templateType: 'faultCard',
+          audienceLevel: audience,
+          modelIds: modelId ? [modelId] : [],
+          templateData: {
+            faultCode: errorCode,
+            faultPhenomenon: symptom,
+            possibleCauses: `1. 对应部位机械部件卡死或异物阻挡；\n2. 光电/接近传感器积灰信号丢失；\n3. 驱动电机过载或线束松脱。`,
+            troubleshootingSteps: steps
+              .map(
+                (s) =>
+                  `步骤 ${s.stepNumber}：${s.checkPoint} - 检查项：${s.action} - 正常现象：${s.normalResult} - 处置：${s.abnormalFix}`
+              )
+              .join('\n'),
+            spareParts: '标准备品备件库对应备件',
+            escalationCondition: escalationRules || '若完成排查后故障仍未消除，自动触发转人工工单。'
+          }
+        }
       });
 
       toast({ status: 'success', title: '售后故障卡已成功登记并进入审核流' });

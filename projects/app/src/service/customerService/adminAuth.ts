@@ -52,7 +52,7 @@ export const authCustomerServiceDatasets = async ({
   tmbId: string;
   isRoot: boolean;
   datasetIds: string[];
-  mode: 'write' | 'manage';
+  mode: 'read' | 'write' | 'manage';
 }) => {
   const uniqueDatasetIds = Array.from(new Set(datasetIds));
   await Promise.all(
@@ -60,7 +60,12 @@ export const authCustomerServiceDatasets = async ({
       authDatasetByTmbId({
         tmbId,
         datasetId,
-        per: mode === 'manage' ? ManagePermissionVal : WritePermissionVal,
+        per:
+          mode === 'manage'
+            ? ManagePermissionVal
+            : mode === 'write'
+              ? WritePermissionVal
+              : ReadPermissionVal,
         isRoot
       })
     )

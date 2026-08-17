@@ -10,9 +10,11 @@ import {
   Progress,
   Stack,
   Text,
-  Textarea
+  useToast
 } from '@chakra-ui/react';
+import type { CustomerServiceAdminKnowledgeTestSearchResponse } from '@fastgpt/global/openapi/customerService/api';
 import type { KnowledgeItem } from '../types';
+import { requestAdminApi } from '../context';
 import Markdown from '@/components/Markdown';
 
 interface InlineTestSandboxProps {
@@ -20,12 +22,14 @@ interface InlineTestSandboxProps {
 }
 
 export const InlineTestSandbox: React.FC<InlineTestSandboxProps> = ({ knowledge }) => {
+  const toast = useToast();
   const [testQuery, setTestQuery] = useState('');
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{
     similarityScore: number;
     matchedChunk: string;
     generatedAnswer: string;
+    matchCount: number;
   } | null>(null);
 
   const presetQuestions = [
@@ -35,24 +39,46 @@ export const InlineTestSandbox: React.FC<InlineTestSandboxProps> = ({ knowledge 
     '什么时候需要联系人工售后？'
   ];
 
-  const runSimulation = (query: string) => {
+  const runSimulation = async (query: string) => {
     const q = query.trim() || testQuery.trim();
     if (!q) return;
     setTesting(true);
 
-    // Simulate RAG Retrieval Score and answer generation
-    setTimeout(() => {
-      // Calculate a heuristic similarity score
-      const titleOverlap = knowledge.title.split('').filter((c) => q.includes(c)).length;
-      const score = Math.min(0.96, Math.max(0.72, 0.75 + (titleOverlap / 20) * 0.2));
+    try {
+      const res = await requestAdminApi<CustomerServiceAdminKnowledgeTestSearchResponse>({
+        url: '/api/customer-service/admin/knowledge/testSearch',
+        method: 'POST',
+        body: {
+          datasetId: knowledge.datasetId,
+          collectionId: knowledge.collectionId,
+          question: q,
+          modelId: knowledge.modelIds[0] || undefined
+        }
+      });
+
+      const matchedChunkText =
+        res.chunks.length > 0
+          ? res.chunks
+              .map(
+                (c, i) => `【切片 ${i + 1} · 相似度 ${(c.score * 100).toFixed(1)}%】\n${c.content}`
+              )
+              .join('\n\n')
+          : `【检索切片】未在当前知识中检索到高相关度切片。`;
 
       setTestResult({
-        similarityScore: score,
-        matchedChunk: `【检索命中切片 · 来源：${knowledge.title}】\n- 知识类型：${knowledge.knowledgeType}\n- 关键内容：关于 ${q} 的标准处置规范，请首先确认设备电源与指示灯状态，按照 SOP 步骤执行。`,
-        generatedAnswer: `您好！针对您咨询的 **“${q}”**：\n\n根据《${knowledge.title}》最新规程：\n1. **初步核验**：请确认设备处于就绪模式，电源指示灯常亮；\n2. **标准步骤**：按对应指引进行排查，切勿带电强行拆卸；\n3. **转人工提示**：若重试 2 次仍异常，请点击转人工客服由工程师协助。`
+        similarityScore: res.score,
+        matchedChunk: matchedChunkText,
+        generatedAnswer: res.answerPreview,
+        matchCount: res.matchCount
       });
+    } catch (err) {
+      toast({
+        status: 'error',
+        title: err instanceof Error ? err.message : '试问检索失败'
+      });
+    } finally {
       setTesting(false);
-    }, 450);
+    }
   };
 
   return (

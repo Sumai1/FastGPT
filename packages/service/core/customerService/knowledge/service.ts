@@ -163,6 +163,7 @@ export const createCustomerServiceKnowledgeDraft = async ({
   effectiveFrom,
   effectiveTo,
   previousKnowledgeId,
+  structuredData,
   session
 }: {
   teamId: string;
@@ -181,6 +182,7 @@ export const createCustomerServiceKnowledgeDraft = async ({
   effectiveFrom?: Date;
   effectiveTo?: Date;
   previousKnowledgeId?: string;
+  structuredData?: Record<string, unknown> | null;
   session?: ClientSession;
 }) => {
   if (effectiveFrom && effectiveTo && effectiveFrom > effectiveTo) {
@@ -243,6 +245,9 @@ export const createCustomerServiceKnowledgeDraft = async ({
         version: (previousKnowledge?.version ?? 0) + 1,
         versionGroupId: previousKnowledge?.versionGroupId ?? String(new Types.ObjectId()),
         previousKnowledgeId,
+        supersededBy: null,
+        supersededAt: null,
+        structuredData: structuredData ?? null,
         reviewReason: ''
       },
       activeSession
@@ -290,6 +295,7 @@ export const updateCustomerServiceKnowledgeDraft = async ({
   softwareVersionIds,
   effectiveFrom,
   effectiveTo,
+  structuredData,
   session
 }: {
   teamId: string;
@@ -304,6 +310,7 @@ export const updateCustomerServiceKnowledgeDraft = async ({
   softwareVersionIds?: string[];
   effectiveFrom?: Date | null;
   effectiveTo?: Date | null;
+  structuredData?: Record<string, unknown> | null;
   session?: ClientSession;
 }) => {
   const update = async (activeSession: ClientSession) => {
@@ -342,6 +349,7 @@ export const updateCustomerServiceKnowledgeDraft = async ({
         }),
         ...(effectiveFrom !== undefined && { effectiveFrom }),
         ...(effectiveTo !== undefined && { effectiveTo }),
+        ...(structuredData !== undefined && { structuredData }),
         updateTmbId: tmbId
       },
       session: activeSession
@@ -544,6 +552,8 @@ export const publishCustomerServiceKnowledge = async ({
           {
             $set: {
               status: CustomerServiceKnowledgeStatusEnum.offline,
+              supersededBy: knowledgeId,
+              supersededAt: now,
               offlineTime: now,
               updateTime: now,
               updateTmbId: reviewerTmbId

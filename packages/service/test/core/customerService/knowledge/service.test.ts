@@ -154,6 +154,8 @@ describe('customer service knowledge publishing', () => {
         MongoDatasetCollection.findById(nextCollection._id).lean()
       ]);
     expect(oldAfter?.status).toBe(CustomerServiceKnowledgeStatusEnum.offline);
+    expect(String(oldAfter?.supersededBy)).toBe(String(nextKnowledge._id));
+    expect(oldAfter?.supersededAt).toBeInstanceOf(Date);
     expect(nextAfter?.status).toBe(CustomerServiceKnowledgeStatusEnum.published);
     expect(unrelatedAfter?.status).toBe(CustomerServiceKnowledgeStatusEnum.published);
     expect(oldCollectionAfter?.forbid).toBe(true);

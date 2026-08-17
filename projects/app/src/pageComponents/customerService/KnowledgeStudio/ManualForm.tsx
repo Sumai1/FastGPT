@@ -35,9 +35,8 @@ import {
   CustomerServiceKnowledgeTypeEnum
 } from '@fastgpt/global/core/customerService/constants';
 import type { SelectedDatasetType } from '@fastgpt/global/core/workflow/type/io';
-import { postCreateDatasetTextCollection } from '@/web/core/dataset/api/collection';
 import { DatasetResourceSelect } from '../ResourceSelectors';
-import { useCustomerServiceContext, audienceMap } from '../context';
+import { useCustomerServiceContext, audienceMap, requestAdminApi } from '../context';
 import type { StructuredManualStep } from '../types';
 import Markdown from '@/components/Markdown';
 import MyIcon from '@fastgpt/web/components/common/Icon';
@@ -205,24 +204,29 @@ ${escalationConditions.trim() || '常规排查无效时请转接人工客服。'
 
     setSubmitting(true);
     try {
-      const created = await postCreateDatasetTextCollection({
-        datasetId: dataset.datasetId,
-        name: `${finalTitle}.md`,
-        text: generatedMarkdown,
-        metadata: { customerServicePendingRegistration: true },
-        forbid: true
-      });
-
-      await createKnowledge({
-        datasetId: dataset.datasetId,
-        collectionId: created.collectionId,
-        title: finalTitle,
-        sourceName: `${finalTitle}.md`,
-        knowledgeType: CustomerServiceKnowledgeTypeEnum.manual,
-        audienceLevel: audience,
-        modelIds: modelId ? [modelId] : [],
-        hardwareVersionIds: [],
-        softwareVersionIds: []
+      await requestAdminApi({
+        url: '/api/customer-service/admin/knowledge/createStructured',
+        method: 'POST',
+        body: {
+          datasetId: dataset.datasetId,
+          title: finalTitle,
+          templateType: 'manual',
+          audienceLevel: audience,
+          modelIds: modelId ? [modelId] : [],
+          templateData: {
+            purpose: `${selectedModel?.name || '设备'}标准日常维护与操作流程`,
+            safetyWarnings: prerequisites || '操作前务必先切断主电源，佩戴绝缘安全手套。',
+            toolsRequired: '标准维护钥匙、十字螺丝刀、防静电刷',
+            steps: steps
+              .map(
+                (s) =>
+                  `步骤 ${s.stepNumber}：${s.title} - 动作：${s.action} - 预期：${s.expectedResult}`
+              )
+              .join('\n'),
+            verification: completionCriteria || '接通电源，观察指示灯常亮且自检无报错。',
+            emergencyStop: escalationConditions || '常规排查无效时请转接人工客服。'
+          }
+        }
       });
 
       toast({ status: 'success', title: '操作说明书已成功生成并登记为草稿' });

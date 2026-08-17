@@ -39,9 +39,8 @@ import {
   CustomerServiceKnowledgeTypeEnum
 } from '@fastgpt/global/core/customerService/constants';
 import type { SelectedDatasetType } from '@fastgpt/global/core/workflow/type/io';
-import { postCreateDatasetTextCollection } from '@/web/core/dataset/api/collection';
 import { DatasetResourceSelect } from '../ResourceSelectors';
-import { useCustomerServiceContext, audienceMap } from '../context';
+import { useCustomerServiceContext, audienceMap, requestAdminApi } from '../context';
 import type { StructuredFaqItem } from '../types';
 import Markdown from '@/components/Markdown';
 
@@ -261,24 +260,22 @@ ${item.detailedAnswer ? `**详细说明与指引**：\n${item.detailedAnswer}\n`
     setSubmitting(true);
     try {
       const finalTitle = batchTitle.trim() || `FAQ 问答集 (${faqList.length}条)`;
-      const created = await postCreateDatasetTextCollection({
-        datasetId: dataset.datasetId,
-        name: `${finalTitle}.md`,
-        text: generatedMarkdown,
-        metadata: { customerServicePendingRegistration: true },
-        forbid: true
-      });
-
-      await createKnowledge({
-        datasetId: dataset.datasetId,
-        collectionId: created.collectionId,
-        title: finalTitle,
-        sourceName: `${finalTitle}.md`,
-        knowledgeType: CustomerServiceKnowledgeTypeEnum.faq,
-        audienceLevel: audience,
-        modelIds: modelId ? [modelId] : [],
-        hardwareVersionIds: [],
-        softwareVersionIds: []
+      await requestAdminApi({
+        url: '/api/customer-service/admin/knowledge/importBatch',
+        method: 'POST',
+        body: {
+          datasetId: dataset.datasetId,
+          title: finalTitle,
+          audienceLevel: audience,
+          modelIds: modelId ? [modelId] : [],
+          items: faqList.map((f) => ({
+            question: f.standardQuestion.trim(),
+            similarQuestions: f.similarQuestions,
+            answer: f.conciseAnswer.trim(),
+            detailedAnswer: f.detailedAnswer?.trim() || undefined,
+            categoryTag: f.categoryTag?.trim() || undefined
+          }))
+        }
       });
 
       toast({ status: 'success', title: `成功登记 ${faqList.length} 条 FAQ 知识到草稿库` });

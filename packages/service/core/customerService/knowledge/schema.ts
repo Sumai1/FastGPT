@@ -85,6 +85,13 @@ const CustomerServiceKnowledgeSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: CustomerServiceKnowledgeCollectionName
   },
+  supersededBy: {
+    type: Schema.Types.ObjectId,
+    ref: CustomerServiceKnowledgeCollectionName,
+    default: null
+  },
+  supersededAt: { type: Date, default: null },
+  structuredData: { type: Schema.Types.Mixed, default: null },
   submitterTmbId: {
     type: Schema.Types.ObjectId,
     ref: TeamMemberCollectionName
@@ -123,6 +130,12 @@ defineIndex(CustomerServiceKnowledgeSchema, {
     unique: true,
     partialFilterExpression: { status: CustomerServiceKnowledgeStatusEnum.published }
   }
+});
+defineIndex(CustomerServiceKnowledgeSchema, {
+  key: { teamId: 1, versionGroupId: 1, version: 1 }
+});
+defineIndex(CustomerServiceKnowledgeSchema, {
+  key: { teamId: 1, datasetId: 1, status: 1, audienceLevel: 1 }
 });
 defineIndex(CustomerServiceKnowledgeSchema, {
   key: { teamId: 1, status: 1, audienceLevel: 1, effectiveFrom: 1, effectiveTo: 1, modelIds: 1 }

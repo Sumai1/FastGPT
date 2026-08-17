@@ -435,6 +435,17 @@ export const CustomerServiceKnowledgeApiSchema = z.object({
     example: '68ad85a7463006c963799a12',
     description: '上一治理版本 ID'
   }),
+  supersededBy: IdSchema.nullish().meta({
+    example: '68ad85a7463006c963799a15',
+    description: '被替代下架的新版本 ID'
+  }),
+  supersededAt: z.coerce.date().nullish().meta({
+    example: '2026-08-11T00:00:00.000Z',
+    description: '被替代下架时间'
+  }),
+  structuredData: z.record(z.string(), z.unknown()).nullish().meta({
+    description: '结构化模板参数'
+  }),
   submitterTmbId: IdSchema.nullish().meta({
     example: '68ad85a7463006c963799a13',
     description: '提交人团队成员 ID'
@@ -565,6 +576,9 @@ export const CustomerServiceAdminKnowledgeCreateBodySchema = z.object({
   previousKnowledgeId: IdSchema.optional().meta({
     example: '68ad85a7463006c963799a12',
     description: '上一治理版本 ID'
+  }),
+  structuredData: z.record(z.string(), z.unknown()).optional().meta({
+    description: '结构化模板参数'
   })
 });
 export type CustomerServiceAdminKnowledgeCreateBody = z.infer<
@@ -575,6 +589,193 @@ export const CustomerServiceAdminKnowledgeCreateResponseSchema = z.object({
 });
 export type CustomerServiceAdminKnowledgeCreateResponse = z.infer<
   typeof CustomerServiceAdminKnowledgeCreateResponseSchema
+>;
+
+/* ============================================================================
+ * API: 知识试问沙盒与实时检索
+ * Route: POST /api/customer-service/admin/knowledge/testSearch
+ * Method: POST
+ * Description: 在审核沙盒中执行混合检索与 Rerank 重排试问，返回匹配分与模型拟答
+ * Tags: ['Customer Service']
+ * ============================================================================ */
+export const CustomerServiceAdminKnowledgeTestSearchBodySchema = z.object({
+  datasetId: IdSchema.meta({
+    example: '68ad85a7463006c963799a08',
+    description: 'FastGPT dataset ID'
+  }),
+  collectionId: IdSchema.meta({
+    example: '68ad85a7463006c963799a10',
+    description: 'FastGPT collection ID'
+  }),
+  question: z.string().trim().min(1).max(2000).meta({
+    example: '机器卡纸了怎么清理？',
+    description: '试问问题文本'
+  }),
+  modelId: IdSchema.optional().meta({
+    example: '68ad85a7463006c963799a09',
+    description: '产品型号 ID'
+  })
+});
+export type CustomerServiceAdminKnowledgeTestSearchBody = z.infer<
+  typeof CustomerServiceAdminKnowledgeTestSearchBodySchema
+>;
+
+export const CustomerServiceAdminKnowledgeTestSearchResponseSchema = z.object({
+  score: z.number().meta({ example: 0.92, description: '最高相似度匹配得分 (0-1)' }),
+  matchCount: IntSchema.nonnegative().meta({ example: 2, description: '命中文档切片数' }),
+  chunks: z
+    .array(
+      z.object({
+        chunkId: z.string(),
+        content: z.string(),
+        score: z.number()
+      })
+    )
+    .meta({ description: '命中文档切片列表' }),
+  answerPreview: z.string().meta({
+    example: '您好！针对机器卡纸问题，处理步骤如下：...',
+    description: '模型生成的拟答预览'
+  })
+});
+export type CustomerServiceAdminKnowledgeTestSearchResponse = z.infer<
+  typeof CustomerServiceAdminKnowledgeTestSearchResponseSchema
+>;
+
+/* ============================================================================
+ * API: 4 大结构化模板录入知识
+ * Route: POST /api/customer-service/admin/knowledge/createStructured
+ * Method: POST
+ * Description: 支持产品主档、SOP 操作说明、FAQ 与售后故障卡 4 大模板标准化录入
+ * Tags: ['Customer Service']
+ * ============================================================================ */
+export const CustomerServiceAdminKnowledgeCreateStructuredBodySchema = z.object({
+  datasetId: IdSchema.meta({
+    example: '68ad85a7463006c963799a08',
+    description: '目标 dataset ID'
+  }),
+  title: z.string().trim().min(1).max(300).meta({
+    example: 'DT-2026A 产品主档与规格参数',
+    description: '知识标题'
+  }),
+  templateType: z
+    .enum(['productMaster', 'manual', 'faq', 'faultCard'])
+    .meta({ example: 'productMaster', description: '结构化模板类型' }),
+  audienceLevel: z
+    .enum(CustomerServiceAudienceEnum)
+    .default(CustomerServiceAudienceEnum.public)
+    .meta({ example: CustomerServiceAudienceEnum.public, description: '最高受众等级' }),
+  modelIds: z.array(IdSchema).max(100).default([]).meta({
+    example: [],
+    description: '适用产品型号'
+  }),
+  hardwareVersionIds: z.array(IdSchema).max(100).default([]).meta({
+    example: [],
+    description: '适用硬件版本'
+  }),
+  softwareVersionIds: z.array(IdSchema).max(100).default([]).meta({
+    example: [],
+    description: '适用软件版本'
+  }),
+  templateData: z.record(z.string(), z.unknown()).meta({
+    description: '模板结构化表单对象数据'
+  })
+});
+export type CustomerServiceAdminKnowledgeCreateStructuredBody = z.infer<
+  typeof CustomerServiceAdminKnowledgeCreateStructuredBodySchema
+>;
+
+export const CustomerServiceAdminKnowledgeCreateStructuredResponseSchema = z.object({
+  id: IdSchema.meta({ example: '68ad85a7463006c963799a15', description: '治理记录 ID' }),
+  collectionId: IdSchema.meta({
+    example: '68ad85a7463006c963799a10',
+    description: '创建的 dataset collection ID'
+  })
+});
+export type CustomerServiceAdminKnowledgeCreateStructuredResponse = z.infer<
+  typeof CustomerServiceAdminKnowledgeCreateStructuredResponseSchema
+>;
+
+/* ============================================================================
+ * API: FAQ 批量导入与多相似问
+ * Route: POST /api/customer-service/admin/knowledge/importBatch
+ * Method: POST
+ * Description: 批量导入 FAQ 问答与多相似问扩展并生成标准化草稿
+ * Tags: ['Customer Service']
+ * ============================================================================ */
+export const CustomerServiceAdminFaqBatchItemSchema = z.object({
+  question: z.string().trim().min(1).max(500).meta({
+    example: '设备如何退款？',
+    description: '标准问'
+  }),
+  similarQuestions: z
+    .array(z.string().trim().min(1).max(500))
+    .default([])
+    .meta({ example: ['没出货怎么退钱', '扣款了但东西没出来'], description: '相似问同义词列表' }),
+  answer: z.string().trim().min(1).max(20000).meta({
+    example: '请检查出货口，系统将在 3 分钟内自动退款。',
+    description: '核心简答'
+  }),
+  detailedAnswer: z.string().max(20000).optional().meta({
+    example: '详细排查指引...',
+    description: '详细解答与原理指引'
+  }),
+  categoryTag: z.string().max(100).optional().meta({
+    example: '出货退款',
+    description: '分类标签'
+  })
+});
+export type CustomerServiceAdminFaqBatchItem = z.infer<
+  typeof CustomerServiceAdminFaqBatchItemSchema
+>;
+
+export const CustomerServiceAdminKnowledgeImportBatchBodySchema = z.object({
+  datasetId: IdSchema.meta({
+    example: '68ad85a7463006c963799a08',
+    description: '目标 dataset ID'
+  }),
+  title: z
+    .string()
+    .trim()
+    .min(1)
+    .max(300)
+    .default('FAQ 批量导入')
+    .meta({ example: '常见问题解答 (FAQ)', description: '知识集标题' }),
+  audienceLevel: z
+    .enum(CustomerServiceAudienceEnum)
+    .default(CustomerServiceAudienceEnum.public)
+    .meta({ example: CustomerServiceAudienceEnum.public, description: '最高受众等级' }),
+  modelIds: z.array(IdSchema).max(100).default([]).meta({
+    example: [],
+    description: '适用产品型号'
+  }),
+  hardwareVersionIds: z.array(IdSchema).max(100).default([]).meta({
+    example: [],
+    description: '适用硬件版本'
+  }),
+  softwareVersionIds: z.array(IdSchema).max(100).default([]).meta({
+    example: [],
+    description: '适用软件版本'
+  }),
+  items: z
+    .array(CustomerServiceAdminFaqBatchItemSchema)
+    .min(1)
+    .max(500)
+    .meta({ description: '批量 FAQ 列表' })
+});
+export type CustomerServiceAdminKnowledgeImportBatchBody = z.infer<
+  typeof CustomerServiceAdminKnowledgeImportBatchBodySchema
+>;
+
+export const CustomerServiceAdminKnowledgeImportBatchResponseSchema = z.object({
+  id: IdSchema.meta({ example: '68ad85a7463006c963799a15', description: '治理记录 ID' }),
+  collectionId: IdSchema.meta({
+    example: '68ad85a7463006c963799a10',
+    description: '创建的 dataset collection ID'
+  }),
+  importedCount: IntSchema.positive().meta({ example: 10, description: '成功导入的 FAQ 条目数' })
+});
+export type CustomerServiceAdminKnowledgeImportBatchResponse = z.infer<
+  typeof CustomerServiceAdminKnowledgeImportBatchResponseSchema
 >;
 
 /* ============================================================================
@@ -1334,6 +1535,107 @@ export const CustomerServiceAdminOperationToKnowledgeResponseSchema =
   CustomerServiceAdminKnowledgeCreateResponseSchema;
 export type CustomerServiceAdminOperationToKnowledgeResponse = z.infer<
   typeof CustomerServiceAdminOperationToKnowledgeResponseSchema
+>;
+
+/* ============================================================================
+ * API: 运营效能与消耗指标聚合
+ * Route: POST /api/customer-service/admin/operation/metrics
+ * Method: POST
+ * Description: 按时间范围聚合 Token、积分费用、平均耗时、解决率与转人工原因归因
+ * Tags: ['Customer Service']
+ * ============================================================================ */
+export const CustomerServiceAdminOperationMetricsBodySchema = z.object({
+  timeRange: z
+    .enum(['1d', '7d', '30d'])
+    .default('7d')
+    .meta({ example: '7d', description: '统计周期' }),
+  projectId: IdSchema.optional().meta({ description: '客服项目 ID' }),
+  seriesId: IdSchema.optional().meta({ description: '产品系列 ID' }),
+  modelId: IdSchema.optional().meta({ description: '产品型号 ID' }),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional()
+});
+export type CustomerServiceAdminOperationMetricsBody = z.infer<
+  typeof CustomerServiceAdminOperationMetricsBodySchema
+>;
+
+export const CustomerServiceAdminOperationMetricsResponseSchema = z.object({
+  totalTokens: IntSchema.nonnegative().meta({ example: 124500, description: 'Token 消耗总量' }),
+  totalPoints: z.number().nonnegative().meta({ example: 32.8, description: '总积分/费用消耗' }),
+  avgDurationSeconds: z
+    .number()
+    .nonnegative()
+    .meta({ example: 1.2, description: '平均响应耗时(秒)' }),
+  goodFeedbackCount: IntSchema.nonnegative().meta({ example: 45, description: '好评/满意数' }),
+  badFeedbackCount: IntSchema.nonnegative().meta({ example: 5, description: '差评/未解决数' }),
+  totalFeedbackCount: IntSchema.nonnegative().meta({ example: 50, description: '总反馈数' }),
+  resolutionRate: z
+    .number()
+    .min(0)
+    .max(100)
+    .meta({ example: 90.0, description: '问题解决率/满意率百分比' }),
+  handoffCount: IntSchema.nonnegative().meta({ example: 8, description: '转人工事件数' }),
+  handoffRate: z.number().min(0).max(100).meta({ example: 6.4, description: '转人工率百分比' }),
+  trendBars: z
+    .array(z.number())
+    .meta({ example: [35, 48, 62, 55, 78, 85, 92], description: '趋势柱状图百分比' }),
+  handoffAttributions: z
+    .array(
+      z.object({
+        key: z.string(),
+        label: z.string(),
+        count: IntSchema.nonnegative(),
+        percentage: z.number(),
+        colorScheme: z.string(),
+        description: z.string()
+      })
+    )
+    .meta({ description: '转人工归因分类统计' })
+});
+export type CustomerServiceAdminOperationMetricsResponse = z.infer<
+  typeof CustomerServiceAdminOperationMetricsResponseSchema
+>;
+
+/* ============================================================================
+ * API: Badcase 与未解决问题聚类分析
+ * Route: POST /api/customer-service/admin/operation/clusters
+ * Method: POST
+ * Description: 对点踩、未解决反馈、低置信度会话执行主题聚类并提供代表性案例
+ * Tags: ['Customer Service']
+ * ============================================================================ */
+export const CustomerServiceAdminOperationClustersBodySchema = z.object({
+  projectId: IdSchema.optional(),
+  seriesId: IdSchema.optional(),
+  modelId: IdSchema.optional(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional(),
+  limit: IntSchema.positive().max(100).default(20)
+});
+export type CustomerServiceAdminOperationClustersBody = z.infer<
+  typeof CustomerServiceAdminOperationClustersBodySchema
+>;
+
+export const CustomerServiceAdminOperationClusterItemSchema = z.object({
+  id: z.string(),
+  clusterTitle: z
+    .string()
+    .meta({ example: '售货机支付扣款成功后出货口卡货未掉出', description: '聚类主题标题' }),
+  clusterCount: IntSchema.nonnegative().meta({ example: 14, description: '聚类提问次数' }),
+  sampleQuestions: z.array(z.string()).meta({ description: '代表性用户问法列表' }),
+  latestTime: z.coerce.date().meta({ description: '最近发生时间' }),
+  affectedModelIds: z.array(IdSchema).default([]),
+  feedbackType: z.enum(['unresolved', 'bad', 'lowConfidence']),
+  representativeItem: CustomerServiceAdminOperationItemSchema
+});
+export type CustomerServiceAdminOperationClusterItem = z.infer<
+  typeof CustomerServiceAdminOperationClusterItemSchema
+>;
+
+export const CustomerServiceAdminOperationClustersResponseSchema = z.object({
+  clusters: z.array(CustomerServiceAdminOperationClusterItemSchema)
+});
+export type CustomerServiceAdminOperationClustersResponse = z.infer<
+  typeof CustomerServiceAdminOperationClustersResponseSchema
 >;
 
 /* ============================================================================
