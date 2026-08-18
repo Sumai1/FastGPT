@@ -12,11 +12,13 @@ import {
   upsertCustomerServiceMemberRole
 } from './entity';
 
-/** 设置成员唯一客服岗位；单岗位模型使编辑和审核无法同时生效。 */
+/** 设置成员唯一客服岗位；单岗位模型使编辑和审核无法同时生效，支持限定管理的产品范围。 */
 export const setCustomerServiceMemberRole = ({
   teamId,
   tmbId,
   role,
+  allowedCategoryIds = [],
+  allowedModelIds = [],
   status = CustomerServiceResourceStatusEnum.active,
   reason,
   operatorTmbId,
@@ -25,6 +27,8 @@ export const setCustomerServiceMemberRole = ({
   teamId: string;
   tmbId: string;
   role: CustomerServiceMemberRoleEnum;
+  allowedCategoryIds?: string[];
+  allowedModelIds?: string[];
   status?: CustomerServiceResourceStatusEnum;
   reason: string;
   operatorTmbId: string;
@@ -44,6 +48,8 @@ export const setCustomerServiceMemberRole = ({
       teamId,
       tmbId,
       role,
+      allowedCategoryIds,
+      allowedModelIds,
       status,
       reason: reason.trim(),
       operatorTmbId,

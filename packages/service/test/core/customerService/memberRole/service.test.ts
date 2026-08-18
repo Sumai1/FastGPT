@@ -78,4 +78,27 @@ describe('customer service member roles', () => {
       })
     ).rejects.toThrow('Customer service role permission denied');
   });
+
+  it('stores and updates allowed product categories and models', async () => {
+    const teamId = String(id());
+    const tmbId = String(id());
+    const operatorTmbId = String(id());
+    const categoryId = String(id());
+    const modelId = String(id());
+
+    await setCustomerServiceMemberRole({
+      teamId,
+      tmbId,
+      operatorTmbId,
+      role: CustomerServiceMemberRoleEnum.knowledgeEditor,
+      allowedCategoryIds: [categoryId],
+      allowedModelIds: [modelId],
+      status: CustomerServiceResourceStatusEnum.active,
+      reason: '分配限定产品线'
+    });
+
+    const stored = await MongoCustomerServiceMemberRole.findOne({ teamId, tmbId }).lean();
+    expect(stored?.allowedCategoryIds?.map(String)).toEqual([categoryId]);
+    expect(stored?.allowedModelIds?.map(String)).toEqual([modelId]);
+  });
 });

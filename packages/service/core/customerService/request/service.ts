@@ -1,7 +1,8 @@
+import type { CustomerServiceHandoffSnapshotType } from '@fastgpt/global/core/customerService/type';
 import {
+  CustomerServiceAudienceEnum,
   CustomerServiceChatStatusEnum,
   CustomerServiceRequestStatusEnum,
-  type CustomerServiceAudienceEnum,
   type CustomerServiceHumanHandoffReasonEnum
 } from '@fastgpt/global/core/customerService/constants';
 import { UserError } from '@fastgpt/global/common/error/utils';
@@ -293,3 +294,81 @@ export const findLatestCompletedCustomerServiceRequest = ({
     .select('modelId hardwareVersionId softwareVersionId')
     .sort({ updateTime: -1 })
     .lean();
+
+/**
+ * 保存访客转人工排查快照到客服请求记录。
+ * 优先匹配并更新指定 requestId 或该会话最近的请求记录；若会话尚未生成请求记录，则创建一条转人工快照记录。
+ */
+export const saveCustomerServiceHandoffSnapshot = async ({
+  teamId,
+  projectId,
+  openApiKeyId,
+  sessionId,
+  requestId,
+  handoffSnapshot
+}: {
+  teamId: string;
+  projectId: string;
+  openApiKeyId: string;
+  sessionId: string;
+  requestId?: string;
+  handoffSnapshot: CustomerServiceHandoffSnapshotType;
+}) => {
+  const sanitizedSnapshot = {
+    ...handoffSnapshot,
+    summaryText: handoffSnapshot.summaryText
+      ? redactCustomerServiceSensitiveText(handoffSnapshot.summaryText)
+      : undefined
+  };
+
+  if (requestId) {
+    const updated = await MongoCustomerServiceRequest.findOneAndUpdate(
+      {
+        teamId,
+        projectId,
+        openApiKeyId,
+        externalSessionId: sessionId,
+        requestId
+      },
+      {
+        $set: {
+          handoffSnapshot: sanitizedSnapshot,
+          updateTime: new Date()
+        }
+      },
+      { new: true }
+    ).lean();
+    if (updated) return updated;
+  }
+
+  const latest = await MongoCustomerServiceRequest.findOneAndUpdate(
+    {
+      teamId,
+      projectId,
+      openApiKeyId,
+      externalSessionId: sessionId
+    },
+    {
+      $set: {
+        handoffSnapshot: sanitizedSnapshot,
+        updateTime: new Date()
+      }
+    },
+    { sort: { updateTime: -1 }, new: true }
+  ).lean();
+  if (latest) return latest;
+
+  return MongoCustomerServiceRequest.create({
+    teamId,
+    projectId,
+    openApiKeyId,
+    requestId: requestId || `handoff_${Date.now()}`,
+    question: '转人工客服排查快照',
+    externalSessionId: sessionId,
+    internalChatId: `handoff_${sessionId}`,
+    responseChatItemId: `handoff_${Date.now()}`,
+    status: CustomerServiceRequestStatusEnum.completed,
+    audience: CustomerServiceAudienceEnum.public,
+    handoffSnapshot: sanitizedSnapshot
+  });
+};

@@ -20,6 +20,8 @@ export const upsertCustomerServiceMemberRole = ({
   teamId,
   tmbId,
   role,
+  allowedCategoryIds = [],
+  allowedModelIds = [],
   status,
   reason,
   operatorTmbId,
@@ -28,6 +30,8 @@ export const upsertCustomerServiceMemberRole = ({
   teamId: string;
   tmbId: string;
   role: CustomerServiceMemberRoleEnum;
+  allowedCategoryIds?: string[];
+  allowedModelIds?: string[];
   status: CustomerServiceResourceStatusEnum;
   reason: string;
   operatorTmbId: string;
@@ -38,6 +42,8 @@ export const upsertCustomerServiceMemberRole = ({
     {
       $set: {
         role,
+        allowedCategoryIds,
+        allowedModelIds,
         status,
         reason,
         updateTmbId: operatorTmbId,
@@ -93,3 +99,20 @@ export const createCustomerServiceMemberRoleAudit = ({
 
 export const listCustomerServiceMemberRoles = ({ teamId }: { teamId: string }) =>
   MongoCustomerServiceMemberRole.find({ teamId }).sort({ updateTime: -1 }).lean();
+
+export const listCustomerServiceMemberRoleAudits = ({
+  teamId,
+  tmbId,
+  limit = 50
+}: {
+  teamId: string;
+  tmbId?: string;
+  limit?: number;
+}) =>
+  MongoCustomerServiceMemberRoleAudit.find({
+    teamId,
+    ...(tmbId && { tmbId })
+  })
+    .sort({ createTime: -1 })
+    .limit(limit)
+    .lean();

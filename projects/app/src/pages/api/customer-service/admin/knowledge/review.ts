@@ -36,6 +36,9 @@ async function handler(req: NextApiRequest): Promise<CustomerServiceAdminKnowled
     knowledgeId: body.knowledgeId
   });
   if (!knowledge) throw new UserError('Customer service knowledge not found');
+  if (knowledge.submitterTmbId && String(knowledge.submitterTmbId) === String(tmbId)) {
+    throw new UserError('双人复核原则：您是该知识草稿的提交人，禁止自审，请交由其他审核员审批');
+  }
   await authCustomerServiceDatasets({
     tmbId,
     isRoot,

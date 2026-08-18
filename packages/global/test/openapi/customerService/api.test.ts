@@ -10,11 +10,16 @@ import {
   CustomerServiceAdminFrequentQuestionListBodySchema,
   CustomerServiceAdminOperationListBodySchema,
   CustomerServiceAdminOperationToKnowledgeBodySchema,
+  CustomerServiceAdminKnowledgeAuditListQuerySchema,
+  CustomerServiceAdminKnowledgeAuditListResponseSchema,
+  CustomerServiceAdminRoleSetBodySchema,
   CustomerServiceFeedbackBodySchema,
   CustomerServiceInternalStopBodySchema,
   CustomerServicePublicBootstrapResponseSchema,
   CustomerServicePublicChatBodySchema,
   CustomerServicePublicChatResponseSchema,
+  CustomerServicePublicHandoffBodySchema,
+  CustomerServicePublicHandoffResponseSchema,
   CustomerServicePublicStopBodySchema,
   CustomerServiceStopBodySchema,
   CustomerServiceStopResponseSchema
@@ -324,5 +329,65 @@ describe('customer service knowledge upload boundary', () => {
       forbid: true,
       metadata: { customerServicePendingRegistration: true }
     });
+  });
+});
+
+describe('customer service knowledge audit and role contracts', () => {
+  it('validates audit query filters and response schema with operator info', () => {
+    const query = CustomerServiceAdminKnowledgeAuditListQuerySchema.parse({
+      knowledgeId: '68ad85a7463006c963799a15',
+      versionGroupId: '68ad85a7463006c963799a11'
+    });
+    expect(query.knowledgeId).toBe('68ad85a7463006c963799a15');
+    expect(query.versionGroupId).toBe('68ad85a7463006c963799a11');
+
+    const response = CustomerServiceAdminKnowledgeAuditListResponseSchema.parse([
+      {
+        id: '68ad85a7463006c963799a99',
+        knowledgeId: '68ad85a7463006c963799a15',
+        versionGroupId: '68ad85a7463006c963799a11',
+        version: 1,
+        diffSummary: '初始版本创建',
+        action: 'create',
+        toStatus: 'draft',
+        reason: '',
+        operatorTmbId: '68ad85a7463006c963799a14',
+        operatorName: '李四',
+        operatorAvatar: '/avatar.png',
+        createTime: new Date()
+      }
+    ]);
+    expect(response[0].operatorName).toBe('李四');
+    expect(response[0].version).toBe(1);
+  });
+
+  it('accepts role scope restrictions in role set contract', () => {
+    const parsed = CustomerServiceAdminRoleSetBodySchema.parse({
+      tmbId: '68ad85a7463006c963799a13',
+      role: 'knowledgeEditor',
+      reason: '分配拍照机产品线维护职责',
+      allowedCategoryIds: ['68ad85a7463006c963799a01'],
+      allowedModelIds: ['68ad85a7463006c963799a03']
+    });
+    expect(parsed.allowedCategoryIds).toEqual(['68ad85a7463006c963799a01']);
+    expect(parsed.allowedModelIds).toEqual(['68ad85a7463006c963799a03']);
+  });
+
+  it('validates public handoff snapshot contract and publishes OpenAPI paths', () => {
+    const handoff = CustomerServicePublicHandoffBodySchema.parse({
+      publicId: 'cs_aB3dE5fG7hJ9kL2mN4pQ6rS8',
+      sessionId: 'visitor-001',
+      requestId: 'req-001',
+      productModelName: 'DT-2026A',
+      faultCode: 'E-1002',
+      completedSteps: ['电源检查', '清理纸屑'],
+      summaryText: '已多次重启，红灯常亮'
+    });
+    expect(handoff.productModelName).toBe('DT-2026A');
+    expect(handoff.completedSteps).toHaveLength(2);
+    expect(CustomerServicePublicHandoffResponseSchema.parse(undefined)).toBeUndefined();
+
+    expect(CustomerServicePath['/customer-service/admin/knowledge/audits']?.get).toBeDefined();
+    expect(CustomerServicePath['/customer-service/public/handoff']?.post).toBeDefined();
   });
 });

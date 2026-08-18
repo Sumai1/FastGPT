@@ -13,6 +13,11 @@ import {
 } from '@fastgpt/global/support/user/team/constant';
 import { defineIndex, Schema, getMongoModel } from '../../../common/mongo';
 
+import {
+  CustomerServiceProductCategoryCollectionName,
+  CustomerServiceProductModelCollectionName
+} from '../product/schema';
+
 export const CustomerServiceMemberRoleCollectionName = 'customer_service_member_roles';
 export const CustomerServiceMemberRoleAuditCollectionName = 'customer_service_member_role_audits';
 
@@ -31,6 +36,16 @@ const CustomerServiceMemberRoleSchema = new Schema({
     type: String,
     enum: Object.values(CustomerServiceMemberRoleEnum),
     required: true
+  },
+  allowedCategoryIds: {
+    type: [Schema.Types.ObjectId],
+    ref: CustomerServiceProductCategoryCollectionName,
+    default: []
+  },
+  allowedModelIds: {
+    type: [Schema.Types.ObjectId],
+    ref: CustomerServiceProductModelCollectionName,
+    default: []
   },
   status: {
     type: String,

@@ -159,6 +159,12 @@ const CustomerServiceKnowledgeAuditSchema = new Schema({
     ref: CustomerServiceKnowledgeCollectionName,
     required: true
   },
+  versionGroupId: {
+    type: Schema.Types.ObjectId,
+    ref: CustomerServiceKnowledgeCollectionName
+  },
+  version: { type: Number },
+  diffSummary: { type: String, default: '' },
   action: {
     type: String,
     enum: Object.values(CustomerServiceKnowledgeAuditActionEnum),
@@ -183,7 +189,11 @@ const CustomerServiceKnowledgeAuditSchema = new Schema({
 });
 
 defineIndex(CustomerServiceKnowledgeAuditSchema, { key: { knowledgeId: 1, createTime: -1 } });
+defineIndex(CustomerServiceKnowledgeAuditSchema, { key: { versionGroupId: 1, createTime: -1 } });
 defineIndex(CustomerServiceKnowledgeAuditSchema, { key: { teamId: 1, createTime: -1 } });
+defineIndex(CustomerServiceKnowledgeAuditSchema, {
+  key: { teamId: 1, operatorTmbId: 1, createTime: -1 }
+});
 
 export const MongoCustomerServiceKnowledge = getMongoModel<CustomerServiceKnowledgeType>(
   CustomerServiceKnowledgeCollectionName,

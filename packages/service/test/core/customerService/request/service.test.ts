@@ -11,6 +11,7 @@ import {
   countConsecutiveCustomerServiceLowConfidence,
   failCustomerServiceRequest,
   findProcessingCustomerServiceRequest,
+  saveCustomerServiceHandoffSnapshot,
   setCustomerServiceRequestUnresolved
 } from '@fastgpt/service/core/customerService/request/service';
 import { findCompletedCustomerServiceRequestByMessage } from '@fastgpt/service/core/customerService/request/service';
@@ -312,5 +313,35 @@ describe('customer service request idempotency', () => {
         responseChatItemId: base.responseChatItemId
       })
     ).toEqual(expect.objectContaining({ resultStatus: 'clarification_required' }));
+  });
+
+  it('saves troubleshooting handoff snapshot to the request record and redacts sensitive summary', async () => {
+    const teamId = id();
+    const projectId = id();
+    const openApiKeyId = id();
+    const sessionId = 'handoff-session';
+    const requestId = 'req-handoff';
+
+    const saved = await saveCustomerServiceHandoffSnapshot({
+      teamId,
+      projectId,
+      openApiKeyId,
+      sessionId,
+      requestId,
+      handoffSnapshot: {
+        productModelName: 'DT-2026A',
+        hardwareVersionName: 'V2',
+        softwareVersionName: 'V3.1',
+        faultCode: 'E-1002',
+        completedSteps: ['重启设备', '检查网线'],
+        summaryText: '用户手机 13800138000 反映红灯常亮'
+      }
+    });
+
+    expect(saved).toBeDefined();
+    const stored = await MongoCustomerServiceRequest.findById(saved._id).lean();
+    expect(stored?.handoffSnapshot?.productModelName).toBe('DT-2026A');
+    expect(stored?.handoffSnapshot?.completedSteps).toEqual(['重启设备', '检查网线']);
+    expect(stored?.handoffSnapshot?.summaryText).toBe('用户手机 [PHONE] 反映红灯常亮');
   });
 });

@@ -64,6 +64,14 @@ const CustomerServiceRequestSchema = new Schema({
   citationCount: { type: Number, default: 0 },
   unresolved: { type: Boolean, default: false },
   errorMessage: { type: String, default: '' },
+  handoffSnapshot: {
+    productModelName: { type: String },
+    hardwareVersionName: { type: String },
+    softwareVersionName: { type: String },
+    faultCode: { type: String },
+    completedSteps: { type: [String], default: [] },
+    summaryText: { type: String }
+  },
   createTime: { type: Date, default: () => new Date() },
   updateTime: { type: Date, default: () => new Date() }
 });

@@ -5,8 +5,14 @@ import type {
   listCustomerServiceKeyBindings,
   listCustomerServiceProjects
 } from '@fastgpt/service/core/customerService/project/entity';
-import type { listCustomerServiceKnowledges } from '@fastgpt/service/core/customerService/knowledge/entity';
-import type { listCustomerServiceMemberRoles } from '@fastgpt/service/core/customerService/memberRole/entity';
+import type {
+  listCustomerServiceKnowledgeAudits,
+  listCustomerServiceKnowledges
+} from '@fastgpt/service/core/customerService/knowledge/entity';
+import type {
+  listCustomerServiceMemberRoleAudits,
+  listCustomerServiceMemberRoles
+} from '@fastgpt/service/core/customerService/memberRole/entity';
 import { CustomerServiceWorkflowSyncStatusEnum } from '@fastgpt/global/core/customerService/constants';
 
 const stringIds = (ids: unknown[]) => ids.map(String);
@@ -213,6 +219,39 @@ export const formatCustomerServiceMemberRoles = (
     ...item,
     id: String(item._id),
     tmbId: String(item.tmbId),
+    allowedCategoryIds: stringIds(item.allowedCategoryIds ?? []),
+    allowedModelIds: stringIds(item.allowedModelIds ?? []),
     memberName: memberMap.get(String(item.tmbId))?.name ?? '已删除成员',
     memberAvatar: memberMap.get(String(item.tmbId))?.avatar ?? ''
+  }));
+
+/** 将岗位变更审计记录转换为 API 输出。 */
+export const formatCustomerServiceMemberRoleAudits = (
+  items: Awaited<ReturnType<typeof listCustomerServiceMemberRoleAudits>>,
+  memberMap: Map<string, { name: string; avatar: string }> = new Map()
+) =>
+  items.map((item) => ({
+    ...item,
+    id: String(item._id),
+    tmbId: String(item.tmbId),
+    operatorTmbId: String(item.operatorTmbId),
+    operatorName: memberMap.get(String(item.operatorTmbId))?.name ?? '已删除成员',
+    operatorAvatar: memberMap.get(String(item.operatorTmbId))?.avatar ?? '',
+    memberName: memberMap.get(String(item.tmbId))?.name ?? '已删除成员',
+    memberAvatar: memberMap.get(String(item.tmbId))?.avatar ?? ''
+  }));
+
+/** 将知识治理审计记录转换为 API 输出。 */
+export const formatCustomerServiceKnowledgeAudits = (
+  items: Awaited<ReturnType<typeof listCustomerServiceKnowledgeAudits>>,
+  memberMap: Map<string, { name: string; avatar: string }> = new Map()
+) =>
+  items.map((item) => ({
+    ...item,
+    id: String(item._id),
+    knowledgeId: String(item.knowledgeId),
+    versionGroupId: item.versionGroupId ? String(item.versionGroupId) : undefined,
+    operatorTmbId: String(item.operatorTmbId),
+    operatorName: memberMap.get(String(item.operatorTmbId))?.name ?? '已删除成员',
+    operatorAvatar: memberMap.get(String(item.operatorTmbId))?.avatar ?? ''
   }));

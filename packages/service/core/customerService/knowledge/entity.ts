@@ -81,9 +81,13 @@ export const transitionCustomerServiceKnowledge = ({
     { new: true, runValidators: true, session }
   ).lean();
 
+/** 记录知识治理流转审计流水，追踪版本演进、审批批注与操作人。 */
 export const createCustomerServiceKnowledgeAudit = ({
   teamId,
   knowledgeId,
+  versionGroupId,
+  version,
+  diffSummary = '',
   action,
   fromStatus,
   toStatus,
@@ -93,6 +97,9 @@ export const createCustomerServiceKnowledgeAudit = ({
 }: {
   teamId: string;
   knowledgeId: string;
+  versionGroupId?: string;
+  version?: number;
+  diffSummary?: string;
   action: CustomerServiceKnowledgeAuditActionEnum;
   fromStatus?: CustomerServiceKnowledgeStatusEnum;
   toStatus: CustomerServiceKnowledgeStatusEnum;
@@ -105,6 +112,9 @@ export const createCustomerServiceKnowledgeAudit = ({
       {
         teamId,
         knowledgeId,
+        ...(versionGroupId && { versionGroupId }),
+        ...(version !== undefined && { version }),
+        diffSummary,
         action,
         fromStatus,
         toStatus,
@@ -114,6 +124,24 @@ export const createCustomerServiceKnowledgeAudit = ({
     ],
     { session }
   ).then(([item]) => item);
+
+/** 按知识 ID 或版本组 ID 获取知识治理审计历史列表。 */
+export const listCustomerServiceKnowledgeAudits = ({
+  teamId,
+  knowledgeId,
+  versionGroupId
+}: {
+  teamId: string;
+  knowledgeId?: string;
+  versionGroupId?: string;
+}) =>
+  MongoCustomerServiceKnowledgeAudit.find({
+    teamId,
+    ...(knowledgeId && { knowledgeId }),
+    ...(versionGroupId && { versionGroupId })
+  })
+    .sort({ createTime: -1 })
+    .lean();
 
 export const listCustomerServiceKnowledges = ({
   teamId,

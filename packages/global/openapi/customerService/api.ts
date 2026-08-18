@@ -5,8 +5,10 @@ import {
   CustomerServiceAudienceEnum,
   CustomerServiceChatStatusEnum,
   CustomerServiceHumanHandoffReasonEnum,
+  CustomerServiceKnowledgeAuditActionEnum,
   CustomerServiceKnowledgeStatusEnum,
   CustomerServiceKnowledgeTypeEnum,
+  CustomerServiceMemberRoleAuditActionEnum,
   CustomerServiceMemberRoleEnum,
   CustomerServiceProductStatusEnum,
   CustomerServiceProjectStatusEnum,
@@ -474,6 +476,76 @@ export const CustomerServiceKnowledgeApiSchema = z.object({
     description: '更新时间'
   })
 });
+
+export const CustomerServiceKnowledgeAuditApiSchema = z.object({
+  id: IdSchema,
+  knowledgeId: IdSchema,
+  versionGroupId: IdSchema.nullish().meta({
+    example: '68ad85a7463006c963799a11',
+    description: '版本组 ID'
+  }),
+  version: IntSchema.nullish().meta({ example: 1, description: '知识版本号' }),
+  diffSummary: z.string().default('').meta({ example: '更新了适用型号', description: '变更摘要' }),
+  action: z.enum(CustomerServiceKnowledgeAuditActionEnum).meta({
+    example: CustomerServiceKnowledgeAuditActionEnum.publish,
+    description: '审计动作'
+  }),
+  fromStatus: z.enum(CustomerServiceKnowledgeStatusEnum).nullish().meta({
+    example: CustomerServiceKnowledgeStatusEnum.pending,
+    description: '变更前状态'
+  }),
+  toStatus: z.enum(CustomerServiceKnowledgeStatusEnum).meta({
+    example: CustomerServiceKnowledgeStatusEnum.published,
+    description: '变更后状态'
+  }),
+  reason: z.string().meta({ example: '审核通过', description: '审核原因或变更说明' }),
+  operatorTmbId: IdSchema.meta({
+    example: '68ad85a7463006c963799a14',
+    description: '操作人团队成员 ID'
+  }),
+  operatorName: z.string().default('已删除成员').meta({
+    example: '张三',
+    description: '操作人姓名'
+  }),
+  operatorAvatar: z.string().default('').meta({
+    example: '/icon/defaultAvatar.svg',
+    description: '操作人头像'
+  }),
+  createTime: z.coerce.date().meta({
+    example: '2026-08-11T00:00:00.000Z',
+    description: '审计记录创建时间'
+  })
+});
+export type CustomerServiceKnowledgeAuditApi = z.infer<
+  typeof CustomerServiceKnowledgeAuditApiSchema
+>;
+
+/* ============================================================================
+ * API: 获取知识治理审计历史
+ * Route: GET /api/customer-service/admin/knowledge/audits
+ * Method: GET
+ * Description: 查询知识或版本组的审核与流转审计历史
+ * Tags: ['Customer Service']
+ * ============================================================================ */
+export const CustomerServiceAdminKnowledgeAuditListQuerySchema = z.object({
+  knowledgeId: IdSchema.optional().meta({
+    example: '68ad85a7463006c963799a15',
+    description: '知识记录 ID'
+  }),
+  versionGroupId: IdSchema.optional().meta({
+    example: '68ad85a7463006c963799a11',
+    description: '版本组 ID'
+  })
+});
+export type CustomerServiceAdminKnowledgeAuditListQuery = z.infer<
+  typeof CustomerServiceAdminKnowledgeAuditListQuerySchema
+>;
+export const CustomerServiceAdminKnowledgeAuditListResponseSchema = z
+  .array(CustomerServiceKnowledgeAuditApiSchema)
+  .meta({ description: '知识治理审计历史列表' });
+export type CustomerServiceAdminKnowledgeAuditListResponse = z.infer<
+  typeof CustomerServiceAdminKnowledgeAuditListResponseSchema
+>;
 
 /* ============================================================================
  * API: 获取知识治理列表
@@ -1249,6 +1321,14 @@ export const CustomerServiceMemberRoleApiSchema = z.object({
     example: CustomerServiceMemberRoleEnum.knowledgeEditor,
     description: '客服岗位'
   }),
+  allowedCategoryIds: z.array(IdSchema).default([]).meta({
+    example: [],
+    description: '允许管理的产品大类 ID 列表'
+  }),
+  allowedModelIds: z.array(IdSchema).default([]).meta({
+    example: [],
+    description: '允许管理的产品型号 ID 列表'
+  }),
   status: z.enum(CustomerServiceResourceStatusEnum).meta({
     example: CustomerServiceResourceStatusEnum.active,
     description: '岗位状态'
@@ -1293,6 +1373,14 @@ export const CustomerServiceAdminRoleSetBodySchema = z.object({
     example: CustomerServiceMemberRoleEnum.knowledgeEditor,
     description: '目标岗位'
   }),
+  allowedCategoryIds: z.array(IdSchema).default([]).optional().meta({
+    example: [],
+    description: '允许管理的产品大类 ID 列表'
+  }),
+  allowedModelIds: z.array(IdSchema).default([]).optional().meta({
+    example: [],
+    description: '允许管理的产品型号 ID 列表'
+  }),
   status: z
     .enum(CustomerServiceResourceStatusEnum)
     .default(CustomerServiceResourceStatusEnum.active)
@@ -1311,6 +1399,40 @@ export const CustomerServiceAdminRoleSetResponseSchema = z.undefined().meta({
 });
 export type CustomerServiceAdminRoleSetResponse = z.infer<
   typeof CustomerServiceAdminRoleSetResponseSchema
+>;
+
+/* ============================================================================
+ * API: 客服岗位流转审计历史
+ * Route: GET /api/customer-service/admin/role/audits
+ * Method: GET
+ * Description: 查询团队客服岗位变更与启停流转审计日志
+ * Tags: ['Customer Service']
+ * ============================================================================ */
+export const CustomerServiceMemberRoleAuditApiSchema = z.object({
+  id: IdSchema,
+  tmbId: IdSchema,
+  action: z.enum(CustomerServiceMemberRoleAuditActionEnum),
+  fromRole: z.enum(CustomerServiceMemberRoleEnum).nullish(),
+  toRole: z.enum(CustomerServiceMemberRoleEnum),
+  fromStatus: z.enum(CustomerServiceResourceStatusEnum).nullish(),
+  toStatus: z.enum(CustomerServiceResourceStatusEnum),
+  reason: z.string(),
+  operatorTmbId: IdSchema,
+  operatorName: z.string().default('已删除成员'),
+  operatorAvatar: z.string().default(''),
+  memberName: z.string().default('已删除成员'),
+  memberAvatar: z.string().default(''),
+  createTime: z.coerce.date()
+});
+export type CustomerServiceMemberRoleAuditApi = z.infer<
+  typeof CustomerServiceMemberRoleAuditApiSchema
+>;
+
+export const CustomerServiceAdminRoleAuditListResponseSchema = z.array(
+  CustomerServiceMemberRoleAuditApiSchema
+);
+export type CustomerServiceAdminRoleAuditListResponse = z.infer<
+  typeof CustomerServiceAdminRoleAuditListResponseSchema
 >;
 
 /* ============================================================================
@@ -2066,4 +2188,61 @@ export const CustomerServicePublicFeedbackBodySchema = CustomerServiceFeedbackBo
 });
 export type CustomerServicePublicFeedbackBody = z.infer<
   typeof CustomerServicePublicFeedbackBodySchema
+>;
+
+/* ============================================================================
+ * API: 正式客户咨询端排查留痕与转人工快照
+ * Route: POST /api/customer-service/public/handoff
+ * Method: POST
+ * Description: 接收访客已确认的排查步骤和故障代码，保存为客服请求转人工快照
+ * Tags: ['Customer Service']
+ * ============================================================================ */
+export const CustomerServicePublicHandoffBodySchema = z.object({
+  publicId: CustomerServicePublicIdSchema,
+  sessionId: z.string().trim().min(1).max(200).meta({
+    example: 'visitor-session-001',
+    description: '访客会话 ID'
+  }),
+  requestId: z.string().trim().min(1).max(200).optional().meta({
+    example: 'req_001',
+    description: '请求 ID（若有）'
+  }),
+  productModelName: z.string().max(200).optional().meta({
+    example: 'DT-2026A',
+    description: '排查型号名称'
+  }),
+  hardwareVersionName: z.string().max(200).optional().meta({
+    example: 'V2',
+    description: '硬件版本'
+  }),
+  softwareVersionName: z.string().max(200).optional().meta({
+    example: 'V3.1',
+    description: '软件版本'
+  }),
+  faultCode: z.string().max(200).optional().meta({
+    example: 'E-1002',
+    description: '故障代码'
+  }),
+  completedSteps: z
+    .array(z.string().max(500))
+    .max(50)
+    .default([])
+    .meta({
+      example: ['检查电源插头', '重启设备'],
+      description: '已排查步骤'
+    }),
+  summaryText: z.string().max(2000).optional().meta({
+    example: '用户已重启三次，出纸口红灯仍常亮',
+    description: '排查总结或用户补充信息'
+  })
+});
+export type CustomerServicePublicHandoffBody = z.infer<
+  typeof CustomerServicePublicHandoffBodySchema
+>;
+
+export const CustomerServicePublicHandoffResponseSchema = z.undefined().meta({
+  description: '转人工快照保存成功'
+});
+export type CustomerServicePublicHandoffResponse = z.infer<
+  typeof CustomerServicePublicHandoffResponseSchema
 >;

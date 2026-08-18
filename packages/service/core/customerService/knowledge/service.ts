@@ -265,6 +265,9 @@ export const createCustomerServiceKnowledgeDraft = async ({
       createCustomerServiceKnowledgeAudit({
         teamId,
         knowledgeId: String(knowledge._id),
+        versionGroupId: String(knowledge.versionGroupId),
+        version: knowledge.version,
+        diffSummary: '创建知识草稿',
         action: CustomerServiceKnowledgeAuditActionEnum.create,
         toStatus: CustomerServiceKnowledgeStatusEnum.draft,
         operatorTmbId: tmbId,
@@ -359,6 +362,9 @@ export const updateCustomerServiceKnowledgeDraft = async ({
     await createCustomerServiceKnowledgeAudit({
       teamId,
       knowledgeId,
+      versionGroupId: String(knowledge.versionGroupId),
+      version: knowledge.version,
+      diffSummary: '更新治理字段',
       action: CustomerServiceKnowledgeAuditActionEnum.update,
       fromStatus: knowledge.status,
       toStatus: knowledge.status,
@@ -431,6 +437,9 @@ export const submitCustomerServiceKnowledge = async ({
     await createCustomerServiceKnowledgeAudit({
       teamId,
       knowledgeId,
+      versionGroupId: String(knowledge.versionGroupId),
+      version: knowledge.version,
+      diffSummary: '提交审核',
       action: CustomerServiceKnowledgeAuditActionEnum.submit,
       fromStatus: knowledge.status,
       toStatus: CustomerServiceKnowledgeStatusEnum.pending,
@@ -493,6 +502,9 @@ export const rejectCustomerServiceKnowledge = async ({
       createCustomerServiceKnowledgeAudit({
         teamId,
         knowledgeId,
+        versionGroupId: String(knowledge.versionGroupId),
+        version: knowledge.version,
+        diffSummary: `审核驳回: ${reason.trim()}`,
         action: CustomerServiceKnowledgeAuditActionEnum.reject,
         fromStatus: CustomerServiceKnowledgeStatusEnum.pending,
         toStatus: CustomerServiceKnowledgeStatusEnum.rejected,
@@ -540,7 +552,7 @@ export const publishCustomerServiceKnowledge = async ({
       versionGroupId: knowledge.versionGroupId
     };
     const oldVersions = await MongoCustomerServiceKnowledge.find(conflictFilter)
-      .select('_id collectionId')
+      .select('_id collectionId versionGroupId version')
       .session(activeSession)
       .lean();
     const now = new Date();
@@ -595,6 +607,9 @@ export const publishCustomerServiceKnowledge = async ({
       createCustomerServiceKnowledgeAudit({
         teamId,
         knowledgeId,
+        versionGroupId: String(knowledge.versionGroupId),
+        version: knowledge.version,
+        diffSummary: '审核通过并发布',
         action: CustomerServiceKnowledgeAuditActionEnum.publish,
         fromStatus: CustomerServiceKnowledgeStatusEnum.pending,
         toStatus: CustomerServiceKnowledgeStatusEnum.published,
@@ -605,6 +620,9 @@ export const publishCustomerServiceKnowledge = async ({
         createCustomerServiceKnowledgeAudit({
           teamId,
           knowledgeId: String(item._id),
+          versionGroupId: String(item.versionGroupId ?? knowledge.versionGroupId),
+          version: item.version,
+          diffSummary: `被新版本 ${knowledgeId} 替代下架`,
           action: CustomerServiceKnowledgeAuditActionEnum.offline,
           fromStatus: CustomerServiceKnowledgeStatusEnum.published,
           toStatus: CustomerServiceKnowledgeStatusEnum.offline,
@@ -668,6 +686,9 @@ export const offlineCustomerServiceKnowledge = async ({
       createCustomerServiceKnowledgeAudit({
         teamId,
         knowledgeId,
+        versionGroupId: String(knowledge.versionGroupId),
+        version: knowledge.version,
+        diffSummary: `手动下架: ${reason.trim()}`,
         action: CustomerServiceKnowledgeAuditActionEnum.offline,
         fromStatus: CustomerServiceKnowledgeStatusEnum.published,
         toStatus: CustomerServiceKnowledgeStatusEnum.offline,

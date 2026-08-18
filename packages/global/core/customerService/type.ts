@@ -101,6 +101,8 @@ export const CustomerServiceMemberRoleSchema = z
     teamId: ObjectIdSchema,
     tmbId: ObjectIdSchema,
     role: z.enum(CustomerServiceMemberRoleEnum),
+    allowedCategoryIds: z.array(ObjectIdSchema).default([]),
+    allowedModelIds: z.array(ObjectIdSchema).default([]),
     status: z.enum(CustomerServiceResourceStatusEnum),
     reason: z.string().default(''),
     creatorTmbId: ObjectIdSchema,
@@ -167,6 +169,9 @@ export const CustomerServiceKnowledgeAuditSchema = z.object({
   _id: ObjectIdSchema,
   teamId: ObjectIdSchema,
   knowledgeId: ObjectIdSchema,
+  versionGroupId: ObjectIdSchema.optional(),
+  version: z.number().int().positive().optional(),
+  diffSummary: z.string().default(''),
   action: z.enum(CustomerServiceKnowledgeAuditActionEnum),
   fromStatus: z.enum(CustomerServiceKnowledgeStatusEnum).optional(),
   toStatus: z.enum(CustomerServiceKnowledgeStatusEnum),
@@ -256,6 +261,18 @@ export const CustomerServiceKeyBindingSchema = z
   .extend(CustomerServiceTimestampSchema.shape);
 export type CustomerServiceKeyBindingType = z.infer<typeof CustomerServiceKeyBindingSchema>;
 
+export const CustomerServiceHandoffSnapshotSchema = z.object({
+  productModelName: z.string().optional(),
+  hardwareVersionName: z.string().optional(),
+  softwareVersionName: z.string().optional(),
+  faultCode: z.string().optional(),
+  completedSteps: z.array(z.string()).default([]),
+  summaryText: z.string().optional()
+});
+export type CustomerServiceHandoffSnapshotType = z.infer<
+  typeof CustomerServiceHandoffSnapshotSchema
+>;
+
 export const CustomerServiceRequestSchema = z
   .object({
     _id: ObjectIdSchema,
@@ -280,7 +297,8 @@ export const CustomerServiceRequestSchema = z
     lowConfidence: z.boolean().default(false),
     citationCount: z.number().int().nonnegative().default(0),
     unresolved: z.boolean().default(false),
-    errorMessage: z.string().default('')
+    errorMessage: z.string().default(''),
+    handoffSnapshot: CustomerServiceHandoffSnapshotSchema.optional()
   })
   .extend(CustomerServiceTimestampSchema.shape);
 export type CustomerServiceRequestType = z.infer<typeof CustomerServiceRequestSchema>;

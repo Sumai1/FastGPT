@@ -17,6 +17,7 @@ import {
   publishCustomerServiceKnowledge,
   updateCustomerServiceKnowledgeDraft
 } from '@fastgpt/service/core/customerService/knowledge/service';
+import { listCustomerServiceKnowledgeAudits } from '@fastgpt/service/core/customerService/knowledge/entity';
 import {
   MongoCustomerServiceKnowledge,
   MongoCustomerServiceKnowledgeAudit
@@ -302,5 +303,72 @@ describe('customer service knowledge publishing', () => {
         trainingError: '向量生成失败'
       })
     );
+  });
+
+  it('records audits with version info and diff summary, and enforces anti-self-review', async () => {
+    const teamId = id();
+    const datasetId = id();
+    const submitterTmbId = id();
+    const reviewerTmbId = id();
+    const collection = await MongoDatasetCollection.create({
+      teamId,
+      datasetId,
+      tmbId: submitterTmbId,
+      type: DatasetCollectionTypeEnum.file,
+      name: '审计测试.pdf',
+      forbid: true
+    });
+
+    const draft = await createCustomerServiceKnowledgeDraft({
+      teamId: String(teamId),
+      tmbId: String(submitterTmbId),
+      datasetId: String(datasetId),
+      collectionId: String(collection._id),
+      title: '审计测试知识',
+      knowledgeType: CustomerServiceKnowledgeTypeEnum.manual,
+      audienceLevel: CustomerServiceAudienceEnum.public
+    });
+
+    // Check draft audit record
+    const auditsAfterCreate = await listCustomerServiceKnowledgeAudits({
+      teamId: String(teamId),
+      knowledgeId: String(draft._id)
+    });
+    expect(auditsAfterCreate).toHaveLength(1);
+    expect(auditsAfterCreate[0].versionGroupId).toBeDefined();
+    expect(auditsAfterCreate[0].version).toBe(1);
+    expect(auditsAfterCreate[0].diffSummary).toBe('创建知识草稿');
+    expect(auditsAfterCreate[0].action).toBe('create');
+
+    // Make it pending
+    await MongoCustomerServiceKnowledge.updateOne(
+      { _id: draft._id },
+      { $set: { status: CustomerServiceKnowledgeStatusEnum.pending, submitterTmbId } }
+    );
+
+    // Self-review must be forbidden
+    await expect(
+      publishCustomerServiceKnowledge({
+        teamId: String(teamId),
+        reviewerTmbId: String(submitterTmbId),
+        knowledgeId: String(draft._id)
+      })
+    ).rejects.toThrow('Knowledge cannot be reviewed by its submitter');
+
+    // Other reviewer can publish
+    await publishCustomerServiceKnowledge({
+      teamId: String(teamId),
+      reviewerTmbId: String(reviewerTmbId),
+      knowledgeId: String(draft._id)
+    });
+
+    const auditsAfterPublish = await listCustomerServiceKnowledgeAudits({
+      teamId: String(teamId),
+      knowledgeId: String(draft._id)
+    });
+    expect(auditsAfterPublish.length).toBeGreaterThanOrEqual(2);
+    expect(auditsAfterPublish[0].action).toBe('publish');
+    expect(auditsAfterPublish[0].diffSummary).toBe('审核通过并发布');
+    expect(String(auditsAfterPublish[0].operatorTmbId)).toBe(String(reviewerTmbId));
   });
 });

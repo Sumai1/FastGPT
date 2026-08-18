@@ -24,6 +24,7 @@ import type {
   CustomerServiceAdminProjectListResponse,
   CustomerServiceAdminRoleMemberListResponse,
   CustomerServiceAdminRoleListResponse,
+  CustomerServiceAdminRoleAuditListResponse,
   CustomerServiceAdminUnregisteredKnowledgeListResponse
 } from '@fastgpt/global/openapi/customerService/api';
 import type { SelectedDatasetType } from '@fastgpt/global/core/workflow/type/io';
@@ -166,10 +167,16 @@ interface CustomerServiceContextType {
   projectData: CustomerServiceAdminProjectListResponse;
   roles: CustomerServiceAdminRoleListResponse;
   roleMembers: CustomerServiceAdminRoleMemberListResponse;
+  roleAudits: CustomerServiceAdminRoleAuditListResponse;
+  loadRoleAudits: () => Promise<void>;
   roleTmbId: string;
   setRoleTmbId: (id: string) => void;
   roleType: CustomerServiceMemberRoleEnum;
   setRoleType: (role: CustomerServiceMemberRoleEnum) => void;
+  roleAllowedCategoryIds: string[];
+  setRoleAllowedCategoryIds: (ids: string[]) => void;
+  roleAllowedModelIds: string[];
+  setRoleAllowedModelIds: (ids: string[]) => void;
   roleReason: string;
   setRoleReason: (reason: string) => void;
   todoCounts: { unresolved: number; noAnswer: number; human: number };
@@ -205,6 +212,25 @@ interface CustomerServiceContextType {
   bindingDataset?: SelectedDatasetType;
   setBindingDataset: (dataset?: SelectedDatasetType) => void;
 
+  // Role Simulation & RBAC
+  simulatedRole: CustomerServiceMemberRoleEnum | null;
+  setSimulatedRole: (role: CustomerServiceMemberRoleEnum | null) => void;
+  actualRole: CustomerServiceMemberRoleEnum;
+  effectiveRole: CustomerServiceMemberRoleEnum;
+  effectiveCapabilities: {
+    manageProjects: boolean;
+    editKnowledge: boolean;
+    reviewKnowledge: boolean;
+    viewOperations: boolean;
+    manageRoles: boolean;
+  };
+  isAdmin: boolean;
+  canEditKnowledge: boolean;
+  canReviewKnowledge: boolean;
+  canManageProjects: boolean;
+  canManageRoles: boolean;
+  canViewOperations: boolean;
+
   // Modals / Disclosures
   createDisclosure: ReturnType<typeof useDisclosure>;
   knowledgeCreateDisclosure: ReturnType<typeof useDisclosure>;
@@ -235,6 +261,7 @@ interface CustomerServiceContextType {
       CustomerServiceAdminKnowledgeListResponse,
       CustomerServiceAdminProjectListResponse,
       CustomerServiceAdminRoleListResponse,
+      CustomerServiceAdminRoleAuditListResponse,
       CustomerServiceAdminUnregisteredKnowledgeListResponse,
       CustomerServiceAdminOperationListResponse,
       CustomerServiceAdminFrequentQuestionListResponse,
@@ -293,9 +320,14 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
   const [projectData, setProjectData] = useState(emptyProjects);
   const [roles, setRoles] = useState<CustomerServiceAdminRoleListResponse>([]);
   const [roleMembers, setRoleMembers] = useState<CustomerServiceAdminRoleMemberListResponse>([]);
+  const [roleAudits, setRoleAudits] = useState<CustomerServiceAdminRoleAuditListResponse>([]);
   const [roleTmbId, setRoleTmbId] = useState('');
   const [roleType, setRoleType] = useState(CustomerServiceMemberRoleEnum.knowledgeEditor);
+  const [roleAllowedCategoryIds, setRoleAllowedCategoryIds] = useState<string[]>([]);
+  const [roleAllowedModelIds, setRoleAllowedModelIds] = useState<string[]>([]);
   const [roleReason, setRoleReason] = useState('调整客服日常职责');
+  const [simulatedRole, setSimulatedRole] = useState<CustomerServiceMemberRoleEnum | null>(null);
+
   const [todoCounts, setTodoCounts] = useState({ unresolved: 0, noAnswer: 0, human: 0 });
   const [operations, setOperations] = useState<CustomerServiceAdminOperationListResponse>({
     total: 0,
@@ -318,6 +350,68 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
   const [draftAnswer, setDraftAnswer] = useState('');
   const [bindingModelId, setBindingModelId] = useState('');
   const [bindingDataset, setBindingDataset] = useState<SelectedDatasetType>();
+
+  const actualRole = currentMember?.role ?? CustomerServiceMemberRoleEnum.customerServiceAdmin;
+  const isAdmin =
+    !!currentMember?.isTeamOwner ||
+    actualRole === CustomerServiceMemberRoleEnum.customerServiceAdmin;
+  const effectiveRole = isAdmin && simulatedRole ? simulatedRole : actualRole;
+
+  const effectiveCapabilities = useMemo(() => {
+    if (effectiveRole === CustomerServiceMemberRoleEnum.customerServiceAdmin) {
+      return {
+        manageProjects: true,
+        editKnowledge: true,
+        reviewKnowledge: true,
+        viewOperations: true,
+        manageRoles: true
+      };
+    }
+    if (effectiveRole === CustomerServiceMemberRoleEnum.knowledgeEditor) {
+      return {
+        manageProjects: false,
+        editKnowledge: true,
+        reviewKnowledge: false,
+        viewOperations: true,
+        manageRoles: false
+      };
+    }
+    if (effectiveRole === CustomerServiceMemberRoleEnum.knowledgeReviewer) {
+      return {
+        manageProjects: false,
+        editKnowledge: false,
+        reviewKnowledge: true,
+        viewOperations: true,
+        manageRoles: false
+      };
+    }
+    return (
+      currentMember?.capabilities ?? {
+        manageProjects: false,
+        editKnowledge: false,
+        reviewKnowledge: false,
+        viewOperations: false,
+        manageRoles: false
+      }
+    );
+  }, [effectiveRole, currentMember?.capabilities]);
+
+  const canEditKnowledge = effectiveCapabilities.editKnowledge;
+  const canReviewKnowledge = effectiveCapabilities.reviewKnowledge;
+  const canManageProjects = effectiveCapabilities.manageProjects;
+  const canManageRoles = effectiveCapabilities.manageRoles;
+  const canViewOperations = effectiveCapabilities.viewOperations;
+
+  const loadRoleAudits = useCallback(async () => {
+    try {
+      const audits = await requestAdminApi<CustomerServiceAdminRoleAuditListResponse>({
+        url: '/api/customer-service/admin/role/audits'
+      });
+      setRoleAudits(audits);
+    } catch (error) {
+      console.error('Failed to load role audits', error);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     const member = await requestAdminApi<CustomerServiceAdminMeResponse>({
@@ -342,6 +436,11 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
         ? requestAdminApi<CustomerServiceAdminRoleListResponse>({
             url: '/api/customer-service/admin/role/list'
           })
+        : Promise.resolve([]),
+      member.capabilities.manageRoles
+        ? requestAdminApi<CustomerServiceAdminRoleAuditListResponse>({
+            url: '/api/customer-service/admin/role/audits'
+          }).catch(() => [])
         : Promise.resolve([]),
       member.capabilities.editKnowledge
         ? requestAdminApi<CustomerServiceAdminUnregisteredKnowledgeListResponse>({
@@ -397,6 +496,7 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
         nextKnowledge,
         nextProjects,
         nextRoles,
+        nextRoleAudits,
         nextUnregistered,
         nextOperations,
         nextFrequentQuestions,
@@ -408,6 +508,7 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
       setKnowledge(nextKnowledge);
       setProjectData(nextProjects);
       setRoles(nextRoles);
+      setRoleAudits(nextRoleAudits);
       setUnregisteredKnowledge(nextUnregistered);
       setOperations(nextOperations);
       setFrequentQuestions(nextFrequentQuestions);
@@ -495,6 +596,7 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
           nextKnowledge,
           nextProjects,
           nextRoles,
+          nextRoleAudits,
           nextUnregistered,
           nextOperations,
           nextFrequentQuestions,
@@ -507,6 +609,7 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
           setKnowledge(nextKnowledge);
           setProjectData(nextProjects);
           setRoles(nextRoles);
+          setRoleAudits(nextRoleAudits);
           setUnregisteredKnowledge(nextUnregistered);
           setOperations(nextOperations);
           setFrequentQuestions(nextFrequentQuestions);
@@ -536,13 +639,13 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
       sectionConfig.filter((item) => {
         if (!currentMember) return item.key === 'overview';
         if (item.key === 'assistants' || item.key === 'settings') {
-          return currentMember.capabilities.manageProjects;
+          return effectiveCapabilities.manageProjects;
         }
-        if (item.key === 'review') return currentMember.capabilities.reviewKnowledge;
-        if (item.key === 'operations') return currentMember.capabilities.viewOperations;
+        if (item.key === 'review') return effectiveCapabilities.reviewKnowledge;
+        if (item.key === 'operations') return effectiveCapabilities.viewOperations;
         return true;
       }),
-    [currentMember]
+    [currentMember, effectiveCapabilities]
   );
 
   const section = useMemo<ConsoleSection>(() => {
@@ -729,10 +832,18 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
         requestAdminApi({
           url: '/api/customer-service/admin/role/set',
           method: 'POST',
-          body: { tmbId: roleTmbId, role: roleType, reason: roleReason, status }
+          body: {
+            tmbId: roleTmbId,
+            role: roleType,
+            allowedCategoryIds: roleAllowedCategoryIds,
+            allowedModelIds: roleAllowedModelIds,
+            reason: roleReason,
+            status
+          }
         }),
       status === CustomerServiceResourceStatusEnum.active ? '客服岗位已保存' : '客服岗位已停用'
     );
+    await loadRoleAudits();
     roleDisclosure.onClose();
   };
 
@@ -797,10 +908,16 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
     projectData,
     roles,
     roleMembers,
+    roleAudits,
+    loadRoleAudits,
     roleTmbId,
     setRoleTmbId,
     roleType,
     setRoleType,
+    roleAllowedCategoryIds,
+    setRoleAllowedCategoryIds,
+    roleAllowedModelIds,
+    setRoleAllowedModelIds,
     roleReason,
     setRoleReason,
     todoCounts,
@@ -835,6 +952,18 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
     setBindingModelId,
     bindingDataset,
     setBindingDataset,
+
+    simulatedRole,
+    setSimulatedRole,
+    actualRole,
+    effectiveRole,
+    effectiveCapabilities,
+    isAdmin,
+    canEditKnowledge,
+    canReviewKnowledge,
+    canManageProjects,
+    canManageRoles,
+    canViewOperations,
 
     createDisclosure,
     knowledgeCreateDisclosure,

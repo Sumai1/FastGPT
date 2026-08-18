@@ -9,6 +9,8 @@ import {
   CustomerServiceAdminKeyUpdateResponseSchema,
   CustomerServiceAdminKnowledgeCreateBodySchema,
   CustomerServiceAdminKnowledgeCreateResponseSchema,
+  CustomerServiceAdminKnowledgeAuditListQuerySchema,
+  CustomerServiceAdminKnowledgeAuditListResponseSchema,
   CustomerServiceAdminKnowledgeListBodySchema,
   CustomerServiceAdminKnowledgeListResponseSchema,
   CustomerServiceAdminKnowledgeOfflineBodySchema,
@@ -64,6 +66,8 @@ import {
   CustomerServicePublicChatResponseSchema,
   CustomerServicePublicStopBodySchema,
   CustomerServicePublicFeedbackBodySchema,
+  CustomerServicePublicHandoffBodySchema,
+  CustomerServicePublicHandoffResponseSchema,
   CustomerServiceProductsResponseSchema
 } from './api';
 
@@ -156,6 +160,14 @@ export const CustomerServicePath: OpenAPIPath = {
       summary: '获取待登记的原生资料',
       tags: customerServiceTags,
       responses: successResponse(CustomerServiceAdminUnregisteredKnowledgeListResponseSchema)
+    }
+  },
+  '/customer-service/admin/knowledge/audits': {
+    get: {
+      summary: '获取知识治理审计历史',
+      tags: customerServiceTags,
+      requestParams: { query: CustomerServiceAdminKnowledgeAuditListQuerySchema },
+      responses: successResponse(CustomerServiceAdminKnowledgeAuditListResponseSchema)
     }
   },
   '/customer-service/admin/knowledge/update': {
@@ -459,6 +471,16 @@ export const CustomerServicePath: OpenAPIPath = {
         content: { 'application/json': { schema: CustomerServicePublicFeedbackBodySchema } }
       },
       responses: successResponse(CustomerServiceFeedbackResponseSchema)
+    }
+  },
+  '/customer-service/public/handoff': {
+    post: {
+      summary: '正式客户咨询端排查留痕与转人工快照',
+      tags: customerServiceTags,
+      requestBody: {
+        content: { 'application/json': { schema: CustomerServicePublicHandoffBodySchema } }
+      },
+      responses: successResponse(CustomerServicePublicHandoffResponseSchema)
     }
   }
 };
