@@ -1402,6 +1402,57 @@ export type CustomerServiceAdminRoleSetResponse = z.infer<
 >;
 
 /* ============================================================================
+ * API: 创建客服独立账号并分配岗位
+ * Route: POST /api/customer-service/admin/role/create-member
+ * Method: POST
+ * Description: 创建真实系统账号（用户名/密码），并加入团队绑定客服岗位
+ * Tags: ['Customer Service']
+ * ============================================================================ */
+export const CustomerServiceAdminRoleCreateMemberBodySchema = z.object({
+  username: z.string().trim().min(2).max(50).meta({
+    example: 'editor1',
+    description: '登录用户名'
+  }),
+  password: z.string().trim().min(4).max(50).meta({
+    example: '1234',
+    description: '登录密码'
+  }),
+  name: z.string().trim().min(1).max(50).meta({
+    example: '采编员李明',
+    description: '成员显示姓名'
+  }),
+  role: z.enum(CustomerServiceMemberRoleEnum).meta({
+    example: CustomerServiceMemberRoleEnum.knowledgeEditor,
+    description: '分配客服岗位'
+  }),
+  allowedCategoryIds: z.array(IdSchema).default([]).optional().meta({
+    example: [],
+    description: '允许管理的产品大类 ID 列表'
+  }),
+  allowedModelIds: z.array(IdSchema).default([]).optional().meta({
+    example: [],
+    description: '允许管理的产品型号 ID 列表'
+  }),
+  reason: z.string().trim().max(1000).default('管理员创建客服账号并分配岗位').meta({
+    example: '客服新成员入职',
+    description: '开通原因'
+  })
+});
+export type CustomerServiceAdminRoleCreateMemberBody = z.infer<
+  typeof CustomerServiceAdminRoleCreateMemberBodySchema
+>;
+export const CustomerServiceAdminRoleCreateMemberResponseSchema = z.object({
+  tmbId: IdSchema,
+  userId: IdSchema,
+  username: z.string(),
+  name: z.string(),
+  role: z.enum(CustomerServiceMemberRoleEnum)
+});
+export type CustomerServiceAdminRoleCreateMemberResponse = z.infer<
+  typeof CustomerServiceAdminRoleCreateMemberResponseSchema
+>;
+
+/* ============================================================================
  * API: 客服岗位流转审计历史
  * Route: GET /api/customer-service/admin/role/audits
  * Method: GET

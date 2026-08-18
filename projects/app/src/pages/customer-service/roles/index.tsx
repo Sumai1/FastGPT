@@ -35,7 +35,8 @@ import {
   Th,
   Thead,
   Tr,
-  useToast
+  useToast,
+  useDisclosure
 } from '@chakra-ui/react';
 import { serviceSideProps } from '@/web/common/i18n/utils';
 import MyIcon from '@fastgpt/web/components/common/Icon';
@@ -46,7 +47,8 @@ import {
 import {
   CustomerServiceProvider,
   useCustomerServiceContext,
-  memberRoleMap
+  memberRoleMap,
+  requestAdminApi
 } from '@/pageComponents/customerService/context';
 import CustomerServiceHeader from '@/pageComponents/customerService/CustomerServiceHeader';
 
@@ -84,6 +86,91 @@ const RolesCenterContent: React.FC = () => {
   } = useCustomerServiceContext();
 
   const [activeTab, setActiveTab] = useState<'matrix' | 'audits'>('matrix');
+
+  // Create member state
+  const createMemberDisclosure = useDisclosure();
+  const [creatingMember, setCreatingMember] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newPassword, setNewPassword] = useState('1234');
+  const [newRole, setNewRole] = useState<CustomerServiceMemberRoleEnum>(
+    CustomerServiceMemberRoleEnum.knowledgeEditor
+  );
+  const [newAllowedCategoryIds, setNewAllowedCategoryIds] = useState<string[]>([]);
+  const [newAllowedModelIds, setNewAllowedModelIds] = useState<string[]>([]);
+
+  const handleOpenCreateMemberModal = () => {
+    setNewUsername('');
+    setNewName('');
+    setNewPassword('1234');
+    setNewRole(CustomerServiceMemberRoleEnum.knowledgeEditor);
+    setNewAllowedCategoryIds([]);
+    setNewAllowedModelIds([]);
+    createMemberDisclosure.onOpen();
+  };
+
+  const handleToggleNewCategory = (catId: string) => {
+    setNewAllowedCategoryIds(
+      newAllowedCategoryIds.includes(catId)
+        ? newAllowedCategoryIds.filter((id) => id !== catId)
+        : [...newAllowedCategoryIds, catId]
+    );
+  };
+
+  const handleToggleNewModel = (modelId: string) => {
+    setNewAllowedModelIds(
+      newAllowedModelIds.includes(modelId)
+        ? newAllowedModelIds.filter((id) => id !== modelId)
+        : [...newAllowedModelIds, modelId]
+    );
+  };
+
+  const handleCreateMember = async () => {
+    if (!newUsername.trim()) {
+      toast({ status: 'warning', title: '请输入登录用户名' });
+      return;
+    }
+    if (!newName.trim()) {
+      toast({ status: 'warning', title: '请输入成员姓名' });
+      return;
+    }
+    if (!newPassword.trim()) {
+      toast({ status: 'warning', title: '请输入登录密码' });
+      return;
+    }
+
+    try {
+      setCreatingMember(true);
+      await requestAdminApi({
+        url: '/api/customer-service/admin/role/create-member',
+        method: 'POST',
+        body: {
+          username: newUsername.trim(),
+          name: newName.trim(),
+          password: newPassword.trim(),
+          role: newRole,
+          allowedCategoryIds: newAllowedCategoryIds,
+          allowedModelIds: newAllowedModelIds,
+          reason: '管理员在客服岗位中心直接开通独立账号'
+        }
+      });
+      await loadData();
+      createMemberDisclosure.onClose();
+      toast({
+        status: 'success',
+        title: '独立账号创建成功',
+        description: `账号【${newUsername.trim()}】已就绪，密码为【${newPassword.trim()}】，可直接使用 FastGPT 登录页登录！`
+      });
+    } catch (error) {
+      toast({
+        status: 'error',
+        title: '创建失败',
+        description: error instanceof Error ? error.message : '请稍后重试'
+      });
+    } finally {
+      setCreatingMember(false);
+    }
+  };
 
   // Compute metrics
   const adminCount = roles.filter(
@@ -184,19 +271,19 @@ const RolesCenterContent: React.FC = () => {
             {canManageRoles && (
               <HStack spacing={3}>
                 <Button
-                  variant="outline"
                   colorScheme="blue"
-                  leftIcon={<MyIcon name="support/user/usersLight" w={4} />}
-                  onClick={() => void router.push('/account/team')}
+                  leftIcon={<MyIcon name="common/addLight" w={4} />}
+                  onClick={handleOpenCreateMemberModal}
                 >
-                  前往团队邀请新成员
+                  新建客服独立账号
                 </Button>
                 <Button
+                  variant="outline"
                   colorScheme="blue"
                   leftIcon={<MyIcon name="common/settingLight" w={4} />}
                   onClick={() => handleOpenAssignModal()}
                 >
-                  分配客服岗位与范围
+                  分配已有成员岗位
                 </Button>
               </HStack>
             )}
@@ -700,6 +787,149 @@ const RolesCenterContent: React.FC = () => {
               onClick={() => saveMemberRole(CustomerServiceResourceStatusEnum.active)}
             >
               确认分配并生效
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Create Customer Service Member Modal */}
+      <Modal
+        isOpen={createMemberDisclosure.isOpen}
+        onClose={createMemberDisclosure.onClose}
+        size="lg"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader fontSize="md">✨ 创建客服独立账号并分配岗位</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Stack spacing={4}>
+              <Alert status="info" borderRadius="md" py={2} px={3}>
+                <AlertIcon />
+                <AlertDescription fontSize="xs">
+                  创建成功后，该成员将直接获得 FastGPT
+                  登录凭证，可在统一登录页输入用户名和密码登录对应客服工作台。
+                </AlertDescription>
+              </Alert>
+
+              <SimpleGrid columns={2} gap={4}>
+                <FormControl isRequired>
+                  <FormLabel fontSize="xs">登录用户名</FormLabel>
+                  <Input
+                    size="sm"
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                    placeholder="如: editor1 / reviewer1"
+                  />
+                </FormControl>
+
+                <FormControl isRequired>
+                  <FormLabel fontSize="xs">登录初始密码</FormLabel>
+                  <Input
+                    size="sm"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="请输入初始登录密码"
+                  />
+                </FormControl>
+              </SimpleGrid>
+
+              <FormControl isRequired>
+                <FormLabel fontSize="xs">成员显示姓名</FormLabel>
+                <Input
+                  size="sm"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="如: 知识采编员·李明"
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel fontSize="xs">分配客服岗位</FormLabel>
+                <Select
+                  size="sm"
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as CustomerServiceMemberRoleEnum)}
+                >
+                  <option value={CustomerServiceMemberRoleEnum.knowledgeEditor}>
+                    📝 知识采编员 (仅知识录入与维护，不可自审)
+                  </option>
+                  <option value={CustomerServiceMemberRoleEnum.knowledgeReviewer}>
+                    🔍 知识审核员 (仅知识版本审查与审批)
+                  </option>
+                  <option value={CustomerServiceMemberRoleEnum.customerServiceAdmin}>
+                    🛡️ 客服管理员 (项目/产品/拓扑与权限全量管理)
+                  </option>
+                </Select>
+              </FormControl>
+
+              {newRole !== CustomerServiceMemberRoleEnum.customerServiceAdmin && (
+                <>
+                  <FormControl>
+                    <FormLabel fontSize="xs">管辖产品大类 (可选限定，留空表示全部大类)</FormLabel>
+                    <SimpleGrid
+                      columns={2}
+                      gap={2}
+                      maxH="120px"
+                      overflowY="auto"
+                      p={2}
+                      borderWidth="1px"
+                      borderColor="myGray.200"
+                      borderRadius="md"
+                    >
+                      {catalog.categories.map((c) => (
+                        <Checkbox
+                          key={c.id}
+                          size="sm"
+                          isChecked={newAllowedCategoryIds.includes(c.id)}
+                          onChange={() => handleToggleNewCategory(c.id)}
+                        >
+                          <Text fontSize="xs">{c.name}</Text>
+                        </Checkbox>
+                      ))}
+                    </SimpleGrid>
+                  </FormControl>
+
+                  <FormControl>
+                    <FormLabel fontSize="xs">管辖产品型号 (可选限定，留空表示全部型号)</FormLabel>
+                    <SimpleGrid
+                      columns={2}
+                      gap={2}
+                      maxH="140px"
+                      overflowY="auto"
+                      p={2}
+                      borderWidth="1px"
+                      borderColor="myGray.200"
+                      borderRadius="md"
+                    >
+                      {catalog.models.map((m) => (
+                        <Checkbox
+                          key={m.id}
+                          size="sm"
+                          isChecked={newAllowedModelIds.includes(m.id)}
+                          onChange={() => handleToggleNewModel(m.id)}
+                        >
+                          <Text fontSize="xs">{m.name}</Text>
+                        </Checkbox>
+                      ))}
+                    </SimpleGrid>
+                  </FormControl>
+                </>
+              )}
+            </Stack>
+          </ModalBody>
+
+          <ModalFooter gap={2}>
+            <Button size="sm" variant="outline" onClick={createMemberDisclosure.onClose}>
+              取消
+            </Button>
+            <Button
+              size="sm"
+              colorScheme="blue"
+              isLoading={creatingMember}
+              onClick={handleCreateMember}
+            >
+              确认创建并授权
             </Button>
           </ModalFooter>
         </ModalContent>
