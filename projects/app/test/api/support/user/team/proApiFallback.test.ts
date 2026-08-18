@@ -28,9 +28,22 @@ vi.mock('@fastgpt/service/support/user/team/teamSchema', () => ({
 }));
 
 vi.mock('@fastgpt/service/support/user/schema', () => ({
+  userCollectionName: 'users',
   MongoUser: {
     updateOne: vi.fn()
   }
+}));
+
+vi.mock('@fastgpt/service/core/customerService/memberRole/schema', () => ({
+  MongoCustomerServiceMemberRole: {
+    find: vi.fn().mockReturnValue({
+      lean: vi.fn().mockResolvedValue([])
+    })
+  }
+}));
+
+vi.mock('@fastgpt/service/core/customerService/memberRole/service', () => ({
+  setCustomerServiceMemberRole: vi.fn().mockResolvedValue(undefined)
 }));
 
 import { handleProApiFallback } from '@/service/support/user/team/proApiFallback';

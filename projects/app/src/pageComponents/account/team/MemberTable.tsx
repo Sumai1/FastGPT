@@ -291,6 +291,7 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                     {t('account_team:user_name')}
                   </Th>
                   <Th bgColor="myGray.100">{t('common:contact_way')}</Th>
+                  <Th bgColor="myGray.100">角色与权限</Th>
                   <Th bgColor="myGray.100" pl={9}>
                     {t('account_team:org')}
                   </Th>
@@ -309,7 +310,7 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                         <Box className={'textEllipsis'}>
                           {member.memberName}
                           {member.status !== 'active' && (
-                            <Tag ml="2" colorSchema="gray" bg={'myGray.100'} color={'myGray.700'}>
+                            <Tag ml="2" colorScheme="gray" bg={'myGray.100'} color={'myGray.700'}>
                               {member.status === 'forbidden'
                                 ? t('account_team:forbidden')
                                 : t('account_team:leave')}
@@ -319,6 +320,41 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                       </HStack>
                     </Td>
                     <Td maxW={'300px'}>{member.contact || '-'}</Td>
+                    <Td>
+                      {(() => {
+                        const role = (member as any).csRole || member.role;
+                        if (
+                          role === 'customerServiceAdmin' ||
+                          role === 'owner' ||
+                          role === 'admin'
+                        ) {
+                          return (
+                            <Tag colorScheme="purple" size="sm" borderRadius="full" px={2.5}>
+                              🛡️ 管理员
+                            </Tag>
+                          );
+                        }
+                        if (role === 'knowledgeReviewer') {
+                          return (
+                            <Tag colorScheme="green" size="sm" borderRadius="full" px={2.5}>
+                              🔍 知识审核员
+                            </Tag>
+                          );
+                        }
+                        if (role === 'knowledgeEditor') {
+                          return (
+                            <Tag colorScheme="orange" size="sm" borderRadius="full" px={2.5}>
+                              📝 知识采编员
+                            </Tag>
+                          );
+                        }
+                        return (
+                          <Tag colorScheme="gray" size="sm" borderRadius="full" px={2.5}>
+                            👤 普通成员
+                          </Tag>
+                        );
+                      })()}
+                    </Td>
                     <Td maxWidth="300px">
                       {(() => {
                         return <OrgTags orgs={member.orgs || undefined} type="tag" />;

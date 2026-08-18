@@ -4,10 +4,16 @@ import { authCert } from '@fastgpt/service/support/permission/auth/common';
 import { MongoTeamMember } from '@fastgpt/service/support/user/team/teamMemberSchema';
 import { MongoTeam } from '@fastgpt/service/support/user/team/teamSchema';
 import { MongoUser } from '@fastgpt/service/support/user/schema';
+import { MongoCustomerServiceMemberRole } from '@fastgpt/service/core/customerService/memberRole/schema';
+import { setCustomerServiceMemberRole } from '@fastgpt/service/core/customerService/memberRole/service';
 import {
   TeamMemberRoleEnum,
   TeamMemberStatusEnum
 } from '@fastgpt/global/support/user/team/constant';
+import {
+  CustomerServiceMemberRoleEnum,
+  CustomerServiceResourceStatusEnum
+} from '@fastgpt/global/core/customerService/constants';
 import { TeamPermission } from '@fastgpt/global/support/permission/user/controller';
 import { TeamDefaultRoleVal } from '@fastgpt/global/support/permission/user/constant';
 import type { TeamSchema } from '@fastgpt/global/support/user/team/type';
@@ -116,24 +122,48 @@ export async function handleProApiFallback(
         .lean()
     ]);
 
-    const list = members.map((tmb) => ({
-      tmbId: String(tmb._id),
-      userId: String(
-        typeof tmb.userId === 'object' && tmb.userId ? (tmb.userId as any)._id : tmb.userId
-      ),
-      username: typeof tmb.userId === 'object' && tmb.userId ? (tmb.userId as any).username : '',
-      memberName: tmb.name,
-      avatar: tmb.avatar || '',
-      role: tmb.role || TeamMemberRoleEnum.member,
-      status: tmb.status,
-      createTime: tmb.createTime,
-      permission: {
-        hasManagePer:
-          tmb.role === TeamMemberRoleEnum.owner || tmb.role === TeamMemberRoleEnum.admin,
-        isOwner: tmb.role === TeamMemberRoleEnum.owner
-      },
-      orgs: []
-    }));
+    // 联查系统角色权限
+    const tmbIds = members.map((m) => m._id);
+    const roles = await MongoCustomerServiceMemberRole.find({
+      teamId,
+      tmbId: { $in: tmbIds },
+      status: CustomerServiceResourceStatusEnum.active
+    }).lean();
+
+    const roleMap = new Map<string, string>();
+    for (const r of roles) {
+      roleMap.set(String(r.tmbId), r.role);
+    }
+
+    const list = members.map((tmb) => {
+      const csRole =
+        roleMap.get(String(tmb._id)) ||
+        (tmb.role === TeamMemberRoleEnum.owner
+          ? CustomerServiceMemberRoleEnum.customerServiceAdmin
+          : CustomerServiceMemberRoleEnum.visitor);
+
+      return {
+        tmbId: String(tmb._id),
+        userId: String(
+          typeof tmb.userId === 'object' && tmb.userId ? (tmb.userId as any)._id : tmb.userId
+        ),
+        username: typeof tmb.userId === 'object' && tmb.userId ? (tmb.userId as any).username : '',
+        memberName: tmb.name,
+        avatar: tmb.avatar || '',
+        role: tmb.role || TeamMemberRoleEnum.member,
+        csRole,
+        status: tmb.status,
+        createTime: tmb.createTime,
+        permission: {
+          hasManagePer:
+            tmb.role === TeamMemberRoleEnum.owner ||
+            tmb.role === TeamMemberRoleEnum.admin ||
+            csRole === CustomerServiceMemberRoleEnum.customerServiceAdmin,
+          isOwner: tmb.role === TeamMemberRoleEnum.owner
+        },
+        orgs: []
+      };
+    });
 
     jsonRes(res, {
       data: {
@@ -151,6 +181,21 @@ export async function handleProApiFallback(
     const { teamId } = await authCert({ req, authToken: true });
     const body = await parseJsonBody(req);
     await MongoTeamMember.updateOne({ _id: body.tmbId, teamId }, { name: body.name });
+    jsonRes(res, { data: 'success' });
+    return true;
+  }
+
+  // 4.1 管理员修改成员角色权限 /support/user/team/member/updateRole
+  if (pathStr === 'support/user/team/member/updateRole' && req.method === 'PUT') {
+    const { teamId, tmbId: operatorTmbId } = await authCert({ req, authToken: true });
+    const body = await parseJsonBody(req);
+    await setCustomerServiceMemberRole({
+      teamId,
+      tmbId: body.tmbId,
+      role: body.role,
+      reason: body.reason || '管理员在团队管理中调整角色权限',
+      operatorTmbId
+    });
     jsonRes(res, { data: 'success' });
     return true;
   }

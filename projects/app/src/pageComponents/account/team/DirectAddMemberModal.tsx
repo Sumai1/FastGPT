@@ -20,7 +20,7 @@ export interface DirectAddMemberModalProps {
 }
 
 /**
- * 极简添加账户弹窗：输入用户名、姓名、初始密码和角色直接创建
+ * 添加账户弹窗：输入用户名、姓名、初始密码，并选择对应的系统角色与权限直接创建
  */
 const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, onSuccess }) => {
   const toast = useToast();
@@ -29,7 +29,9 @@ const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, on
   const [username, setUsername] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('123456');
-  const [role, setRole] = useState<'member' | 'admin'>('member');
+  const [role, setRole] = useState<CustomerServiceMemberRoleEnum>(
+    CustomerServiceMemberRoleEnum.knowledgeEditor
+  );
 
   const handleSubmit = async () => {
     if (!username.trim()) {
@@ -51,17 +53,14 @@ const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, on
         username: username.trim(),
         name: name.trim(),
         password: password.trim(),
-        role:
-          role === 'admin'
-            ? CustomerServiceMemberRoleEnum.customerServiceAdmin
-            : CustomerServiceMemberRoleEnum.knowledgeEditor,
-        reason: '管理员添加账户'
+        role,
+        reason: '管理员在团队管理中直接添加账户'
       });
 
       toast({
         status: 'success',
         title: '账户添加成功',
-        description: `账号【${username.trim()}】已创建就绪，初始密码【${password.trim()}】，可直接使用此密码登录！`
+        description: `账号【${username.trim()}】已就绪，初始密码【${password.trim()}】，可直接使用此密码登录！`
       });
       onSuccess();
       onClose();
@@ -82,15 +81,15 @@ const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, on
       onClose={onClose}
       iconSrc="support/user/usersLight"
       iconColor="primary.600"
-      title="添加账户"
+      title="添加系统账户"
       w="100%"
-      maxW={['90vw', '460px']}
+      maxW={['90vw', '480px']}
     >
       <ModalBody py={4}>
         <Stack spacing={4}>
           <FormControl isRequired>
             <FormLabel fontSize="sm" fontWeight="600">
-              用户名
+              登录用户名
             </FormLabel>
             <Input
               placeholder="请输入登录用户名 (例如: zhangsan)"
@@ -114,7 +113,7 @@ const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, on
 
           <FormControl isRequired>
             <FormLabel fontSize="sm" fontWeight="600">
-              初始密码
+              初始登录密码
             </FormLabel>
             <Input
               type="text"
@@ -125,17 +124,27 @@ const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, on
             />
           </FormControl>
 
-          <FormControl>
+          <FormControl isRequired>
             <FormLabel fontSize="sm" fontWeight="600">
-              身份角色
+              系统角色与权限
             </FormLabel>
             <Select
               value={role}
-              onChange={(e) => setRole(e.target.value as 'member' | 'admin')}
+              onChange={(e) => setRole(e.target.value as CustomerServiceMemberRoleEnum)}
               bg="myGray.50"
             >
-              <option value="member">普通用户</option>
-              <option value="admin">管理员</option>
+              <option value={CustomerServiceMemberRoleEnum.customerServiceAdmin}>
+                🛡️ 管理员（团队管理、全量知识权限与全局治理）
+              </option>
+              <option value={CustomerServiceMemberRoleEnum.knowledgeReviewer}>
+                🔍 知识审核员（负责知识审核台、Diff 复核、试问与发布）
+              </option>
+              <option value={CustomerServiceMemberRoleEnum.knowledgeEditor}>
+                📝 知识采编员（负责知识采编台、结构化录入与提审）
+              </option>
+              <option value={CustomerServiceMemberRoleEnum.visitor}>
+                👤 普通成员（基础问答与知识库查阅使用）
+              </option>
             </Select>
           </FormControl>
         </Stack>
