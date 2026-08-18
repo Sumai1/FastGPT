@@ -46,8 +46,7 @@ import {
 import {
   CustomerServiceProvider,
   useCustomerServiceContext,
-  memberRoleMap,
-  requestAdminApi
+  memberRoleMap
 } from '@/pageComponents/customerService/context';
 import CustomerServiceHeader from '@/pageComponents/customerService/CustomerServiceHeader';
 
@@ -85,32 +84,6 @@ const RolesCenterContent: React.FC = () => {
   } = useCustomerServiceContext();
 
   const [activeTab, setActiveTab] = useState<'matrix' | 'audits'>('matrix');
-  const [initingAccounts, setInitingAccounts] = useState(false);
-
-  const handleInitPresetAccounts = async () => {
-    try {
-      setInitingAccounts(true);
-      await requestAdminApi({
-        url: '/api/customer-service/admin/init-accounts',
-        method: 'POST'
-      });
-      await loadData();
-      toast({
-        status: 'success',
-        title: '独立账号已就绪',
-        description:
-          '知识采编员 (editor / 1234) 与 知识审核员 (reviewer / 1234) 已同步至系统并绑定权限'
-      });
-    } catch (error) {
-      toast({
-        status: 'error',
-        title: '初始化失败',
-        description: error instanceof Error ? error.message : '请稍后重试'
-      });
-    } finally {
-      setInitingAccounts(false);
-    }
-  };
 
   // Compute metrics
   const adminCount = roles.filter(
@@ -211,17 +184,16 @@ const RolesCenterContent: React.FC = () => {
             {canManageRoles && (
               <HStack spacing={3}>
                 <Button
-                  variant="whiteBase"
-                  isLoading={initingAccounts}
-                  loadingText="正在初始化..."
-                  leftIcon={<MyIcon name="common/refreshLight" w={4} />}
-                  onClick={handleInitPresetAccounts}
+                  variant="outline"
+                  colorScheme="blue"
+                  leftIcon={<MyIcon name="support/user/usersLight" w={4} />}
+                  onClick={() => void router.push('/account/team')}
                 >
-                  一键生成/重置预置独立账号
+                  前往团队邀请新成员
                 </Button>
                 <Button
                   colorScheme="blue"
-                  leftIcon={<MyIcon name="support/user/usersLight" w={4} />}
+                  leftIcon={<MyIcon name="common/settingLight" w={4} />}
                   onClick={() => handleOpenAssignModal()}
                 >
                   分配客服岗位与范围
