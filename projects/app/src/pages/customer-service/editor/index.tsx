@@ -48,6 +48,7 @@ import {
   requestAdminApi
 } from '@/pageComponents/customerService/context';
 import CustomerServiceHeader from '@/pageComponents/customerService/CustomerServiceHeader';
+import CSAuthGuard from '@/pageComponents/customerService/CSAuthGuard';
 import ProductMasterForm from '@/pageComponents/customerService/KnowledgeStudio/ProductMasterForm';
 import ManualForm from '@/pageComponents/customerService/KnowledgeStudio/ManualForm';
 import FaqBatchEditor from '@/pageComponents/customerService/KnowledgeStudio/FaqBatchEditor';
@@ -499,8 +500,9 @@ const KnowledgeEditorWorkspaceContent: React.FC = () => {
                           </Text>
                           <Text mt={1} fontSize="xs" color="myGray.500">
                             知识库源：
-                            {item.sourceName || datasetNameMap.get(item.datasetId) || '知识库'} ·{' '}
-                            {item.dataAmount} 段切片
+                            {item.sourceName ||
+                              datasetNameMap.get(item.datasetId) ||
+                              '知识库'} · {item.dataAmount} 段切片
                           </Text>
 
                           <Flex mt={4} justify="space-between" align="center" gap={2} wrap="wrap">
@@ -931,9 +933,11 @@ const KnowledgeEditorWorkspaceContent: React.FC = () => {
  */
 const KnowledgeEditorPage = () => {
   return (
-    <CustomerServiceProvider>
-      <KnowledgeEditorWorkspaceContent />
-    </CustomerServiceProvider>
+    <CSAuthGuard>
+      <CustomerServiceProvider>
+        <KnowledgeEditorWorkspaceContent />
+      </CustomerServiceProvider>
+    </CSAuthGuard>
   );
 };
 

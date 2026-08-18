@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useDisclosure, useToast } from '@chakra-ui/react';
+import { useCSAuthStore } from './useCSAuthStore';
 import {
   CustomerServiceAudienceEnum,
   CustomerServiceChatStatusEnum,
@@ -351,7 +352,10 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
   const [bindingModelId, setBindingModelId] = useState('');
   const [bindingDataset, setBindingDataset] = useState<SelectedDatasetType>();
 
-  const actualRole = currentMember?.role ?? CustomerServiceMemberRoleEnum.customerServiceAdmin;
+  // 优先从客服登录态读取角色，兼容未接入登录流程的场景
+  const csAuthUser = useCSAuthStore((s) => s.currentUser);
+  const actualRole =
+    csAuthUser?.role ?? currentMember?.role ?? CustomerServiceMemberRoleEnum.customerServiceAdmin;
   const isAdmin =
     !!currentMember?.isTeamOwner ||
     actualRole === CustomerServiceMemberRoleEnum.customerServiceAdmin;

@@ -35,6 +35,7 @@ import {
   audienceMap
 } from '@/pageComponents/customerService/context';
 import CustomerServiceHeader from '@/pageComponents/customerService/CustomerServiceHeader';
+import CSAuthGuard from '@/pageComponents/customerService/CSAuthGuard';
 import KnowledgeDiffViewer from '@/pageComponents/customerService/ReviewStudio/KnowledgeDiffViewer';
 import AuditScopePreview from '@/pageComponents/customerService/ReviewStudio/AuditScopePreview';
 import InlineTestSandbox from '@/pageComponents/customerService/ReviewStudio/InlineTestSandbox';
@@ -363,9 +364,11 @@ const KnowledgeReviewerWorkspaceContent: React.FC = () => {
  */
 const KnowledgeReviewerPage = () => {
   return (
-    <CustomerServiceProvider>
-      <KnowledgeReviewerWorkspaceContent />
-    </CustomerServiceProvider>
+    <CSAuthGuard>
+      <CustomerServiceProvider>
+        <KnowledgeReviewerWorkspaceContent />
+      </CustomerServiceProvider>
+    </CSAuthGuard>
   );
 };
 

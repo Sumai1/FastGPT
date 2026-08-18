@@ -19,6 +19,7 @@ import {
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import { CustomerServiceMemberRoleEnum } from '@fastgpt/global/core/customerService/constants';
 import { useCustomerServiceContext, memberRoleMap } from './context';
+import { useCSAuthStore, getDefaultRouteForRole } from './useCSAuthStore';
 
 export interface CustomerServiceHeaderProps {
   currentRoute?: 'console' | 'editor' | 'reviewer' | 'roles' | 'admin';
@@ -46,6 +47,9 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
     pendingKnowledge,
     loadData
   } = useCustomerServiceContext();
+
+  const csAuthUser = useCSAuthStore((s) => s.currentUser);
+  const csLogout = useCSAuthStore((s) => s.logout);
 
   const roleColor = (() => {
     switch (effectiveRole) {
@@ -183,7 +187,10 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
               py={1}
             >
               <Text fontSize="xs" fontWeight="700">
-                {roleIcon} {memberRoleMap[effectiveRole] || '客服成员'}
+                {roleIcon}{' '}
+                {csAuthUser
+                  ? `${csAuthUser.name} · ${memberRoleMap[effectiveRole]}`
+                  : memberRoleMap[effectiveRole] || '客服成员'}
               </Text>
             </Tag>
             {simulatedRole && (
@@ -266,6 +273,19 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
           >
             打开客服终端
           </Button>
+          {csAuthUser && (
+            <Button
+              size="sm"
+              variant="ghost"
+              color="myGray.500"
+              onClick={() => {
+                csLogout();
+                void router.push('/customer-service/login');
+              }}
+            >
+              退出登录
+            </Button>
+          )}
         </Flex>
       </Flex>
     </Box>

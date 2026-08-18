@@ -24,6 +24,7 @@ import {
   useCustomerServiceContext
 } from '@/pageComponents/customerService/context';
 import CustomerServiceHeader from '@/pageComponents/customerService/CustomerServiceHeader';
+import CSAuthGuard from '@/pageComponents/customerService/CSAuthGuard';
 
 import AssistantsWorkspace from '@/pageComponents/customerService/AssistantsWorkspace';
 import ProductStudio from '@/pageComponents/customerService/ProductStudio';
@@ -265,9 +266,11 @@ const AdminConsoleContent: React.FC = () => {
  */
 const CustomerServiceAdminPage = () => {
   return (
-    <CustomerServiceProvider>
-      <AdminConsoleContent />
-    </CustomerServiceProvider>
+    <CSAuthGuard>
+      <CustomerServiceProvider>
+        <AdminConsoleContent />
+      </CustomerServiceProvider>
+    </CSAuthGuard>
   );
 };
 
