@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import {
   Alert,
   AlertDescription,
@@ -53,8 +54,10 @@ import CustomerServiceHeader from '@/pageComponents/customerService/CustomerServ
  * 岗位与权限中心核心内容
  */
 const RolesCenterContent: React.FC = () => {
+  const router = useRouter();
   const toast = useToast();
   const {
+    effectiveRole,
     roles,
     roleMembers,
     roleAudits,
@@ -127,6 +130,34 @@ const RolesCenterContent: React.FC = () => {
         : [...roleAllowedModelIds, modelId]
     );
   };
+
+  if (!loading && !canManageRoles) {
+    return (
+      <Box minH="100vh" bg="myGray.50">
+        <Head>
+          <title>岗位与权限中心 - 智能客服</title>
+        </Head>
+        <CustomerServiceHeader currentRoute="roles" />
+        <Flex minH="60vh" align="center" justify="center" p={6}>
+          <Box bg="white" p={8} borderRadius="xl" shadow="sm" textAlign="center" maxW="480px">
+            <Heading size="md" color="myGray.800" mb={3}>
+              🔒 暂无权限管理权限
+            </Heading>
+            <Text color="myGray.500" fontSize="sm" mb={6}>
+              您当前的账号岗位为【{memberRoleMap[effectiveRole] || '未知'}
+              】。团队成员客服岗位分配与品类范围划分仅限客服管理员与团队 Owner 操作。
+            </Text>
+            <Button
+              colorScheme="blue"
+              onClick={() => void router.push('/customer-service/console')}
+            >
+              返回工作台大厅
+            </Button>
+          </Box>
+        </Flex>
+      </Box>
+    );
+  }
 
   return (
     <Box minH="100vh" bg="myGray.50">

@@ -21,7 +21,8 @@ import { serviceSideProps } from '@/web/common/i18n/utils';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import {
   CustomerServiceProvider,
-  useCustomerServiceContext
+  useCustomerServiceContext,
+  memberRoleMap
 } from '@/pageComponents/customerService/context';
 import CustomerServiceHeader from '@/pageComponents/customerService/CustomerServiceHeader';
 
@@ -39,6 +40,8 @@ const AdminConsoleContent: React.FC = () => {
   const router = useRouter();
   const {
     loading,
+    effectiveRole,
+    canManageProjects,
     catalog,
     projectData,
     knowledge,
@@ -82,6 +85,35 @@ const AdminConsoleContent: React.FC = () => {
       { shallow: true }
     );
   };
+
+  if (!loading && !canManageProjects) {
+    return (
+      <Box minH="100vh" bg="myGray.50">
+        <Head>
+          <title>管理员全景控制台 - 智能客服</title>
+        </Head>
+        <CustomerServiceHeader currentRoute="admin" />
+        <Flex minH="60vh" align="center" justify="center" p={6}>
+          <Box bg="white" p={8} borderRadius="xl" shadow="sm" textAlign="center" maxW="480px">
+            <Heading size="md" color="myGray.800" mb={3}>
+              🔒 暂无管理员权限
+            </Heading>
+            <Text color="myGray.500" fontSize="sm" mb={6}>
+              您当前的账号岗位为【{memberRoleMap[effectiveRole] || '未知'}
+              】。管理员控制台涉及全局项目编排、Key配额绑定与应急下架，仅限客服管理员与团队 Owner
+              操作。
+            </Text>
+            <Button
+              colorScheme="blue"
+              onClick={() => void router.push('/customer-service/console')}
+            >
+              返回工作台大厅
+            </Button>
+          </Box>
+        </Flex>
+      </Box>
+    );
+  }
 
   return (
     <Box minH="100vh" bg="myGray.50">

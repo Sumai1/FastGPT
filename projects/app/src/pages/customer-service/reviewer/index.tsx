@@ -31,6 +31,7 @@ import MyIcon from '@fastgpt/web/components/common/Icon';
 import {
   CustomerServiceProvider,
   useCustomerServiceContext,
+  memberRoleMap,
   knowledgeTypeMap,
   audienceMap
 } from '@/pageComponents/customerService/context';
@@ -48,8 +49,15 @@ const KnowledgeReviewerWorkspaceContent: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
   const { userInfo } = useUserStore();
-  const { pendingKnowledge, saving, knowledgeAction, datasetNameMap, loading, canReviewKnowledge } =
-    useCustomerServiceContext();
+  const {
+    effectiveRole,
+    pendingKnowledge,
+    saving,
+    knowledgeAction,
+    datasetNameMap,
+    loading,
+    canReviewKnowledge
+  } = useCustomerServiceContext();
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const rejectDisclosure = useDisclosure();
@@ -75,6 +83,34 @@ const KnowledgeReviewerWorkspaceContent: React.FC = () => {
     rejectDisclosure.onClose();
     setRejectingItem(undefined);
   };
+
+  if (!loading && !canReviewKnowledge) {
+    return (
+      <Box minH="100vh" bg="myGray.50">
+        <Head>
+          <title>知识审核工作台 - 智能客服</title>
+        </Head>
+        <CustomerServiceHeader currentRoute="reviewer" />
+        <Flex minH="60vh" align="center" justify="center" p={6}>
+          <Box bg="white" p={8} borderRadius="xl" shadow="sm" textAlign="center" maxW="480px">
+            <Heading size="md" color="myGray.800" mb={3}>
+              🔒 暂无知识审核权限
+            </Heading>
+            <Text color="myGray.500" fontSize="sm" mb={6}>
+              您当前的账号岗位为【{memberRoleMap[effectiveRole] || '未知'}
+              】，知识审核由独立审核员负责（双人复核制）。
+            </Text>
+            <Button
+              colorScheme="blue"
+              onClick={() => void router.push('/customer-service/console')}
+            >
+              返回工作台大厅
+            </Button>
+          </Box>
+        </Flex>
+      </Box>
+    );
+  }
 
   return (
     <Box minH="100vh" bg="myGray.50">

@@ -42,6 +42,7 @@ import type { CustomerServiceAdminKnowledgeTestSearchResponse } from '@fastgpt/g
 import {
   CustomerServiceProvider,
   useCustomerServiceContext,
+  memberRoleMap,
   statusMap,
   knowledgeTypeMap,
   audienceMap,
@@ -62,6 +63,8 @@ const KnowledgeEditorWorkspaceContent: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
   const {
+    effectiveRole,
+    canEditKnowledge,
     knowledge,
     catalog,
     modelMap,
@@ -180,6 +183,34 @@ const KnowledgeEditorWorkspaceContent: React.FC = () => {
       setTestSearching(false);
     }
   };
+
+  if (!loading && !canEditKnowledge) {
+    return (
+      <Box minH="100vh" bg="myGray.50">
+        <Head>
+          <title>知识采编工作台 - 智能客服</title>
+        </Head>
+        <CustomerServiceHeader currentRoute="editor" />
+        <Flex minH="60vh" align="center" justify="center" p={6}>
+          <Box bg="white" p={8} borderRadius="xl" shadow="sm" textAlign="center" maxW="480px">
+            <Heading size="md" color="myGray.800" mb={3}>
+              🔒 暂无知识采编权限
+            </Heading>
+            <Text color="myGray.500" fontSize="sm" mb={6}>
+              您当前的账号岗位为【{memberRoleMap[effectiveRole] || '未知'}
+              】，知识采编由采编岗位专人负责。
+            </Text>
+            <Button
+              colorScheme="blue"
+              onClick={() => void router.push('/customer-service/console')}
+            >
+              返回工作台大厅
+            </Button>
+          </Box>
+        </Flex>
+      </Box>
+    );
+  }
 
   return (
     <Box minH="100vh" bg="myGray.50">

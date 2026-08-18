@@ -212,9 +212,6 @@ interface CustomerServiceContextType {
   bindingDataset?: SelectedDatasetType;
   setBindingDataset: (dataset?: SelectedDatasetType) => void;
 
-  // Role Simulation & RBAC
-  simulatedRole: CustomerServiceMemberRoleEnum | null;
-  setSimulatedRole: (role: CustomerServiceMemberRoleEnum | null) => void;
   actualRole: CustomerServiceMemberRoleEnum;
   effectiveRole: CustomerServiceMemberRoleEnum;
   effectiveCapabilities: {
@@ -326,7 +323,6 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
   const [roleAllowedCategoryIds, setRoleAllowedCategoryIds] = useState<string[]>([]);
   const [roleAllowedModelIds, setRoleAllowedModelIds] = useState<string[]>([]);
   const [roleReason, setRoleReason] = useState('调整客服日常职责');
-  const [simulatedRole, setSimulatedRole] = useState<CustomerServiceMemberRoleEnum | null>(null);
 
   const [todoCounts, setTodoCounts] = useState({ unresolved: 0, noAnswer: 0, human: 0 });
   const [operations, setOperations] = useState<CustomerServiceAdminOperationListResponse>({
@@ -355,7 +351,7 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
   const isAdmin =
     !!currentMember?.isTeamOwner ||
     actualRole === CustomerServiceMemberRoleEnum.customerServiceAdmin;
-  const effectiveRole = isAdmin && simulatedRole ? simulatedRole : actualRole;
+  const effectiveRole = actualRole;
 
   const effectiveCapabilities = useMemo(() => {
     if (effectiveRole === CustomerServiceMemberRoleEnum.customerServiceAdmin) {
@@ -953,8 +949,6 @@ export const CustomerServiceProvider: React.FC<{ children: React.ReactNode }> = 
     bindingDataset,
     setBindingDataset,
 
-    simulatedRole,
-    setSimulatedRole,
     actualRole,
     effectiveRole,
     effectiveCapabilities,

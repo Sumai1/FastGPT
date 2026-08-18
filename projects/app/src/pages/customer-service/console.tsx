@@ -37,6 +37,10 @@ const WorkspacePortalContent: React.FC = () => {
     loading,
     effectiveRole,
     isAdmin,
+    canEditKnowledge,
+    canReviewKnowledge,
+    canManageProjects,
+    canManageRoles,
     catalog,
     projectData,
     knowledge,
@@ -246,10 +250,11 @@ const WorkspacePortalContent: React.FC = () => {
                     w="100%"
                     size="sm"
                     colorScheme="purple"
-                    variant="outline"
+                    variant={canEditKnowledge ? 'solid' : 'outline'}
+                    isDisabled={!canEditKnowledge}
                     onClick={() => void router.push('/customer-service/editor')}
                   >
-                    进入采编工作台 ➔
+                    {canEditKnowledge ? '进入采编工作台 ➔' : '无权限 (仅采编员)'}
                   </Button>
                 </Box>
               </Box>
@@ -297,10 +302,11 @@ const WorkspacePortalContent: React.FC = () => {
                     w="100%"
                     size="sm"
                     colorScheme="orange"
-                    variant="outline"
+                    variant={canReviewKnowledge ? 'solid' : 'outline'}
+                    isDisabled={!canReviewKnowledge}
                     onClick={() => void router.push('/customer-service/reviewer')}
                   >
-                    进入审核工作台 ➔
+                    {canReviewKnowledge ? '进入审核工作台 ➔' : '无权限 (仅审核员)'}
                   </Button>
                 </Box>
               </Box>
@@ -345,10 +351,11 @@ const WorkspacePortalContent: React.FC = () => {
                     w="100%"
                     size="sm"
                     colorScheme="blue"
-                    variant="outline"
+                    variant={canManageRoles ? 'solid' : 'outline'}
+                    isDisabled={!canManageRoles}
                     onClick={() => void router.push('/customer-service/roles')}
                   >
-                    进入权限中心 ➔
+                    {canManageRoles ? '进入权限中心 ➔' : '无权限 (仅管理员)'}
                   </Button>
                 </Box>
               </Box>
@@ -395,10 +402,11 @@ const WorkspacePortalContent: React.FC = () => {
                     w="100%"
                     size="sm"
                     colorScheme="gray"
-                    variant="outline"
+                    variant={canManageProjects ? 'solid' : 'outline'}
+                    isDisabled={!canManageProjects}
                     onClick={() => void router.push('/customer-service/admin')}
                   >
-                    进入全景控制台 ➔
+                    {canManageProjects ? '进入全景控制台 ➔' : '无权限 (仅管理员)'}
                   </Button>
                 </Box>
               </Box>
