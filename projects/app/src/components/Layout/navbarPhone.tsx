@@ -28,7 +28,14 @@ const NavbarPhone = ({ unread }: { unread: number }) => {
         icon: 'core/chat/chatLight',
         activeIcon: 'core/chat/chatFill',
         link: '/customer-service/console',
-        activeLink: ['/customer-service', '/customer-service/console', '/customer-service/admin'],
+        activeLink: [
+          '/customer-service',
+          '/customer-service/console',
+          '/customer-service/admin',
+          '/customer-service/editor',
+          '/customer-service/reviewer',
+          '/customer-service/roles'
+        ],
         unread: 0
       },
       {

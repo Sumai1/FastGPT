@@ -27,7 +27,6 @@ import {
   memberRoleMap
 } from '@/pageComponents/customerService/context';
 import CustomerServiceHeader from '@/pageComponents/customerService/CustomerServiceHeader';
-import CSAuthGuard from '@/pageComponents/customerService/CSAuthGuard';
 
 /**
  * 智能客服管理门户与工作台枢纽大厅
@@ -531,11 +530,9 @@ const WorkspacePortalContent: React.FC = () => {
  */
 const CustomerServiceConsolePage = () => {
   return (
-    <CSAuthGuard>
-      <CustomerServiceProvider>
-        <WorkspacePortalContent />
-      </CustomerServiceProvider>
-    </CSAuthGuard>
+    <CustomerServiceProvider>
+      <WorkspacePortalContent />
+    </CustomerServiceProvider>
   );
 };
 

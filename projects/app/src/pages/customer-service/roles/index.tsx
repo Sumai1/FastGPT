@@ -48,7 +48,6 @@ import {
   memberRoleMap
 } from '@/pageComponents/customerService/context';
 import CustomerServiceHeader from '@/pageComponents/customerService/CustomerServiceHeader';
-import CSAuthGuard from '@/pageComponents/customerService/CSAuthGuard';
 
 /**
  * 岗位与权限中心核心内容
@@ -672,11 +671,9 @@ const RolesCenterContent: React.FC = () => {
  */
 const CustomerServiceRolesPage = () => {
   return (
-    <CSAuthGuard>
-      <CustomerServiceProvider>
-        <RolesCenterContent />
-      </CustomerServiceProvider>
-    </CSAuthGuard>
+    <CustomerServiceProvider>
+      <RolesCenterContent />
+    </CustomerServiceProvider>
   );
 };
 

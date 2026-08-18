@@ -58,7 +58,14 @@ const Navbar = ({ unread }: { unread: number }) => {
         icon: 'navbar/chatLight',
         activeIcon: 'navbar/chatFill',
         link: '/customer-service/console',
-        activeLink: ['/customer-service', '/customer-service/console', '/customer-service/admin']
+        activeLink: [
+          '/customer-service',
+          '/customer-service/console',
+          '/customer-service/admin',
+          '/customer-service/editor',
+          '/customer-service/reviewer',
+          '/customer-service/roles'
+        ]
       },
       {
         label: t('common:navbar.Studio'),

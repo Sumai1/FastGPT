@@ -18,8 +18,8 @@ import {
 } from '@chakra-ui/react';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import { CustomerServiceMemberRoleEnum } from '@fastgpt/global/core/customerService/constants';
+import { useUserStore } from '@/web/support/user/useUserStore';
 import { useCustomerServiceContext, memberRoleMap } from './context';
-import { useCSAuthStore, getDefaultRouteForRole } from './useCSAuthStore';
 
 export interface CustomerServiceHeaderProps {
   currentRoute?: 'console' | 'editor' | 'reviewer' | 'roles' | 'admin';
@@ -38,6 +38,7 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
 }) => {
   const router = useRouter();
   const toast = useToast();
+  const { userInfo } = useUserStore();
   const {
     currentMember,
     effectiveRole,
@@ -47,9 +48,6 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
     pendingKnowledge,
     loadData
   } = useCustomerServiceContext();
-
-  const csAuthUser = useCSAuthStore((s) => s.currentUser);
-  const csLogout = useCSAuthStore((s) => s.logout);
 
   const roleColor = (() => {
     switch (effectiveRole) {
@@ -188,8 +186,8 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
             >
               <Text fontSize="xs" fontWeight="700">
                 {roleIcon}{' '}
-                {csAuthUser
-                  ? `${csAuthUser.name} · ${memberRoleMap[effectiveRole]}`
+                {userInfo?.username
+                  ? `${userInfo.username} · ${memberRoleMap[effectiveRole] || '客服成员'}`
                   : memberRoleMap[effectiveRole] || '客服成员'}
               </Text>
             </Tag>
@@ -273,19 +271,6 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
           >
             打开客服终端
           </Button>
-          {csAuthUser && (
-            <Button
-              size="sm"
-              variant="ghost"
-              color="myGray.500"
-              onClick={() => {
-                csLogout();
-                void router.push('/customer-service/login');
-              }}
-            >
-              退出登录
-            </Button>
-          )}
         </Flex>
       </Flex>
     </Box>

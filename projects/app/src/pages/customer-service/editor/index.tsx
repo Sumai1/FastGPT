@@ -48,7 +48,6 @@ import {
   requestAdminApi
 } from '@/pageComponents/customerService/context';
 import CustomerServiceHeader from '@/pageComponents/customerService/CustomerServiceHeader';
-import CSAuthGuard from '@/pageComponents/customerService/CSAuthGuard';
 import ProductMasterForm from '@/pageComponents/customerService/KnowledgeStudio/ProductMasterForm';
 import ManualForm from '@/pageComponents/customerService/KnowledgeStudio/ManualForm';
 import FaqBatchEditor from '@/pageComponents/customerService/KnowledgeStudio/FaqBatchEditor';
@@ -933,11 +932,9 @@ const KnowledgeEditorWorkspaceContent: React.FC = () => {
  */
 const KnowledgeEditorPage = () => {
   return (
-    <CSAuthGuard>
-      <CustomerServiceProvider>
-        <KnowledgeEditorWorkspaceContent />
-      </CustomerServiceProvider>
-    </CSAuthGuard>
+    <CustomerServiceProvider>
+      <KnowledgeEditorWorkspaceContent />
+    </CustomerServiceProvider>
   );
 };
 
