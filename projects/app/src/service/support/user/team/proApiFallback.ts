@@ -78,7 +78,7 @@ export async function handleProApiFallback(
       avatar: tmb.avatar || '',
       balance: tmb.team?.balance ?? 0,
       tmbId: String(tmb._id),
-      role: tmb.role || TeamMemberRoleEnum.member,
+      role: tmb.role || TeamMemberRoleEnum.owner,
       status: tmb.status,
       permission: new TeamPermission({
         role: TeamDefaultRoleVal,
@@ -140,7 +140,7 @@ export async function handleProApiFallback(
         roleMap.get(String(tmb._id)) ||
         (tmb.role === TeamMemberRoleEnum.owner
           ? CustomerServiceMemberRoleEnum.customerServiceAdmin
-          : CustomerServiceMemberRoleEnum.visitor);
+          : undefined);
 
       return {
         tmbId: String(tmb._id),
@@ -150,14 +150,13 @@ export async function handleProApiFallback(
         username: typeof tmb.userId === 'object' && tmb.userId ? (tmb.userId as any).username : '',
         memberName: tmb.name,
         avatar: tmb.avatar || '',
-        role: tmb.role || TeamMemberRoleEnum.member,
+        role: tmb.role || TeamMemberRoleEnum.owner,
         csRole,
         status: tmb.status,
         createTime: tmb.createTime,
         permission: {
           hasManagePer:
             tmb.role === TeamMemberRoleEnum.owner ||
-            tmb.role === TeamMemberRoleEnum.admin ||
             csRole === CustomerServiceMemberRoleEnum.customerServiceAdmin,
           isOwner: tmb.role === TeamMemberRoleEnum.owner
         },

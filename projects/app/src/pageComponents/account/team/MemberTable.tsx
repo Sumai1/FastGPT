@@ -310,7 +310,7 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                         <Box className={'textEllipsis'}>
                           {member.memberName}
                           {member.status !== 'active' && (
-                            <Tag ml="2" colorScheme="gray" bg={'myGray.100'} color={'myGray.700'}>
+                            <Tag ml="2" colorSchema="gray" bg={'myGray.100'} color={'myGray.700'}>
                               {member.status === 'forbidden'
                                 ? t('account_team:forbidden')
                                 : t('account_team:leave')}
@@ -329,27 +329,51 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                           role === 'admin'
                         ) {
                           return (
-                            <Tag colorScheme="purple" size="sm" borderRadius="full" px={2.5}>
+                            <Tag
+                              colorSchema="purple"
+                              borderRadius="full"
+                              px={2.5}
+                              py={0.5}
+                              fontSize="xs"
+                            >
                               🛡️ 管理员
                             </Tag>
                           );
                         }
                         if (role === 'knowledgeReviewer') {
                           return (
-                            <Tag colorScheme="green" size="sm" borderRadius="full" px={2.5}>
+                            <Tag
+                              colorSchema="green"
+                              borderRadius="full"
+                              px={2.5}
+                              py={0.5}
+                              fontSize="xs"
+                            >
                               🔍 知识审核员
                             </Tag>
                           );
                         }
                         if (role === 'knowledgeEditor') {
                           return (
-                            <Tag colorScheme="orange" size="sm" borderRadius="full" px={2.5}>
+                            <Tag
+                              colorSchema="yellow"
+                              borderRadius="full"
+                              px={2.5}
+                              py={0.5}
+                              fontSize="xs"
+                            >
                               📝 知识采编员
                             </Tag>
                           );
                         }
                         return (
-                          <Tag colorScheme="gray" size="sm" borderRadius="full" px={2.5}>
+                          <Tag
+                            colorSchema="gray"
+                            borderRadius="full"
+                            px={2.5}
+                            py={0.5}
+                            fontSize="xs"
+                          >
                             👤 普通成员
                           </Tag>
                         );

@@ -142,9 +142,6 @@ const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, on
               <option value={CustomerServiceMemberRoleEnum.knowledgeEditor}>
                 📝 知识采编员（负责知识采编台、结构化录入与提审）
               </option>
-              <option value={CustomerServiceMemberRoleEnum.visitor}>
-                👤 普通成员（基础问答与知识库查阅使用）
-              </option>
             </Select>
           </FormControl>
         </Stack>
