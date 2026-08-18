@@ -53,6 +53,7 @@ import MyIconButton from '@fastgpt/web/components/common/Icon/button';
 const InviteModal = dynamic(() => import('./Invite/InviteModal'));
 const TransferOwnershipModal = dynamic(() => import('./TransferOwnershipModal'));
 const DirectAddMemberModal = dynamic(() => import('./DirectAddMemberModal'));
+const EditMemberRoleModal = dynamic(() => import('./EditMemberRoleModal'));
 
 function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
   const { t } = useTranslation();
@@ -179,6 +180,13 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
       }
     });
   };
+
+  const [editingRoleData, setEditingRoleData] = useState<{
+    tmbId: string;
+    role: string;
+    allowedCategoryIds: string[];
+    allowedModelIds: string[];
+  } | null>(null);
 
   return (
     <>
@@ -406,6 +414,19 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                               hoverColor={'blue.500'}
                               onClick={() => handleEditMemberName(member.tmbId, member.memberName)}
                             />
+                            <MyIconButton
+                              icon={'support/permission/manageLight'}
+                              size="1rem"
+                              hoverColor={'purple.500'}
+                              onClick={() =>
+                                setEditingRoleData({
+                                  tmbId: member.tmbId,
+                                  role: (member as any).csRole || member.role,
+                                  allowedCategoryIds: (member as any).allowedCategoryIds || [],
+                                  allowedModelIds: (member as any).allowedModelIds || []
+                                })
+                              }
+                            />
                             <PopoverConfirm
                               Trigger={
                                 <Box>
@@ -475,6 +496,16 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
             initUserInfo();
             refetchMemberList();
           }}
+        />
+      )}
+      {!!editingRoleData && (
+        <EditMemberRoleModal
+          tmbId={editingRoleData.tmbId}
+          defaultRole={editingRoleData.role}
+          defaultAllowedCategoryIds={editingRoleData.allowedCategoryIds}
+          defaultAllowedModelIds={editingRoleData.allowedModelIds}
+          onClose={() => setEditingRoleData(null)}
+          onSuccess={() => refetchMemberList()}
         />
       )}
     </>

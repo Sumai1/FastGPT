@@ -1,3 +1,7 @@
+import { MongoDataset } from '@fastgpt/service/core/dataset/schema';
+import { MongoResourcePermission } from '@fastgpt/service/support/permission/schema';
+import { getResourceOwnedClbs, getClbsInfo } from '@fastgpt/service/support/permission/controller';
+import { PerResourceTypeEnum } from '@fastgpt/global/support/permission/constant';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { jsonRes } from '@fastgpt/service/common/response';
 import { authCert } from '@fastgpt/service/support/permission/auth/common';
@@ -232,6 +236,103 @@ export async function handleProApiFallback(
     if (!tmb) throw new Error('Member not found in target team');
     await MongoUser.updateOne({ _id: userId }, { lastLoginTmbId: tmb._id });
     jsonRes(res, { data: String(tmb._id) });
+    return true;
+  }
+
+  // 7.1 获取知识库协同成员列表 /core/dataset/collaborator/list
+  if (pathStr === 'core/dataset/collaborator/list' && req.method === 'GET') {
+    const { teamId } = await authCert({ req, authToken: true });
+    const datasetId = req.query.datasetId as string;
+    const dataset = await MongoDataset.findOne({ _id: datasetId, teamId }).lean();
+    if (!dataset) throw new Error('Dataset not found');
+
+    const clbs = await getResourceOwnedClbs({
+      resourceType: PerResourceTypeEnum.dataset,
+      teamId,
+      resourceId: datasetId
+    });
+    const clbsInfo = await getClbsInfo({
+      clbs,
+      teamId,
+      ownerTmbId: String(dataset.tmbId)
+    });
+
+    let parentClbsInfo: any[] = [];
+    if (dataset.inheritPermission && dataset.parentId) {
+      const parentClbs = await getResourceOwnedClbs({
+        resourceType: PerResourceTypeEnum.dataset,
+        teamId,
+        resourceId: dataset.parentId
+      });
+      parentClbsInfo = await getClbsInfo({
+        clbs: parentClbs,
+        teamId
+      });
+    }
+
+    jsonRes(res, {
+      data: {
+        clbs: clbsInfo,
+        parentClbs: parentClbsInfo
+      }
+    });
+    return true;
+  }
+
+  // 7.2 更新知识库协同成员 /core/dataset/collaborator/update
+  if (pathStr === 'core/dataset/collaborator/update' && req.method === 'POST') {
+    const { teamId } = await authCert({ req, authToken: true });
+    const body = await parseJsonBody(req);
+    const { datasetId, collaborators = [] } = body;
+
+    const dataset = await MongoDataset.findOne({ _id: datasetId, teamId }).lean();
+    if (!dataset) throw new Error('Dataset not found');
+
+    await Promise.all(
+      collaborators.map(async (clb: any) => {
+        const match: any = {
+          resourceType: PerResourceTypeEnum.dataset,
+          resourceId: datasetId,
+          teamId
+        };
+        if (clb.tmbId) match.tmbId = clb.tmbId;
+        if (clb.groupId) match.groupId = clb.groupId;
+        if (clb.orgId) match.orgId = clb.orgId;
+
+        await MongoResourcePermission.findOneAndUpdate(
+          match,
+          {
+            ...match,
+            permission: clb.permission
+          },
+          { upsert: true }
+        );
+      })
+    );
+
+    jsonRes(res, { data: 'success' });
+    return true;
+  }
+
+  // 7.3 删除知识库协同成员 /core/dataset/collaborator/delete
+  if (pathStr === 'core/dataset/collaborator/delete' && req.method === 'DELETE') {
+    const { teamId } = await authCert({ req, authToken: true });
+    const datasetId = req.query.datasetId as string;
+    const tmbId = req.query.tmbId as string;
+    const groupId = req.query.groupId as string;
+    const orgId = req.query.orgId as string;
+
+    const match: any = {
+      resourceType: PerResourceTypeEnum.dataset,
+      resourceId: datasetId,
+      teamId
+    };
+    if (tmbId) match.tmbId = tmbId;
+    if (groupId) match.groupId = groupId;
+    if (orgId) match.orgId = orgId;
+
+    await MongoResourcePermission.deleteOne(match);
+    jsonRes(res, { data: 'success' });
     return true;
   }
 
