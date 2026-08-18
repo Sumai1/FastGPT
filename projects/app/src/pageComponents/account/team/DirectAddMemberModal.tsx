@@ -7,9 +7,7 @@ import {
   ModalBody,
   ModalFooter,
   Select,
-  SimpleGrid,
   Stack,
-  Text,
   useToast
 } from '@chakra-ui/react';
 import MyModal from '@fastgpt/web/components/common/MyModal';
@@ -21,16 +19,17 @@ export interface DirectAddMemberModalProps {
   onSuccess: () => void;
 }
 
+/**
+ * 极简添加账户弹窗：输入用户名、姓名、初始密码和角色直接创建
+ */
 const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, onSuccess }) => {
   const toast = useToast();
 
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [name, setName] = useState('');
-  const [password, setPassword] = useState('1234');
-  const [role, setRole] = useState<CustomerServiceMemberRoleEnum>(
-    CustomerServiceMemberRoleEnum.knowledgeEditor
-  );
+  const [password, setPassword] = useState('123456');
+  const [role, setRole] = useState<'member' | 'admin'>('member');
 
   const handleSubmit = async () => {
     if (!username.trim()) {
@@ -38,7 +37,7 @@ const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, on
       return;
     }
     if (!name.trim()) {
-      toast({ status: 'warning', title: '请输入成员姓名' });
+      toast({ status: 'warning', title: '请输入姓名' });
       return;
     }
     if (!password.trim()) {
@@ -52,21 +51,24 @@ const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, on
         username: username.trim(),
         name: name.trim(),
         password: password.trim(),
-        role,
-        reason: '管理员在原生团队管理中心直接开通账号'
+        role:
+          role === 'admin'
+            ? CustomerServiceMemberRoleEnum.customerServiceAdmin
+            : CustomerServiceMemberRoleEnum.knowledgeEditor,
+        reason: '管理员添加账户'
       });
 
       toast({
         status: 'success',
-        title: '成员账号创建成功',
-        description: `账号【${username.trim()}】已就绪，初始密码【${password.trim()}】，可直接使用 FastGPT 登录页登录！`
+        title: '账户添加成功',
+        description: `账号【${username.trim()}】已创建就绪，初始密码【${password.trim()}】，可直接使用此密码登录！`
       });
       onSuccess();
       onClose();
     } catch (error) {
       toast({
         status: 'error',
-        title: '创建失败',
+        title: '添加失败',
         description: error instanceof Error ? error.message : '请稍后重试'
       });
     } finally {
@@ -80,73 +82,60 @@ const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, on
       onClose={onClose}
       iconSrc="support/user/usersLight"
       iconColor="primary.600"
-      title="直接添加成员账号"
+      title="添加账户"
       w="100%"
-      maxW={['90vw', '560px']}
+      maxW={['90vw', '460px']}
     >
       <ModalBody py={4}>
         <Stack spacing={4}>
-          <Text fontSize="xs" color="myGray.500">
-            管理员可直接创建独立系统账号并加入当前团队，成员可使用设定的账号密码直接登录 FastGPT。
-          </Text>
-
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
-            <FormControl isRequired>
-              <FormLabel fontSize="sm" fontWeight="600">
-                登录用户名
-              </FormLabel>
-              <Input
-                placeholder="例如: editor_01 / kf_zhang"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                bg="myGray.50"
-              />
-            </FormControl>
-
-            <FormControl isRequired>
-              <FormLabel fontSize="sm" fontWeight="600">
-                成员真实姓名
-              </FormLabel>
-              <Input
-                placeholder="例如: 张三 (知识采编)"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                bg="myGray.50"
-              />
-            </FormControl>
-          </SimpleGrid>
-
           <FormControl isRequired>
             <FormLabel fontSize="sm" fontWeight="600">
-              初始登录密码
+              用户名
             </FormLabel>
             <Input
-              type="text"
-              placeholder="请输入密码（默认: 1234）"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="请输入登录用户名 (例如: zhangsan)"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               bg="myGray.50"
             />
           </FormControl>
 
           <FormControl isRequired>
             <FormLabel fontSize="sm" fontWeight="600">
-              团队角色与岗位
+              姓名 / 昵称
+            </FormLabel>
+            <Input
+              placeholder="请输入真实姓名或显示昵称"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              bg="myGray.50"
+            />
+          </FormControl>
+
+          <FormControl isRequired>
+            <FormLabel fontSize="sm" fontWeight="600">
+              初始密码
+            </FormLabel>
+            <Input
+              type="text"
+              placeholder="默认: 123456"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              bg="myGray.50"
+            />
+          </FormControl>
+
+          <FormControl>
+            <FormLabel fontSize="sm" fontWeight="600">
+              身份角色
             </FormLabel>
             <Select
               value={role}
-              onChange={(e) => setRole(e.target.value as CustomerServiceMemberRoleEnum)}
+              onChange={(e) => setRole(e.target.value as 'member' | 'admin')}
               bg="myGray.50"
             >
-              <option value={CustomerServiceMemberRoleEnum.knowledgeEditor}>
-                📝 知识采编员 (负责知识编写、结构化录入与提审)
-              </option>
-              <option value={CustomerServiceMemberRoleEnum.knowledgeReviewer}>
-                🔍 知识审核员 (负责知识 Diff 复核、在线试问与发布)
-              </option>
-              <option value={CustomerServiceMemberRoleEnum.customerServiceAdmin}>
-                🛡️ 客服与团队管理员 (拥有全权限、品类分配与工作流治理)
-              </option>
+              <option value="member">普通用户</option>
+              <option value="admin">管理员</option>
             </Select>
           </FormControl>
         </Stack>
@@ -157,7 +146,7 @@ const DirectAddMemberModal: React.FC<DirectAddMemberModalProps> = ({ onClose, on
           取消
         </Button>
         <Button variant="primary" isLoading={loading} onClick={handleSubmit}>
-          一键创建并生效
+          确认添加
         </Button>
       </ModalFooter>
     </MyModal>

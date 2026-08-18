@@ -215,10 +215,10 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
                 size="md"
                 borderRadius={'md'}
                 ml={3}
-                leftIcon={<MyIcon name="support/user/usersLight" w={'16px'} color={'white'} />}
+                leftIcon={<MyIcon name="common/addLight" w={'16px'} color={'white'} />}
                 onClick={onOpenDirectAdd}
               >
-                直接添加成员
+                添加账户
               </Button>
               <Button
                 variant={'whitePrimary'}
