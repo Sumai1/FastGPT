@@ -4,17 +4,21 @@ import { FastGPTProUrl } from '@fastgpt/service/common/system/constants';
 import { buildSameOriginUrl } from '@fastgpt/service/common/security/network';
 import { Readable } from 'stream';
 import { FASTGPT_PRO_TOKEN_HEADER } from '@fastgpt/global/common/system/constants';
+import { handleProApiFallback } from '@/service/support/user/team/proApiFallback';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { path = [], ...query } = req.query as any;
-    const requestPath = `/api/${path?.join('/')}?${new URLSearchParams(query).toString()}`;
+    const pathArray: string[] = Array.isArray(path) ? path : [path];
+    const requestPath = `/api/${pathArray.join('/')}?${new URLSearchParams(query).toString()}`;
 
     if (!requestPath) {
       throw new Error('url is empty');
     }
     if (!FastGPTProUrl) {
-      throw new Error(`未配置商业版链接: ${path}`);
+      const handled = await handleProApiFallback(req, res, pathArray);
+      if (handled) return;
+      throw new Error(`未配置商业版链接: ${pathArray.join('/')}`);
     }
 
     // 防御 protocol-relative URL 覆盖主机(如 path 含空段 → `//169.254...`)
