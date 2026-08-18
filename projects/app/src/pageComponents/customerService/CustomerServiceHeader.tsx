@@ -16,11 +16,7 @@ export interface CustomerServiceHeaderProps {
  * 智能客服统一顶部导航栏
  * 依据登录用户真实 RBAC 岗位动态渲染可见工作台导航项
  */
-export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
-  currentRoute,
-  title,
-  subtitle
-}) => {
+export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({ currentRoute }) => {
   const router = useRouter();
   const { userInfo } = useUserStore();
   const {
@@ -28,7 +24,6 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
     canEditKnowledge,
     canReviewKnowledge,
     canManageRoles,
-    canManageProjects,
     pendingKnowledge,
     loadData
   } = useCustomerServiceContext();
@@ -69,10 +64,10 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
       badge?: number;
     }> = [
       {
-        key: 'console',
-        label: '工作台大厅',
-        path: '/customer-service/console',
-        icon: 'common/overviewLight'
+        key: 'datasetList',
+        label: '知识库总览',
+        path: '/dataset/list',
+        icon: 'core/dataset/datasetLight'
       }
     ];
 
@@ -80,7 +75,7 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
       items.push({
         key: 'editor',
         label: '知识采编台',
-        path: '/customer-service/editor',
+        path: '/dataset/editor',
         icon: 'core/dataset/datasetLight'
       });
     }
@@ -89,7 +84,7 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
       items.push({
         key: 'reviewer',
         label: '知识审核台',
-        path: '/customer-service/reviewer',
+        path: '/dataset/reviewer',
         icon: 'common/check',
         badge: pendingKnowledge.length
       });
@@ -98,36 +93,21 @@ export const CustomerServiceHeader: React.FC<CustomerServiceHeaderProps> = ({
     if (canManageRoles) {
       items.push({
         key: 'roles',
-        label: '岗位权限中心',
-        path: '/customer-service/roles',
+        label: '团队与成员',
+        path: '/account/team',
         icon: 'support/user/usersLight'
       });
     }
 
-    if (canManageProjects) {
-      items.push({
-        key: 'admin',
-        label: '管理员控制台',
-        path: '/customer-service/admin',
-        icon: 'support/config/configLight'
-      });
-    }
-
     return items;
-  }, [
-    canEditKnowledge,
-    canReviewKnowledge,
-    canManageRoles,
-    canManageProjects,
-    pendingKnowledge.length
-  ]);
+  }, [canEditKnowledge, canReviewKnowledge, canManageRoles, pendingKnowledge.length]);
 
   return (
     <Box bg="white" borderBottomWidth="1px" borderColor="myGray.200" px={{ base: 4, lg: 6 }} py={3}>
       <Flex justify="space-between" align="center" gap={4} wrap="wrap">
         {/* Left: Brand, Active Route Title & Navigation Tabs */}
         <Flex align="center" gap={4} wrap="wrap">
-          <Box cursor="pointer" onClick={() => void router.push('/customer-service/console')}>
+          <Box cursor="pointer" onClick={() => void router.push('/dataset/list')}>
             <Flex align="center" gap={2}>
               <Box p={1.5} bg="primary.50" color="primary.600" borderRadius="md">
                 <MyIcon name="core/chat/chatLight" w={5} />

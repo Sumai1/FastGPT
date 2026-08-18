@@ -140,3 +140,29 @@ Collection、OpenAPI Key 等内部对象。普通客服管理员需要在多个 
 - [ ] 普通 FastGPT 功能保持兼容，Rerank 延后不阻塞本轮。
 
 详细方案以根目录 V1.5 需求、功能和项目规划文档为准。用户已确认按两套前端整改。
+
+## V1.6 FastGPT 原生解耦与全局架构重构 (Native First)
+
+### 1. 业务背景 (Background)
+用户明确反馈原有的 `/customer-service` 采用“烟囱式外挂系统”模式，页面层级深且繁琐混乱，管理员在原生 FastGPT 界面找不到账号创建与人员管理入口。必须打破孤岛，将客服能力全面解耦并融入 FastGPT 原生根页面（账号中心、知识库、工作区）。
+
+### 2. 需求边界 (Requirements & Scope Boundaries)
+- **【账号与团队管理】**：
+  - 在 FastGPT 原生团队管理（`/account/team`）中增加“直接添加成员”能力，支持管理员一键输入用户名、初始密码、姓名并分配客服角色与品类权限；
+  - 成员列表展示角色与岗位 Tag，支持一键修改权限与重置密码；
+  - 彻底废弃独立的 `/customer-service/roles` 页面，平滑重定向至 `/account/team`。
+- **【知识库生产流】**：
+  - 将知识采编台（`/dataset/editor`）与知识审核台（`/dataset/reviewer`）作为 FastGPT 原生知识库（`/dataset`）的一级/二级直达工作台；
+  - 采编员登录后直达采编台（4 大结构化录入模板、草稿箱、提审）；
+  - 审核员登录后直达审核台（Diff 对比、在线沙箱试问、发布/驳回）；
+  - 知识库列表（`/dataset/list`）顶部提供清晰直达入口。
+- **【主导航与全局清理】**：
+  - 移除全局左侧侧边栏中冗余的 `customer_service` 独立菜单项，恢复 FastGPT 原生 4 级导航（Chat、Studio、Datasets、Account）；
+  - 废弃 `/customer-service/console` 与 `/customer-service/admin` 等冗余多层嵌套大厅，提供优雅重定向。
+
+### 3. 验收标准 (Acceptance Criteria)
+- [ ] 管理员可在 `/account/team` 直接创建系统账号，新账号支持即时在 FastGPT 登录页登录并生效对应角色权限。
+- [ ] 采编员可在 `/dataset/editor` 顺利完成知识编写与提审，审核员可在 `/dataset/reviewer` 顺利完成审核与发布。
+- [ ] 全局左侧导航恢复标准 4 项原生菜单，无死链、无冗余外挂入口。
+- [ ] 所有相关自动化测试与单元测试 100% 通过。
+

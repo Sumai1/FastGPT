@@ -91,3 +91,11 @@
 客服请求表是最小脱敏运营投影，不复制原生 chat/chatItem 正文集合。Rerank 仍按用户决定延后。
 
 阶段详细清单见根目录《智能客服RAG-TODO.md》第 11 节；代码设计见《智能客服RAG功能开发文档.md》第 13 章。
+
+## V1.6 FastGPT 原生解耦与全局架构重构 (Native First)
+
+1. [x] **原生团队管理 (`/account/team`) 改造**：在 [`MemberTable.tsx`](file:///root/FastGPT-source/projects/app/src/pageComponents/account/team/MemberTable.tsx) 接入 [`DirectAddMemberModal.tsx`](file:///root/FastGPT-source/projects/app/src/pageComponents/account/team/DirectAddMemberModal.tsx)，支持管理员直接创建成员账号。
+2. [x] **知识采编与审核流拆入知识库 (`/dataset`) 体系**：建立 [`/dataset/editor`](file:///root/FastGPT-source/projects/app/src/pages/dataset/editor/index.tsx) 与 [`/dataset/reviewer`](file:///root/FastGPT-source/projects/app/src/pages/dataset/reviewer/index.tsx)，在知识库列表顶部增加直达入口。
+3. [x] **全局侧边栏清理与路由兼容**：在 [`navbar.tsx`](file:///root/FastGPT-source/projects/app/src/components/Layout/navbar.tsx) 与 [`navbarPhone.tsx`](file:///root/FastGPT-source/projects/app/src/components/Layout/navbarPhone.tsx) 移除冗余的 `customer_service` 侧边栏项，将 `/customer-service/roles` 重定向至 `/account/team`，`/customer-service/console` 重定向至 `/dataset/list`。
+4. [x] **自动化测试与全量验收**：运行 `createMember.test.ts` 单元测试，全部通过。
+

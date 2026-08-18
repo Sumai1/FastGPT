@@ -54,20 +54,6 @@ const Navbar = ({ unread }: { unread: number }) => {
         activeLink: ['/chat']
       },
       {
-        label: t('customer_service:title'),
-        icon: 'navbar/chatLight',
-        activeIcon: 'navbar/chatFill',
-        link: '/customer-service/console',
-        activeLink: [
-          '/customer-service',
-          '/customer-service/console',
-          '/customer-service/admin',
-          '/customer-service/editor',
-          '/customer-service/reviewer',
-          '/customer-service/roles'
-        ]
-      },
-      {
         label: t('common:navbar.Studio'),
         icon: 'navbar/dashboardLight',
         activeIcon: 'navbar/dashboardFill',
@@ -91,7 +77,7 @@ const Navbar = ({ unread }: { unread: number }) => {
         icon: 'navbar/datasetLight',
         activeIcon: 'navbar/datasetFill',
         link: `/dataset/list`,
-        activeLink: ['/dataset/list', '/dataset/detail']
+        activeLink: ['/dataset/list', '/dataset/detail', '/dataset/editor', '/dataset/reviewer']
       },
       {
         label: t('common:navbar.Account'),

@@ -24,21 +24,6 @@ const NavbarPhone = ({ unread }: { unread: number }) => {
         unread: 0
       },
       {
-        label: t('customer_service:title'),
-        icon: 'core/chat/chatLight',
-        activeIcon: 'core/chat/chatFill',
-        link: '/customer-service/console',
-        activeLink: [
-          '/customer-service',
-          '/customer-service/console',
-          '/customer-service/admin',
-          '/customer-service/editor',
-          '/customer-service/reviewer',
-          '/customer-service/roles'
-        ],
-        unread: 0
-      },
-      {
         label: t('common:navbar.Studio'),
         icon: 'core/app/aiLight',
         activeIcon: 'core/app/aiFill',
@@ -60,7 +45,7 @@ const NavbarPhone = ({ unread }: { unread: number }) => {
         icon: 'core/dataset/datasetLight',
         activeIcon: 'core/dataset/datasetFill',
         link: `/dataset/list`,
-        activeLink: ['/dataset/list', '/dataset/detail'],
+        activeLink: ['/dataset/list', '/dataset/detail', '/dataset/editor', '/dataset/reviewer'],
         unread: 0
       },
       {

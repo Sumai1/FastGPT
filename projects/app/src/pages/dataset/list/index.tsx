@@ -129,6 +129,30 @@ const Dataset = () => {
                   >
                     {t('common:core.dataset.My Dataset')}
                   </Box>
+                  <Flex gap={2} ml={4} display={{ base: 'none', sm: 'flex' }}>
+                    <Button
+                      size="sm"
+                      variant="whitePrimary"
+                      leftIcon={<MyIcon name="core/dataset/datasetLight" w="14px" />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push('/dataset/editor');
+                      }}
+                    >
+                      知识采编台
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="whitePrimary"
+                      leftIcon={<MyIcon name="common/check" w="14px" />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push('/dataset/reviewer');
+                      }}
+                    >
+                      知识审核台
+                    </Button>
+                  </Flex>
                 </Flex>
               }
               onClick={(e) => {

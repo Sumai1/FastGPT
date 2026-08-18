@@ -52,6 +52,7 @@ import MyIconButton from '@fastgpt/web/components/common/Icon/button';
 
 const InviteModal = dynamic(() => import('./Invite/InviteModal'));
 const TransferOwnershipModal = dynamic(() => import('./TransferOwnershipModal'));
+const DirectAddMemberModal = dynamic(() => import('./DirectAddMemberModal'));
 
 function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
   const { t } = useTranslation();
@@ -125,6 +126,11 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
   }, [refetchMemberList]);
 
   const { isOpen: isOpenInvite, onOpen: onOpenInvite, onClose: onCloseInvite } = useDisclosure();
+  const {
+    isOpen: isOpenDirectAdd,
+    onOpen: onOpenDirectAdd,
+    onClose: onCloseDirectAdd
+  } = useDisclosure();
 
   const { runAsync: onSyncMember, loading: isSyncing } = useRequest(postSyncMembers, {
     onSuccess: onRefreshMembers,
@@ -203,16 +209,28 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
             </Button>
           )}
           {userInfo?.team.permission.hasManagePer && !isSyncMode && !isWecomTeam && (
-            <Button
-              variant={'primary'}
-              size="md"
-              borderRadius={'md'}
-              ml={3}
-              leftIcon={<MyIcon name="common/inviteLight" w={'16px'} color={'white'} />}
-              onClick={onOpenInvite}
-            >
-              {t('account_team:user_team_invite_member')}
-            </Button>
+            <>
+              <Button
+                variant={'primary'}
+                size="md"
+                borderRadius={'md'}
+                ml={3}
+                leftIcon={<MyIcon name="support/user/usersLight" w={'16px'} color={'white'} />}
+                onClick={onOpenDirectAdd}
+              >
+                直接添加成员
+              </Button>
+              <Button
+                variant={'whitePrimary'}
+                size="md"
+                borderRadius={'md'}
+                ml={2}
+                leftIcon={<MyIcon name="common/inviteLight" w={'16px'} />}
+                onClick={onOpenInvite}
+              >
+                {t('account_team:user_team_invite_member')}
+              </Button>
+            </>
           )}
           {userInfo?.team.permission.isOwner && !isSyncMode && isWecomTeam && (
             <Button
@@ -381,6 +399,14 @@ function MemberTable({ Tabs }: { Tabs: React.ReactNode }) {
       </MyBox>
 
       {isOpenInvite && userInfo?.team?.teamId && <InviteModal onClose={onCloseInvite} />}
+      {isOpenDirectAdd && (
+        <DirectAddMemberModal
+          onClose={onCloseDirectAdd}
+          onSuccess={() => {
+            refetchMemberList();
+          }}
+        />
+      )}
       {isOpenTransferModal && (
         <TransferOwnershipModal
           onClose={onCloseTransferModal}

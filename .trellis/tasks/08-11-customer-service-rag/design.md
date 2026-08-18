@@ -116,3 +116,18 @@
 - FastGPT 原生页面收口为高级工作台，不作为原需求 10.1、10.2 的日常操作入口。
 
 完整设计和 TODO 见根目录《智能客服RAG功能开发文档.md》第 13 章与《智能客服RAG-TODO.md》第 11 节。
+
+## V1.6 FastGPT 原生解耦与全局架构设计 (Native First Architecture)
+
+### 1. 架构原则与模块归位 (Native Alignment)
+- **【团队与账号】**：
+  - 在 [`projects/app/src/pageComponents/account/team/MemberTable.tsx`](file:///root/FastGPT-source/projects/app/src/pageComponents/account/team/MemberTable.tsx) 增加原生直接建号弹窗 [`DirectAddMemberModal.tsx`](file:///root/FastGPT-source/projects/app/src/pageComponents/account/team/DirectAddMemberModal.tsx)；
+  - 核心接口：`/api/customer-service/admin/role/create-member` 一体化处理 FastGPT `MongoUser`、`MongoTeamMember` 创建，密码哈希加密，以及客服角色绑定；
+  - 路由兼容：`/customer-service/roles` 重定向至 `/account/team`。
+- **【知识生产流】**：
+  - 采编台路由：[`/dataset/editor`](file:///root/FastGPT-source/projects/app/src/pages/dataset/editor/index.tsx)，审核台路由：[`/dataset/reviewer`](file:///root/FastGPT-source/projects/app/src/pages/dataset/reviewer/index.tsx)；
+  - 在 [`/dataset/list`](file:///root/FastGPT-source/projects/app/src/pages/dataset/list/index.tsx) 顶部增加直达按钮，打通知识库与知识采编审核流。
+- **【全局导航与清理】**：
+  - 在 [`navbar.tsx`](file:///root/FastGPT-source/projects/app/src/components/Layout/navbar.tsx) 与 [`navbarPhone.tsx`](file:///root/FastGPT-source/projects/app/src/components/Layout/navbarPhone.tsx) 移除冗余的 `customer_service` 侧边栏按钮；
+  - 路由兼容：`/customer-service/console` 重定向至 `/dataset/list`。
+
