@@ -54,7 +54,8 @@ const KnowledgeReviewerWorkspaceContent: React.FC = () => {
     knowledgeAction,
     datasetNameMap,
     loading,
-    canReviewKnowledge
+    canReviewKnowledge,
+    effectiveCapabilities
   } = useCustomerServiceContext();
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
@@ -105,18 +106,51 @@ const KnowledgeReviewerWorkspaceContent: React.FC = () => {
   return (
     <Box minH="100vh" bg="myGray.50">
       <MyBox isLoading={loading} h="100%" display="flex" flexDirection="column">
-        <Flex p={4} alignItems="center" bg="white" borderBottomWidth="1px" borderColor="myGray.200">
-          <Button
-            variant="whiteBase"
-            size="sm"
-            leftIcon={<ArrowBackIcon />}
-            onClick={() => router.push('/dataset')}
-          >
-            返回
-          </Button>
-          <Box ml={4} fontWeight="bold" fontSize="lg" color="myGray.900">
-            知识审核台 (Review Studio)
-          </Box>
+        <Flex
+          p={4}
+          alignItems="center"
+          bg="white"
+          borderBottomWidth="1px"
+          borderColor="myGray.200"
+          justify="space-between"
+        >
+          <HStack spacing={3}>
+            <Button
+              variant="ghost"
+              size="sm"
+              leftIcon={<ArrowBackIcon />}
+              onClick={() => router.push('/dataset/list')}
+            >
+              返回知识库
+            </Button>
+            <Box h="16px" w="1px" bg="myGray.300" />
+            <Box fontWeight="bold" fontSize="md" color="myGray.900">
+              知识审核台 (Review Studio)
+            </Box>
+          </HStack>
+
+          <HStack spacing={2}>
+            {effectiveCapabilities.manageProjects && (
+              <Button
+                size="sm"
+                variant="whiteBase"
+                leftIcon={<MyIcon name="common/list" w="14px" />}
+                onClick={() => void router.push('/dataset/product')}
+              >
+                产品管理
+              </Button>
+            )}
+            {effectiveCapabilities.viewOperations && (
+              <Button
+                size="sm"
+                variant="whiteBase"
+                leftIcon={<MyIcon name="core/app/logsLight" w="14px" />}
+                onClick={() => void router.push('/dataset/operations')}
+              >
+                对话运营
+              </Button>
+            )}
+          </HStack>
         </Flex>
 
         <Box

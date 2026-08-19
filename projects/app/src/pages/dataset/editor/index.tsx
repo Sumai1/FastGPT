@@ -73,6 +73,10 @@ const KnowledgeEditorWorkspaceContent: React.FC = () => {
     createKnowledge
   } = useCustomerServiceContext();
 
+  React.useEffect(() => {
+    void router.replace('/dataset/list');
+  }, [router]);
+
   const productMasterDisclosure = useDisclosure();
   const manualDisclosure = useDisclosure();
   const faqBatchDisclosure = useDisclosure();
@@ -186,18 +190,55 @@ const KnowledgeEditorWorkspaceContent: React.FC = () => {
   return (
     <Box minH="100vh" bg="myGray.50">
       <MyBox isLoading={loading} h="100%" display="flex" flexDirection="column">
-        <Flex p={4} alignItems="center" bg="white" borderBottomWidth="1px" borderColor="myGray.200">
-          <Button
-            variant="whiteBase"
-            size="sm"
-            leftIcon={<ArrowBackIcon />}
-            onClick={() => router.push('/dataset')}
-          >
-            返回
-          </Button>
-          <Box ml={4} fontWeight="bold" fontSize="lg" color="myGray.900">
-            知识采编台 (Editor Studio)
-          </Box>
+        <Flex
+          p={4}
+          alignItems="center"
+          bg="white"
+          borderBottomWidth="1px"
+          borderColor="myGray.200"
+          justify="space-between"
+        >
+          <HStack spacing={3}>
+            <Button
+              variant="ghost"
+              size="sm"
+              leftIcon={<ArrowBackIcon />}
+              onClick={() => router.push('/dataset/list')}
+            >
+              返回知识库
+            </Button>
+            <Box h="16px" w="1px" bg="myGray.300" />
+            <Box fontWeight="bold" fontSize="md" color="myGray.900">
+              知识采编台 (Editor Studio)
+            </Box>
+          </HStack>
+
+          <HStack spacing={2}>
+            <Button
+              size="sm"
+              variant="whiteBase"
+              leftIcon={<MyIcon name="common/check" w="14px" />}
+              onClick={() => void router.push('/dataset/reviewer')}
+            >
+              知识审核台
+            </Button>
+            <Button
+              size="sm"
+              variant="whiteBase"
+              leftIcon={<MyIcon name="common/list" w="14px" />}
+              onClick={() => void router.push('/dataset/product')}
+            >
+              产品管理
+            </Button>
+            <Button
+              size="sm"
+              variant="whiteBase"
+              leftIcon={<MyIcon name="core/app/logsLight" w="14px" />}
+              onClick={() => void router.push('/dataset/operations')}
+            >
+              对话运营
+            </Button>
+          </HStack>
         </Flex>
 
         <Box

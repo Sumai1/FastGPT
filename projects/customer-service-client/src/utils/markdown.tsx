@@ -104,7 +104,7 @@ const renderInline = (text: string): React.ReactNode => {
  * 极轻量原生 Markdown 渲染器，零重型依赖，支持流式打字与代码复制
  */
 export const LightMarkdown: React.FC<MarkdownProps> = ({ content, isStreaming }) => {
-  if (!content) {
+  if (!content || !content.trim()) {
     return isStreaming ? <span className="cs-typing-cursor" /> : null;
   }
 

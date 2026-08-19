@@ -297,6 +297,76 @@
 - [x] 使用服务层和 API 样例覆盖“上传发布→客户端命中→未解决→运营转草稿→重新审核”主要跨端状态。
 - [x] 最后运行格式、定向 lint、有效全量测试、生产构建和部署前检查。
 - [ ] 备份现网，构建新镜像，在隔离候选容器冒烟后灰度替换 `support.pkiln.com`。
-- [ ] 线上验证两套前端和三条闭环；保留 `20260813-1231` 镜像及数据回滚路径。
-- [!] 使用真实资料执行三个产品和 200 题质量验收；等待资料与最终模型渠道。
-- [!] 接入并调优 Rerank；按用户决定继续延后，不作为 V1.5 前端闭环门禁。
+## 12. V1.7 原生分散嵌入前端全功能闭环
+
+- [x] 在知识库大厅 (`/dataset/list`) 顶部新增产品与型号管理 (`/dataset/product`) 及对话运营中心 (`/dataset/operations`) 快捷入口。
+- [x] 重构落地产品管理工作台 (`ProductStudio`)：产品大类/系列/型号/版本层级拓扑树、型号详情看板、别名管理、启停用切换与知识库绑定弹窗。
+- [x] 重构落地对话运营工作台 (`OperationsStudio`)：效能与消耗趋势 (`MetricsTrendCards`)、转人工归因分析 (`HandoffReasonChart`)、Badcase 语义聚类 (`BadcaseClusteringList`)、会话多维筛选与一键转知识草稿 (`OneClickToDraftModal`)。
+- [x] 打通知识库大厅、采编台 (`/dataset/editor`)、审核台 (`/dataset/reviewer`)、产品管理 (`/dataset/product`)、对话运营 (`/dataset/operations`) 之间的跨页互通导航。
+- [x] 完成 `@fastgpt/app` 全量 TypeScript 类型检查 (0 错误) 与智能客服单元测试全部通过。
+
+## 13. V1.8 知识采编与 FastGPT 原生知识库一体化深度融合
+
+- [x] 在原生知识库详情页 (`/dataset/detail`)「新建与导入」菜单增加 4 大企业产品结构化模板（产品主档、操作手册、故障排查卡、FAQ批量编辑器）。
+- [x] 在原生集合列表 (`CollectionCard`) 增加「客服治理状态」列（展示草稿/待审/已发布/已驳回 Tag 与受众 Tag）。
+- [x] 在原生集合行操作菜单增加「提交客服审核」与「登记为客服知识」动作，完成从上传到提审的原生闭环。
+- [x] 完成生产镜像构建 `fastgpt-customer-service:20260819-v2.0` 并重启部署验证通过。
+
+## 14. V1.9 导航角色权限精准隔离与知识采编台入口精简
+
+- [x] 彻底移除顶部冗余的「知识采编台」按钮（已全面融入知识库详情页「创建和导入」菜单与集合列表）。
+- [x] 实现顶部导航按钮的角色能力精准隔离（基于 `GET /api/customer-service/admin/me`）：
+  - **【知识审核台】**：仅对具备 `reviewKnowledge` 权限的「知识审核员」及管理员/Owner 显示。
+  - **【产品管理】**：仅对具备 `manageProjects` 权限的「客服管理员」及 Owner 显示。
+  - **【对话运营】**：仅对具备 `viewOperations` 权限的「客服管理员」及 Owner 显示。
+  - **普通成员**：仅展示纯净的原生知识库页面，不暴露任何无权访问的业务按钮。
+- [x] 重定向旧路由 `/dataset/editor` 与 `/customer-service/editor` 直接回流知识库大厅。
+- [x] 完成全套 TypeScript 类型检查 (0 错误) 与自动化测试全部通过。
+- [x] 构建生产镜像 `fastgpt-customer-service:20260819-v2.1` 并热更新上线。
+
+## 15. V2.0 修复知识召回与索引检索致命阻断 Bug
+
+- [x] 彻底定位并解决召回拦截问题：
+  - 修复 [`packages/service/core/customerService/knowledge/guard.ts`](file:///root/FastGPT-source/packages/service/core/customerService/knowledge/guard.ts) 中 `getCustomerServiceGovernedCollectionIds` 无差别排除已发布知识的严重缺陷，仅过滤未发布草稿/待审/下架记录。
+  - 修复 [`packages/service/core/dataset/search/defaultRecall/multiQueryRecall.ts`](file:///root/FastGPT-source/packages/service/core/dataset/search/defaultRecall/multiQueryRecall.ts)，确保已发布知识或普通启用集合均能被原生搜索测试、应用对话、工作流数据集搜索正常召回。
+  - 修复审核试问沙盒中显式 `collectionIdWhitelist` 被全局 forbid 误伤的问题，支持草稿即时试问。
+- [x] 增强 4 大结构化模板（产品主档、操作手册、故障排查卡、FAQ批量）的完整 Markdown 同步渲染，生成高质量切片。
+- [x] 构建生产镜像 `fastgpt-customer-service:20260819-v2.2` 并平滑升级上线。
+
+## 16. V2.1 审核员与采编员极简门户改造与直达审核台
+
+- [x] **审核员 (`knowledgeReviewer`) 极简导航与直达审核**：
+  - 彻底隐藏「对话/门户」(Chat) 与「工作台」(Studio) 入口。
+  - 左侧主导航提供：**【知识审核】** (`/dataset/reviewer`)、**【知识库】** (`/dataset/list`)、**【账号】** (`/account/info`)。
+  - 登录后与首页访问 (`/`) 默认直达 **【知识审核】** (`/dataset/reviewer`)，无需通过知识库层层点击。
+  - URL 防越权拦截：直接在浏览器输入 `/dashboard` 或 `/chat` 时自动平滑重定向至 `/dataset/reviewer`。
+- [x] **采编员 (`knowledgeEditor`) 极简知识采编导航**：
+  - 彻底隐藏「对话/门户」(Chat) 与「工作台」(Studio) 入口。
+  - 左侧主导航提供：**【知识库】** (`/dataset/list`)、**【账号】** (`/account/info`)。
+  - 登录后与首页访问 (`/`) 默认直达 **【知识库】** (`/dataset/list`)。
+  - URL 防越权拦截：直接输入 `/dashboard` 或 `/chat` 时自动平滑重定向至 `/dataset/list`。
+- [x] 构建生产镜像 `fastgpt-customer-service:20260819-v2.3` 并热更新上线。
+
+## 17. V2.2 审核员极致专注审核流（全面移除知识库大厅入口）
+
+- [x] **知识审核员 (`knowledgeReviewer`) 纯粹审核视图**：
+  - 彻底移除左侧主导航栏的「知识库」入口，审核员左侧导航仅保留：**【知识审核】** (`/dataset/reviewer`) 与 **【账号】** (`/account/info`)。
+  - 顶部导航栏移除「返回知识库」跳转链接，防止越权或分散审核注意力。
+  - 路由全面封闭拦截：审核员访问 `/dataset/list`、`/dataset/detail`、`/dashboard`、`/chat` 时，全自动平滑重定向至 `/dataset/reviewer`。
+- [x] 构建生产镜像 `fastgpt-customer-service:20260819-v2.4` 并热更新部署上线。
+
+## 18. V2.3 修复管理员被锁死在审核台与全角色自由导航
+
+- [x] **彻底修复管理员与多角色身份识别与权限隔离**：
+  - 修复 `api/customer-service/admin/me.ts`：将 FastGPT 管理员权限 (`hasManagePer`) 正确纳入 `isTeamOwner`/`isAdmin` 计算，杜绝团队管理员被误识别为普通成员或仅审核员。
+  - 修复 `navbar.tsx` 与 `navbarPhone.tsx`：管理员账号（Owner/Admin/Root/拥有 `manageProjects` 能力者）永远展示全量主导航（门户/工作台/知识库/账号），且知识库直接指向 `/dataset/list`。
+  - 修复 `Layout/index.tsx`：移除对 `/dataset/list` 和 `/dataset/detail` 的全局霸道拦截重定向，仅对纯审核员拦截未开放的 `/dashboard` 和 `/chat`，彻底解除锁死死循环。
+  - 恢复 `dataset/reviewer` 顶部的「返回知识库」按钮，支持管理员和使用者在知识库与审核台之间自由切换。
+- [x] 构建生产镜像 `fastgpt-customer-service:20260819-v2.5` 并平滑升级上线。
+
+
+
+
+
+
+

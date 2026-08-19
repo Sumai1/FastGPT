@@ -47,6 +47,10 @@ import Markdown from '@/components/Markdown';
 interface FaqBatchEditorProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultDataset?: SelectedDatasetType;
+  defaultDatasetId?: string;
+  defaultDatasetName?: string;
+  onSuccess?: () => void;
 }
 
 const initialFaqs: StructuredFaqItem[] = [
@@ -81,14 +85,32 @@ const initialFaqs: StructuredFaqItem[] = [
   }
 ];
 
-export const FaqBatchEditor: React.FC<FaqBatchEditorProps> = ({ isOpen, onClose }) => {
+export const FaqBatchEditor: React.FC<FaqBatchEditorProps> = ({
+  isOpen,
+  onClose,
+  defaultDataset,
+  defaultDatasetId,
+  defaultDatasetName,
+  onSuccess
+}) => {
   const toast = useToast();
   const { catalog, createKnowledge, loadData } = useCustomerServiceContext();
   const [submitting, setSubmitting] = useState(false);
 
   // Group Info
   const [batchTitle, setBatchTitle] = useState('企业智能客服常见问题集 (FAQ)');
-  const [dataset, setDataset] = useState<SelectedDatasetType>();
+  const [dataset, setDataset] = useState<SelectedDatasetType | undefined>(
+    defaultDataset
+      ? defaultDataset
+      : defaultDatasetId
+        ? {
+            datasetId: defaultDatasetId,
+            name: defaultDatasetName || '当前知识库',
+            avatar: 'core/dataset/fileCollection',
+            vectorModel: { model: '' }
+          }
+        : undefined
+  );
   const [modelId, setModelId] = useState('');
   const [audience, setAudience] = useState<CustomerServiceAudienceEnum>(
     CustomerServiceAudienceEnum.public
@@ -280,6 +302,7 @@ ${item.detailedAnswer ? `**详细说明与指引**：\n${item.detailedAnswer}\n`
 
       toast({ status: 'success', title: `成功登记 ${faqList.length} 条 FAQ 知识到草稿库` });
       await loadData();
+      onSuccess?.();
       onClose();
     } catch (err) {
       toast({

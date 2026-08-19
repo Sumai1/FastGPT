@@ -76,12 +76,15 @@ export const getSessionMessages = (projectKey: string, sessionId: string): ChatM
       }
     }
 
-    // 兼容旧版 sessionStorage 单会话数据
-    const legacy = window.sessionStorage.getItem(`fastgpt-cs-messages:${projectKey}`);
-    if (legacy) {
-      const parsed = JSON.parse(legacy);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+    // 仅在请求当前活跃会话时兼容旧版 sessionStorage 单会话数据
+    const activeSessionId = window.localStorage.getItem(`${CURRENT_SESSION_PREFIX}:${projectKey}`);
+    if (activeSessionId === sessionId) {
+      const legacy = window.sessionStorage.getItem(`fastgpt-cs-messages:${projectKey}`);
+      if (legacy) {
+        const parsed = JSON.parse(legacy);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
     }
   } catch {
@@ -216,13 +219,13 @@ export const exportMessagesToMarkdown = ({
   for (let i = 0; i < messages.length; i++) {
     const msg = messages[i];
     const isUser = msg.role === 'user';
-    lines.push(`### ${isUser ? '👤 用户' : '🤖 智能客服'} (#${i + 1})`);
+    lines.push(`### ${isUser ? '用户' : '智能客服'} (#${i + 1})`);
     lines.push('');
     lines.push(msg.content || '*(无文本内容)*');
     lines.push('');
 
     if (msg.response?.safetyWarning) {
-      lines.push(`> ⚠️ **安全警告**：${msg.response.safetyWarning}`);
+      lines.push(`> **安全警告**：${msg.response.safetyWarning}`);
       lines.push('');
     }
 

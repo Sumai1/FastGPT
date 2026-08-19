@@ -50,16 +50,38 @@ import Markdown from '@/components/Markdown';
 interface ProductMasterFormProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultDataset?: SelectedDatasetType;
+  defaultDatasetId?: string;
+  defaultDatasetName?: string;
+  onSuccess?: () => void;
 }
 
-export const ProductMasterForm: React.FC<ProductMasterFormProps> = ({ isOpen, onClose }) => {
+export const ProductMasterForm: React.FC<ProductMasterFormProps> = ({
+  isOpen,
+  onClose,
+  defaultDataset,
+  defaultDatasetId,
+  defaultDatasetName,
+  onSuccess
+}) => {
   const toast = useToast();
   const { catalog, seriesMap, createKnowledge, loadData } = useCustomerServiceContext();
   const [submitting, setSubmitting] = useState(false);
 
   // Form State
   const [title, setTitle] = useState('');
-  const [dataset, setDataset] = useState<SelectedDatasetType>();
+  const [dataset, setDataset] = useState<SelectedDatasetType | undefined>(
+    defaultDataset
+      ? defaultDataset
+      : defaultDatasetId
+        ? {
+            datasetId: defaultDatasetId,
+            name: defaultDatasetName || '当前知识库',
+            avatar: 'core/dataset/fileCollection',
+            vectorModel: { model: '' }
+          }
+        : undefined
+  );
   const [modelId, setModelId] = useState('');
   const [audience, setAudience] = useState<CustomerServiceAudienceEnum>(
     CustomerServiceAudienceEnum.public
@@ -196,6 +218,7 @@ export const ProductMasterForm: React.FC<ProductMasterFormProps> = ({ isOpen, on
           audienceLevel: audience,
           modelIds: modelId ? [modelId] : [],
           templateData: {
+            markdown: generatedMarkdown,
             brand:
               (selectedModel ? seriesMap.get(selectedModel.seriesId)?.name : '标准品牌') ||
               '标准品牌',
@@ -213,6 +236,7 @@ export const ProductMasterForm: React.FC<ProductMasterFormProps> = ({ isOpen, on
 
       toast({ status: 'success', title: '产品主档标准化知识已登记为草稿' });
       await loadData();
+      onSuccess?.();
       onClose();
     } catch (err) {
       toast({

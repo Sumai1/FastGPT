@@ -134,6 +134,9 @@ describe('customer service knowledge native dataset guard', () => {
       teamId: String(teamId),
       datasetIds: [String(datasetId)]
     });
-    expect(new Set(collectionIds)).toEqual(new Set(items.map((item) => String(item.collectionId))));
+    const expectedUnpublishedIds = items
+      .filter((item) => item.status !== CustomerServiceKnowledgeStatusEnum.published)
+      .map((item) => String(item.collectionId));
+    expect(new Set(collectionIds)).toEqual(new Set(expectedUnpublishedIds));
   });
 });

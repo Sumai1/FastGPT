@@ -53,6 +53,9 @@ const ProModal = dynamic(() => import('@/components/ProTip/ProModal'), {
   ssr: false
 });
 
+import { useCustomerServicePermissions } from '@/pageComponents/customerService/useCustomerServicePermissions';
+import { CustomerServiceMemberRoleEnum } from '@fastgpt/global/core/customerService/constants';
+
 const pcUnShowLayoutRoute: Record<string, boolean> = {
   '/': true,
   '/login': true,
@@ -98,6 +101,33 @@ const Layout = ({ children }: { children: JSX.Element }) => {
   const { isPc } = useSystem();
   const { userInfo, isUpdateNotification, setIsUpdateNotification } = useUserStore();
   const { setUserDefaultLng, setShareDefaultLng } = useI18nLng();
+
+  const {
+    role,
+    isTeamOwner,
+    capabilities,
+    loading: permissionsLoading
+  } = useCustomerServicePermissions();
+
+  const isAdmin =
+    isTeamOwner ||
+    role === CustomerServiceMemberRoleEnum.customerServiceAdmin ||
+    capabilities.manageProjects ||
+    userInfo?.username === 'root';
+
+  useEffect(() => {
+    if (permissionsLoading || isAdmin || !role) return;
+
+    if (role === CustomerServiceMemberRoleEnum.knowledgeReviewer) {
+      if (router.pathname.startsWith('/dashboard') || router.pathname === '/chat') {
+        void router.replace('/dataset/reviewer');
+      }
+    } else if (role === CustomerServiceMemberRoleEnum.knowledgeEditor) {
+      if (router.pathname.startsWith('/dashboard') || router.pathname === '/chat') {
+        void router.replace('/dataset/list');
+      }
+    }
+  }, [router, role, isAdmin, permissionsLoading]);
 
   // Auto redeem coupon
   useCheckCoupon();

@@ -29,7 +29,16 @@ const formatStructuredTemplateToMarkdown = (
   templateType: 'productMaster' | 'manual' | 'faq' | 'faultCard',
   data: Record<string, unknown>
 ): { markdown: string; knowledgeType: CustomerServiceKnowledgeTypeEnum } => {
+  const customMarkdown =
+    typeof data.markdown === 'string' && data.markdown.trim() ? data.markdown.trim() : '';
+
   if (templateType === 'productMaster') {
+    if (customMarkdown) {
+      return {
+        markdown: customMarkdown,
+        knowledgeType: CustomerServiceKnowledgeTypeEnum.productMaster
+      };
+    }
     const brand = String(data.brand || '通用品牌');
     const modelName = String(data.modelName || '标准机型');
     const category = String(data.category || '无人自助设备');
@@ -68,6 +77,12 @@ const formatStructuredTemplateToMarkdown = (
   }
 
   if (templateType === 'manual') {
+    if (customMarkdown) {
+      return {
+        markdown: customMarkdown,
+        knowledgeType: CustomerServiceKnowledgeTypeEnum.manual
+      };
+    }
     const purpose = String(data.purpose || '标准日常维护与操作流程');
     const safetyWarnings = String(
       data.safetyWarnings || '操作前务必先切断主电源，佩戴绝缘安全手套。'
@@ -106,6 +121,12 @@ ${emergencyStop}`;
   }
 
   if (templateType === 'faultCard') {
+    if (customMarkdown) {
+      return {
+        markdown: customMarkdown,
+        knowledgeType: CustomerServiceKnowledgeTypeEnum.fault
+      };
+    }
     const faultCode = String(data.faultCode || 'ERR-000');
     const faultPhenomenon = String(data.faultPhenomenon || '设备运行异常报警');
     const possibleCauses = String(
@@ -145,6 +166,12 @@ ${escalationCondition}`;
   }
 
   // FAQ
+  if (customMarkdown) {
+    return {
+      markdown: customMarkdown,
+      knowledgeType: CustomerServiceKnowledgeTypeEnum.faq
+    };
+  }
   const question = String(data.question || title);
   const similarQuestions = Array.isArray(data.similarQuestions)
     ? data.similarQuestions.join(' / ')

@@ -68,7 +68,7 @@ export const TroubleshootCard: React.FC<TroubleshootCardProps> = ({
           <div>
             <div className="cs-troubleshoot-title">{title}</div>
             <div className="cs-troubleshoot-progress-text">
-              排查进度：<strong>{completedCount}</strong> / {totalSteps} 步 ({progressPercent}%)
+              {`排查进度：${completedCount} / ${totalSteps} 步 (${progressPercent}%)`}
             </div>
           </div>
         </div>

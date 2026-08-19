@@ -48,6 +48,10 @@ import Markdown from '@/components/Markdown';
 interface FaultCardFormProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultDataset?: SelectedDatasetType;
+  defaultDatasetId?: string;
+  defaultDatasetName?: string;
+  onSuccess?: () => void;
 }
 
 const defaultFaultSteps: StructuredFaultStep[] = [
@@ -77,7 +81,14 @@ const defaultFaultSteps: StructuredFaultStep[] = [
   }
 ];
 
-export const FaultCardForm: React.FC<FaultCardFormProps> = ({ isOpen, onClose }) => {
+export const FaultCardForm: React.FC<FaultCardFormProps> = ({
+  isOpen,
+  onClose,
+  defaultDataset,
+  defaultDatasetId,
+  defaultDatasetName,
+  onSuccess
+}) => {
   const toast = useToast();
   const { catalog, createKnowledge, loadData } = useCustomerServiceContext();
   const [submitting, setSubmitting] = useState(false);
@@ -86,7 +97,18 @@ export const FaultCardForm: React.FC<FaultCardFormProps> = ({ isOpen, onClose })
   const [title, setTitle] = useState('');
   const [errorCode, setErrorCode] = useState('ERR-1002');
   const [symptom, setSymptom] = useState('设备通电后无响应且屏幕黑屏 / 打印切刀卡死报错');
-  const [dataset, setDataset] = useState<SelectedDatasetType>();
+  const [dataset, setDataset] = useState<SelectedDatasetType | undefined>(
+    defaultDataset
+      ? defaultDataset
+      : defaultDatasetId
+        ? {
+            datasetId: defaultDatasetId,
+            name: defaultDatasetName || '当前知识库',
+            avatar: 'core/dataset/fileCollection',
+            vectorModel: { model: '' }
+          }
+        : undefined
+  );
   const [modelId, setModelId] = useState('');
   const [applicableVersions, setApplicableVersions] = useState('V2.0 及以上硬件版本 / 全固件版本');
   const [riskLevel, setRiskLevel] = useState<'normal' | 'warning' | 'hazard'>('warning');
@@ -224,6 +246,7 @@ ${escalationRules}
           audienceLevel: audience,
           modelIds: modelId ? [modelId] : [],
           templateData: {
+            markdown: generatedMarkdown,
             faultCode: errorCode,
             faultPhenomenon: symptom,
             possibleCauses: `1. 对应部位机械部件卡死或异物阻挡；\n2. 光电/接近传感器积灰信号丢失；\n3. 驱动电机过载或线束松脱。`,
@@ -241,6 +264,7 @@ ${escalationRules}
 
       toast({ status: 'success', title: '售后故障卡已成功登记并进入审核流' });
       await loadData();
+      onSuccess?.();
       onClose();
     } catch (err) {
       toast({

@@ -1494,7 +1494,7 @@ export type CustomerServiceAdminRoleAuditListResponse = z.infer<
  * Tags: ['Customer Service']
  * ============================================================================ */
 export const CustomerServiceAdminMeResponseSchema = z.object({
-  role: z.enum(CustomerServiceMemberRoleEnum),
+  role: z.enum(CustomerServiceMemberRoleEnum).nullable().optional(),
   isTeamOwner: z.boolean(),
   capabilities: z.object({
     manageProjects: z.boolean(),

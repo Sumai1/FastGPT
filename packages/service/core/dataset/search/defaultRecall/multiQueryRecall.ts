@@ -47,9 +47,14 @@ export const multiQueryRecall = async ({
         ? getCustomerServiceGovernedCollectionIds({ teamId, datasetIds })
         : Promise.resolve([])
     ]);
-  // 已纳入客服治理的知识只能由可信客服上下文白名单放行，普通 App 默认拒绝。
+  // 未发布或已禁用的集合被禁止召回；显式白名单（如审核试问沙盒）中的集合允许放行。
+  const combinedForbidList = [...forbidCollectionIdList, ...governedCollectionIdList];
   const finalForbidCollectionIdList = Array.from(
-    new Set([...forbidCollectionIdList, ...governedCollectionIdList])
+    new Set(
+      collectionIdWhitelist && collectionIdWhitelist.length > 0
+        ? combinedForbidList.filter((id) => !collectionIdWhitelist.includes(id))
+        : combinedForbidList
+    )
   );
   // metadata 和客服白名单均为允许集合；任意显式空集合都必须 fail-closed。
   const filterCollectionIdList = computeFilterIntersection([

@@ -23,6 +23,7 @@ import type {
   CustomerServiceAccess,
   CustomerServiceFeedbackBody,
   CustomerServicePublicBootstrapResponse,
+  CustomerServiceCitation,
   FeedbackModalState,
   HumanHandoffData,
   ProductSelection,
@@ -36,6 +37,7 @@ import { ChatInput } from './ChatInput';
 import { FeedbackModal } from './FeedbackModal';
 import { SessionDrawer } from './SessionDrawer';
 import { HumanHandoffModal } from './HumanHandoffModal';
+import { QuoteDrawer } from './QuoteDrawer';
 import { AlertCircle, RefreshCw } from './icons';
 
 interface CustomerServiceAppProps {
@@ -56,7 +58,10 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
   const [loadError, setLoadError] = useState<string>('');
   const [input, setInput] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return window.innerWidth > 900;
+  });
   const [isSessionDrawerOpen, setIsSessionDrawerOpen] = useState<boolean>(false);
 
   // 受众身份状态（客户 / 运营 / 售后）
@@ -91,6 +96,15 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
   const [feedbackModal, setFeedbackModal] = useState<FeedbackModalState>({
     isOpen: false,
     messageIndex: -1
+  });
+
+  const [quoteDrawerState, setQuoteDrawerState] = useState<{
+    isOpen: boolean;
+    citations: CustomerServiceCitation[];
+    messageIndex?: number;
+  }>({
+    isOpen: false,
+    citations: []
   });
 
   const activeRequestRef = useRef<ActiveRequest | undefined>(undefined);
@@ -514,6 +528,11 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
               projectName={bootstrap?.project.name}
               onNewConversation={handleNewConversation}
               hasActiveMessages={messages.length > 0}
+              sessions={sessions}
+              currentSessionId={currentSessionId}
+              onSelectSession={handleSelectSession}
+              onDeleteSession={handleDeleteSession}
+              onClearAllSessions={handleClearAllSessions}
             />
           </aside>
         )}
@@ -551,6 +570,13 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
               })
             }
             onOpenHumanHandoff={handleOpenHumanHandoff}
+            onOpenQuoteDrawer={(cites, idx) =>
+              setQuoteDrawerState({
+                isOpen: true,
+                citations: cites || [],
+                messageIndex: idx
+              })
+            }
             onRetryMessage={(idx) => handleSendMessage(undefined, idx)}
             loading={loading}
           />
@@ -565,6 +591,14 @@ export const CustomerServiceApp: React.FC<CustomerServiceAppProps> = ({
           />
         </main>
       </div>
+
+      {/* 知识库参考来源抽屉 */}
+      <QuoteDrawer
+        isOpen={quoteDrawerState.isOpen}
+        onClose={() => setQuoteDrawerState({ isOpen: false, citations: [] })}
+        citations={quoteDrawerState.citations}
+        messageIndex={quoteDrawerState.messageIndex}
+      />
 
       {/* 历史会话管理抽屉 */}
       <SessionDrawer

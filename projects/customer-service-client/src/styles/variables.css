@@ -1,71 +1,71 @@
 :root {
-  /* 品牌核心色彩 */
-  --cs-primary: #2563eb;
-  --cs-primary-hover: #1d4ed8;
-  --cs-primary-active: #1e40af;
-  --cs-primary-light: #eff6ff;
-  --cs-primary-border: #bfdbfe;
-  --cs-primary-gradient: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-  --cs-primary-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  /* 品牌核心色彩 (FastGPT Native Tech Blue) */
+  --cs-primary: #2B5FDE;
+  --cs-primary-hover: #224CB8;
+  --cs-primary-active: #1B3D96;
+  --cs-primary-light: #F0F4FF;
+  --cs-primary-border: #C5D7FF;
+  --cs-primary-gradient: linear-gradient(135deg, #2B5FDE 0%, #3B82F6 100%);
+  --cs-primary-shadow: 0 4px 14px rgba(43, 95, 222, 0.2);
 
   /* 受众身份专属色彩 (三级受众体系) */
-  --cs-audience-public: #2563eb;
-  --cs-audience-public-bg: #eff6ff;
-  --cs-audience-public-border: #bfdbfe;
-  --cs-audience-public-text: #1e40af;
+  --cs-audience-public: #2B5FDE;
+  --cs-audience-public-bg: #F0F4FF;
+  --cs-audience-public-border: #C5D7FF;
+  --cs-audience-public-text: #1E40AF;
 
-  --cs-audience-dealer: #d97706;
-  --cs-audience-dealer-bg: #fffbeb;
-  --cs-audience-dealer-border: #fde68a;
-  --cs-audience-dealer-text: #92400e;
+  --cs-audience-dealer: #D97706;
+  --cs-audience-dealer-bg: #FFFBEB;
+  --cs-audience-dealer-border: #FDE68A;
+  --cs-audience-dealer-text: #92400E;
 
-  --cs-audience-internal: #7c3aed;
-  --cs-audience-internal-bg: #f5f3ff;
-  --cs-audience-internal-border: #ddd6fe;
-  --cs-audience-internal-text: #5b21b6;
+  --cs-audience-internal: #7C3AED;
+  --cs-audience-internal-bg: #F5F3FF;
+  --cs-audience-internal-border: #DDD6FE;
+  --cs-audience-internal-text: #5B21B6;
 
-  /* 中性背景色与表面色 */
-  --cs-bg: #f8fafc;
-  --cs-surface: #ffffff;
-  --cs-surface-glass: rgba(255, 255, 255, 0.92);
-  --cs-surface-alt: #f1f5f9;
-  --cs-surface-hover: #f8fafc;
-  --cs-surface-card: #ffffff;
+  /* 中性背景色与表面色 (FastGPT 原生质感浅灰 #F7F8FA + 纯白 #FFFFFF) */
+  --cs-bg: #F7F8FA;
+  --cs-surface: #FFFFFF;
+  --cs-surface-glass: rgba(255, 255, 255, 0.94);
+  --cs-surface-alt: #F3F4F6;
+  --cs-surface-hover: #F8FAFC;
+  --cs-surface-card: #FFFFFF;
 
-  /* 边框色 */
-  --cs-border: #e2e8f0;
-  --cs-border-light: #f1f5f9;
-  --cs-border-dark: #cbd5e1;
-  --cs-border-focus: #3b82f6;
+  /* 边框色 (1px 浅灰细边框 #E5E7EB) */
+  --cs-border: #E5E7EB;
+  --cs-border-light: #F3F4F6;
+  --cs-border-dark: #D1D5DB;
+  --cs-border-focus: #2B5FDE;
 
   /* 文本色彩体系 */
-  --cs-text-primary: #0f172a;
-  --cs-text-secondary: #475569;
-  --cs-text-muted: #94a3b8;
-  --cs-text-inverse: #ffffff;
+  --cs-text-primary: #111827;
+  --cs-text-secondary: #4B5563;
+  --cs-text-muted: #9CA3AF;
+  --cs-text-inverse: #FFFFFF;
 
   /* 功能辅助色彩 */
-  --cs-success: #10b981;
-  --cs-success-light: #ecfdf5;
-  --cs-success-border: #a7f3d0;
-  --cs-success-text: #065f46;
+  --cs-success: #10B981;
+  --cs-success-light: #ECFDF5;
+  --cs-success-border: #A7F3D0;
+  --cs-success-text: #065F46;
 
-  --cs-warning: #f59e0b;
-  --cs-warning-light: #fffbeb;
-  --cs-warning-border: #fde68a;
-  --cs-warning-text: #92400e;
+  --cs-warning: #F59E0B;
+  --cs-warning-light: #FFFBEB;
+  --cs-warning-border: #FDE68A;
+  --cs-warning-text: #92400E;
 
-  --cs-danger: #ef4444;
-  --cs-danger-hover: #dc2626;
-  --cs-danger-light: #fef2f2;
-  --cs-danger-border: #fecaca;
-  --cs-danger-text: #991b1b;
-  --cs-danger-gradient: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  --cs-danger: #EF4444;
+  --cs-danger-hover: #DC2626;
+  --cs-danger-light: #FEF2F2;
+  --cs-danger-border: #FECACA;
+  --cs-danger-text: #991B1B;
+  --cs-danger-gradient: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
 
-  --cs-info: #0ea5e9;
-  --cs-info-light: #f0f9ff;
-  --cs-info-border: #bae6fd;
-  --cs-info-text: #0369a1;
+  --cs-info: #0EA5E9;
+  --cs-info-light: #F0F9FF;
+  --cs-info-border: #BAE6FD;
+  --cs-info-text: #0369A1;
 
   /* 圆角 */
   --cs-radius-xs: 4px;
@@ -76,16 +76,16 @@
   --cs-radius-full: 9999px;
 
   /* 阴影 - 现代拟态与微层次 */
-  --cs-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  --cs-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.08);
-  --cs-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --cs-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --cs-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
-  --cs-shadow-float: 0 12px 36px rgba(0, 0, 0, 0.14), 0 4px 12px rgba(0, 0, 0, 0.06);
-  --cs-shadow-card-hover: 0 8px 20px -4px rgba(0, 0, 0, 0.1), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
+  --cs-shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --cs-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  --cs-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --cs-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+  --cs-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+  --cs-shadow-float: 0 12px 36px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --cs-shadow-card-hover: 0 8px 20px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.03);
 
   /* 字体与排版 */
-  --cs-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --cs-font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --cs-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --cs-line-height: 1.6;
 

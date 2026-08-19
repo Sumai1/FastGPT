@@ -14,8 +14,8 @@ const immutableKnowledgeError =
   'Customer service knowledge under review or already published is immutable; create a new version to edit it';
 
 /**
- * 返回已纳入客服治理的 collection。普通 App 召回默认排除这些 collection，
- * 只有携带可信客服白名单的执行上下文才能进入。
+ * 返回已纳入客服治理且未处于已发布状态的 collection（草稿、待审、已驳回、已下架）。
+ * 普通 App 召回默认排除这些未发布的 collection，已发布集合可正常被索引和召回。
  */
 export const getCustomerServiceGovernedCollectionIds = async ({
   teamId,
@@ -29,7 +29,8 @@ export const getCustomerServiceGovernedCollectionIds = async ({
 
   const items = await MongoCustomerServiceKnowledge.find({
     teamId,
-    datasetId: { $in: Array.from(new Set(validDatasetIds)) }
+    datasetId: { $in: Array.from(new Set(validDatasetIds)) },
+    status: { $ne: CustomerServiceKnowledgeStatusEnum.published }
   })
     .select('collectionId')
     .lean();

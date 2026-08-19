@@ -32,7 +32,7 @@ describe('customer service current member API', () => {
         manageProjects: false,
         editKnowledge: true,
         reviewKnowledge: false,
-        viewOperations: true,
+        viewOperations: false,
         manageRoles: false
       }
     });

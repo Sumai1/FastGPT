@@ -39,6 +39,18 @@ import QuestionTip from '@fastgpt/web/components/common/MyTooltip/QuestionTip';
 const FileSourceSelector = dynamic(() => import('../Import/components/FileSourceSelector'));
 const BackupImportModal = dynamic(() => import('./BackupImportModal'));
 const TemplateImportModal = dynamic(() => import('./TemplateImportModal'));
+const ProductMasterForm = dynamic(
+  () => import('@/pageComponents/customerService/KnowledgeStudio/ProductMasterForm')
+);
+const ManualForm = dynamic(
+  () => import('@/pageComponents/customerService/KnowledgeStudio/ManualForm')
+);
+const FaultCardForm = dynamic(
+  () => import('@/pageComponents/customerService/KnowledgeStudio/FaultCardForm')
+);
+const FaqBatchEditor = dynamic(
+  () => import('@/pageComponents/customerService/KnowledgeStudio/FaqBatchEditor')
+);
 
 const Header = ({
   hasTrainingData,
@@ -99,6 +111,12 @@ const Header = ({
     onOpen: onOpenTemplateImportModal,
     onClose: onCloseTemplateImportModal
   } = useDisclosure();
+
+  // Customer Service Structured Knowledge Modals
+  const productMasterDisclosure = useDisclosure();
+  const manualDisclosure = useDisclosure();
+  const faultCardDisclosure = useDisclosure();
+  const faqBatchDisclosure = useDisclosure();
 
   const { runAsync: onCreateCollection } = useRequest(
     async ({
@@ -316,6 +334,61 @@ const Header = ({
                             onCreateCollection({ name, type: DatasetCollectionTypeEnum.virtual })
                         });
                       }
+                    }
+                  ]
+                },
+                {
+                  children: [
+                    {
+                      label: (
+                        <Flex alignItems={'center'}>
+                          <MyIcon
+                            name={'common/overviewLight'}
+                            w={'20px'}
+                            mr={2}
+                            color={'primary.600'}
+                          />
+                          录入产品主档
+                        </Flex>
+                      ),
+                      onClick: productMasterDisclosure.onOpen
+                    },
+                    {
+                      label: (
+                        <Flex alignItems={'center'}>
+                          <MyIcon
+                            name={'core/app/logsLight'}
+                            w={'20px'}
+                            mr={2}
+                            color={'primary.600'}
+                          />
+                          录入操作手册
+                        </Flex>
+                      ),
+                      onClick: manualDisclosure.onOpen
+                    },
+                    {
+                      label: (
+                        <Flex alignItems={'center'}>
+                          <MyIcon name={'common/error'} w={'20px'} mr={2} color={'primary.600'} />
+                          录入故障排查卡
+                        </Flex>
+                      ),
+                      onClick: faultCardDisclosure.onOpen
+                    },
+                    {
+                      label: (
+                        <Flex alignItems={'center'}>
+                          <MyIcon
+                            name={'core/dataset/manualCollection'}
+                            w={'20px'}
+                            mr={2}
+                            color={'primary.600'}
+                          />
+                          FAQ 批量编辑器
+                        </Flex>
+                      ),
+                      onClick: faqBatchDisclosure.onOpen
                     }
                   ]
                 },
@@ -616,6 +689,44 @@ const Header = ({
             getData(1);
           }}
           onClose={onCloseTemplateImportModal}
+        />
+      )}
+
+      {/* Customer Service Structured Knowledge Modals */}
+      {productMasterDisclosure.isOpen && (
+        <ProductMasterForm
+          isOpen
+          onClose={productMasterDisclosure.onClose}
+          defaultDatasetId={datasetDetail?._id}
+          defaultDatasetName={datasetDetail?.name}
+          onSuccess={() => getData(pageNum)}
+        />
+      )}
+      {manualDisclosure.isOpen && (
+        <ManualForm
+          isOpen
+          onClose={manualDisclosure.onClose}
+          defaultDatasetId={datasetDetail?._id}
+          defaultDatasetName={datasetDetail?.name}
+          onSuccess={() => getData(pageNum)}
+        />
+      )}
+      {faultCardDisclosure.isOpen && (
+        <FaultCardForm
+          isOpen
+          onClose={faultCardDisclosure.onClose}
+          defaultDatasetId={datasetDetail?._id}
+          defaultDatasetName={datasetDetail?.name}
+          onSuccess={() => getData(pageNum)}
+        />
+      )}
+      {faqBatchDisclosure.isOpen && (
+        <FaqBatchEditor
+          isOpen
+          onClose={faqBatchDisclosure.onClose}
+          defaultDatasetId={datasetDetail?._id}
+          defaultDatasetName={datasetDetail?.name}
+          onSuccess={() => getData(pageNum)}
         />
       )}
     </MyBox>

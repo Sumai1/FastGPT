@@ -83,7 +83,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       </div>
 
       <div className="cs-input-footer-hint cs-hide-mobile">
-        <span>💡 快捷操作：输入故障现象（如“拍照机卡纸”、“售货机未出货”）可快速调取排障流程</span>
+        <span>输入故障现象或设备错误代码（如 E-01 / V-101）可快速调取排障流程</span>
         {input.length > 0 && <span>{input.length} 字</span>}
       </div>
     </div>

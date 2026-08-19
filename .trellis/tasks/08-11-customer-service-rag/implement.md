@@ -99,3 +99,19 @@
 3. [x] **全局侧边栏清理与路由兼容**：在 [`navbar.tsx`](file:///root/FastGPT-source/projects/app/src/components/Layout/navbar.tsx) 与 [`navbarPhone.tsx`](file:///root/FastGPT-source/projects/app/src/components/Layout/navbarPhone.tsx) 移除冗余的 `customer_service` 侧边栏项，将 `/customer-service/roles` 重定向至 `/account/team`，`/customer-service/console` 重定向至 `/dataset/list`。
 4. [x] **自动化测试与全量验收**：运行 `createMember.test.ts` 单元测试，全部通过。
 
+## V1.7 原生分散嵌入前端全功能闭环 (Full Frontend Suite)
+
+1. [x] **产品管理工作台 (`ProductStudio`) 落地**：
+   - 建立 [`/dataset/product`](file:///root/FastGPT-source/projects/app/src/pages/dataset/product/index.tsx)，支持产品大类/系列/型号/版本 5 级拓扑树浏览与搜索。
+   - 实现型号档案详情卡片、别名展示、启停用切换与 FastGPT Dataset 知识库绑定/解绑弹窗。
+2. [x] **对话运营与反馈工作台 (`OperationsStudio`) 落地**：
+   - 建立 [`/dataset/operations`](file:///root/FastGPT-source/projects/app/src/pages/dataset/operations/index.tsx)，支持会话日志多维筛选（项目、产品、型号、状态、反馈）。
+   - 实现效能与消耗趋势看板 (`MetricsTrendCards`)、转人工归因分析 (`HandoffReasonChart`) 与 Badcase 语义聚类 (`BadcaseClusteringList`)。
+   - 实现“一键转知识草稿”(`OneClickToDraftModal`)，直接将未解决/低置信度对话沉淀为待审知识草稿。
+3. [x] **跨工作台无缝互通导航**：
+   - 在 [`/dataset/list`](file:///root/FastGPT-source/projects/app/src/pages/dataset/list/index.tsx)、[`/dataset/editor`](file:///root/FastGPT-source/projects/app/src/pages/dataset/editor/index.tsx)、[`/dataset/reviewer`](file:///root/FastGPT-source/projects/app/src/pages/dataset/reviewer/index.tsx)、[`/dataset/product`](file:///root/FastGPT-source/projects/app/src/pages/dataset/product/index.tsx)、[`/dataset/operations`](file:///root/FastGPT-source/projects/app/src/pages/dataset/operations/index.tsx) 顶部操作栏提供统一的一键直达导航。
+4. [x] **质量门禁与测试回归**：
+   - `@fastgpt/app` 全量 TypeScript 类型检查 0 错误通过。
+   - 智能客服相关单元测试全部通过。
+
+

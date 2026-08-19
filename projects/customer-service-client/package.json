@@ -8,7 +8,9 @@
     "build": "tsc && vite build && vite build --config vite.embed.config.ts",
     "build:app": "vite build",
     "build:embed": "vite build --config vite.embed.config.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@fastgpt/global": "workspace:*",
@@ -17,10 +19,12 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@testing-library/react": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "catalog:",
     "typescript": "catalog:",
     "vite": "^6.0.0"
   }

@@ -1,20 +1,30 @@
 import React, { useState, useRef, useMemo } from 'react';
 import {
+  Badge,
   Box,
+  Button,
+  Checkbox,
   Flex,
-  TableContainer,
-  Table,
-  Thead,
-  Tr,
-  Th,
-  Td,
-  Tbody,
+  HStack,
   MenuButton,
   Switch,
-  Checkbox,
-  HStack,
-  Button
+  Table,
+  TableContainer,
+  Tbody,
+  Td,
+  Text,
+  Th,
+  Thead,
+  Tr,
+  useDisclosure
 } from '@chakra-ui/react';
+import { CustomerServiceKnowledgeStatusEnum } from '@fastgpt/global/core/customerService/constants';
+import {
+  useCustomerServiceContext,
+  statusMap,
+  audienceMap
+} from '@/pageComponents/customerService/context';
+import KnowledgeCreateModal from '@/pageComponents/customerService/KnowledgeCreateModal';
 import {
   delDatasetCollectionById,
   putDatasetCollectionById,
@@ -81,6 +91,15 @@ const CollectionCard = () => {
   const { collections, Pagination, total, getData, isGetting, pageNum, pageSize } =
     useContextSelector(CollectionPageContext, (v) => v);
 
+  const { knowledge, catalog, knowledgeAction, createKnowledge, currentMember } =
+    useCustomerServiceContext();
+
+  const registerKnowledgeDisclosure = useDisclosure();
+  const [selectedRegisterCollection, setSelectedRegisterCollection] = useState<{
+    collectionId: string;
+    name: string;
+  }>();
+
   // Add file status icon
   const formatCollections = useMemo(
     () =>
@@ -88,15 +107,17 @@ const CollectionCard = () => {
         const icon = getCollectionIcon({ type: collection.type, name: collection.name });
         const statusColorSchema = getCollectionTrainingStatusColorSchema(collection);
         const statusText = getCollectionTrainingStatusText(collection);
+        const csKnowledge = knowledge.find((k) => k.collectionId === collection._id);
 
         return {
           ...collection,
           icon,
           statusText,
-          statusColorSchema
+          statusColorSchema,
+          csKnowledge
         };
       }),
-    [collections]
+    [collections, knowledge]
   );
 
   const {
@@ -247,6 +268,7 @@ const CollectionCard = () => {
                 <Th py={4}>{t('dataset:collection_data_count')}</Th>
                 <Th py={4}>{t('dataset:collection.Create update time')}</Th>
                 <Th py={4}>{t('common:Status')}</Th>
+                <Th py={4}>客服治理状态</Th>
                 <Th py={4}>{t('dataset:Enable')}</Th>
                 <Th py={4} />
               </Tr>
@@ -319,9 +341,9 @@ const CollectionCard = () => {
                   <Td py={2}>
                     {collection.trainingType
                       ? t(
-                        (DatasetCollectionDataProcessModeMap[collection.trainingType]?.label ||
-                          '-') as any
-                      )
+                          (DatasetCollectionDataProcessModeMap[collection.trainingType]?.label ||
+                            '-') as any
+                        )
                       : '-'}
                   </Td>
                   <Td py={2}>{collection.dataAmount || '-'}</Td>
@@ -353,6 +375,52 @@ const CollectionCard = () => {
                     </MyTooltip>
                   </Td>
                   <Td py={2} onClick={(e) => e.stopPropagation()}>
+                    {collection.csKnowledge ? (
+                      <HStack spacing={1.5} wrap="wrap">
+                        <Badge
+                          colorScheme={
+                            collection.csKnowledge.status ===
+                            CustomerServiceKnowledgeStatusEnum.published
+                              ? 'green'
+                              : collection.csKnowledge.status ===
+                                  CustomerServiceKnowledgeStatusEnum.pending
+                                ? 'orange'
+                                : collection.csKnowledge.status ===
+                                    CustomerServiceKnowledgeStatusEnum.rejected
+                                  ? 'red'
+                                  : 'gray'
+                          }
+                          fontSize="xs"
+                        >
+                          {statusMap[collection.csKnowledge.status]?.label ||
+                            collection.csKnowledge.status}
+                        </Badge>
+                        <Badge variant="outline" fontSize="xs">
+                          {audienceMap[collection.csKnowledge.audienceLevel] || '公开'}
+                        </Badge>
+                      </HStack>
+                    ) : collection.type === DatasetCollectionTypeEnum.folder ? (
+                      <Text color="myGray.400" fontSize="xs">
+                        -
+                      </Text>
+                    ) : (
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        colorScheme="blue"
+                        onClick={() => {
+                          setSelectedRegisterCollection({
+                            collectionId: collection._id,
+                            name: collection.name
+                          });
+                          registerKnowledgeDisclosure.onOpen();
+                        }}
+                      >
+                        + 登记治理
+                      </Button>
+                    )}
+                  </Td>
+                  <Td py={2} onClick={(e) => e.stopPropagation()}>
                     <Switch
                       isChecked={!collection.forbid}
                       size={'sm'}
@@ -367,7 +435,7 @@ const CollectionCard = () => {
                   <Td py={2} onClick={(e) => e.stopPropagation()}>
                     {collection.permission.hasWritePer && (
                       <MyMenu
-                        width={100}
+                        width={120}
                         offset={[-70, 5]}
                         Button={
                           <MenuButton
@@ -396,27 +464,94 @@ const CollectionCard = () => {
                         menuList={[
                           {
                             children: [
+                              ...(collection.csKnowledge &&
+                              [
+                                CustomerServiceKnowledgeStatusEnum.draft,
+                                CustomerServiceKnowledgeStatusEnum.rejected
+                              ].includes(collection.csKnowledge.status)
+                                ? [
+                                    {
+                                      label: (
+                                        <Flex
+                                          alignItems={'center'}
+                                          color="primary.600"
+                                          fontWeight="500"
+                                        >
+                                          <MyIcon
+                                            name={'common/check'}
+                                            w={'0.9rem'}
+                                            mr={2}
+                                            color="primary.600"
+                                          />
+                                          提交客服审核
+                                        </Flex>
+                                      ),
+                                      onClick: async () => {
+                                        if (!collection.csKnowledge) return;
+                                        try {
+                                          await knowledgeAction(
+                                            'submit',
+                                            collection.csKnowledge.id
+                                          );
+                                          toast({
+                                            status: 'success',
+                                            title: '已提交审核，请等待审核员复核发布'
+                                          });
+                                          getData(pageNum);
+                                        } catch (err: any) {
+                                          toast({
+                                            status: 'error',
+                                            title: err?.message || '提审失败'
+                                          });
+                                        }
+                                      }
+                                    }
+                                  ]
+                                : !collection.csKnowledge &&
+                                    collection.type !== DatasetCollectionTypeEnum.folder
+                                  ? [
+                                      {
+                                        label: (
+                                          <Flex alignItems={'center'}>
+                                            <MyIcon
+                                              name={'common/overviewLight'}
+                                              w={'0.9rem'}
+                                              mr={2}
+                                            />
+                                            登记为客服知识
+                                          </Flex>
+                                        ),
+                                        onClick: () => {
+                                          setSelectedRegisterCollection({
+                                            collectionId: collection._id,
+                                            name: collection.name
+                                          });
+                                          registerKnowledgeDisclosure.onOpen();
+                                        }
+                                      }
+                                    ]
+                                  : []),
                               ...(collectionCanSync(collection.type)
                                 ? [
-                                  {
-                                    label: (
-                                      <Flex alignItems={'center'}>
-                                        <MyIcon
-                                          name={'common/refreshLight'}
-                                          w={'0.9rem'}
-                                          mr={2}
-                                        />
-                                        {t('dataset:collection_sync')}
-                                      </Flex>
-                                    ),
-                                    onClick: () =>
-                                      openSyncConfirm({
-                                        onConfirm: () => {
-                                          onclickStartSync(collection._id);
-                                        }
-                                      })()
-                                  }
-                                ]
+                                    {
+                                      label: (
+                                        <Flex alignItems={'center'}>
+                                          <MyIcon
+                                            name={'common/refreshLight'}
+                                            w={'0.9rem'}
+                                            mr={2}
+                                          />
+                                          {t('dataset:collection_sync')}
+                                        </Flex>
+                                      ),
+                                      onClick: () =>
+                                        openSyncConfirm({
+                                          onConfirm: () => {
+                                            onclickStartSync(collection._id);
+                                          }
+                                        })()
+                                    }
+                                  ]
                                 : []),
                               {
                                 label: (
@@ -468,8 +603,8 @@ const CollectionCard = () => {
                                     customContent:
                                       collection.type === DatasetCollectionTypeEnum.folder
                                         ? t(
-                                          'common:dataset.collections.Confirm to delete the folder'
-                                        )
+                                            'common:dataset.collections.Confirm to delete the folder'
+                                          )
                                         : t('common:dataset.Confirm to delete the file')
                                   })()
                               }
@@ -558,6 +693,34 @@ const CollectionCard = () => {
                 status: 'success',
                 title: t('common:move_success')
               });
+            }}
+          />
+        )}
+
+        {registerKnowledgeDisclosure.isOpen && selectedRegisterCollection && (
+          <KnowledgeCreateModal
+            isOpen
+            catalog={catalog}
+            initialSource={{
+              dataset: {
+                datasetId: datasetDetail._id,
+                name: datasetDetail.name,
+                avatar: datasetDetail.avatar,
+                vectorModel: datasetDetail.vectorModel
+              },
+              collection: {
+                id: selectedRegisterCollection.collectionId,
+                name: selectedRegisterCollection.name,
+                avatar: 'core/dataset/fileCollection'
+              }
+            }}
+            onClose={() => {
+              setSelectedRegisterCollection(undefined);
+              registerKnowledgeDisclosure.onClose();
+            }}
+            onCreate={async (body) => {
+              await createKnowledge(body);
+              getData(pageNum);
             }}
           />
         )}

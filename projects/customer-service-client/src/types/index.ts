@@ -32,6 +32,8 @@ export type {
   CustomerServiceFeedbackBody
 };
 
+export type CustomerServiceCitation = CustomerServicePublicCitation;
+
 /** 会话消息格式 */
 export type ChatMessage = {
   role: 'user' | 'assistant';
@@ -71,6 +73,7 @@ export type CustomerServiceAccess = {
 
 /** 当前选中的产品型号与软硬件版本 */
 export type ProductSelection = {
+  categoryCode?: string;
   seriesCode: string;
   modelCode: string;
   hardwareVersionCode: string;

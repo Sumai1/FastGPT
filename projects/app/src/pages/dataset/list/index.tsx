@@ -37,6 +37,7 @@ import {
 } from '@fastgpt/global/common/parentFolder/depth';
 import { ReadRoleVal } from '@fastgpt/global/support/permission/constant';
 import ProModal from '@/components/ProTip/ProModal';
+import { useCustomerServicePermissions } from '@/pageComponents/customerService/useCustomerServicePermissions';
 
 const EditFolderModal = dynamic(
   () => import('@fastgpt/web/components/common/MyModal/EditFolderModal')
@@ -49,6 +50,7 @@ const Dataset = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const parentId = normalizeParentId(router.query.parentId);
+  const { capabilities } = useCustomerServicePermissions();
 
   const {
     myDatasets,
@@ -130,28 +132,45 @@ const Dataset = () => {
                     {t('common:core.dataset.My Dataset')}
                   </Box>
                   <Flex gap={2} ml={4} display={{ base: 'none', sm: 'flex' }}>
-                    <Button
-                      size="sm"
-                      variant="whitePrimary"
-                      leftIcon={<MyIcon name="core/dataset/datasetLight" w="14px" />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push('/dataset/editor');
-                      }}
-                    >
-                      知识采编台
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="whitePrimary"
-                      leftIcon={<MyIcon name="common/check" w="14px" />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push('/dataset/reviewer');
-                      }}
-                    >
-                      知识审核台
-                    </Button>
+                    {capabilities.reviewKnowledge && (
+                      <Button
+                        size="sm"
+                        variant="whitePrimary"
+                        leftIcon={<MyIcon name="common/check" w="14px" />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push('/dataset/reviewer');
+                        }}
+                      >
+                        知识审核台
+                      </Button>
+                    )}
+                    {capabilities.manageProjects && (
+                      <Button
+                        size="sm"
+                        variant="whitePrimary"
+                        leftIcon={<MyIcon name="common/list" w="14px" />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push('/dataset/product');
+                        }}
+                      >
+                        产品管理
+                      </Button>
+                    )}
+                    {capabilities.viewOperations && (
+                      <Button
+                        size="sm"
+                        variant="whitePrimary"
+                        leftIcon={<MyIcon name="core/app/logsLight" w="14px" />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push('/dataset/operations');
+                        }}
+                      >
+                        对话运营
+                      </Button>
+                    )}
                   </Flex>
                 </Flex>
               }

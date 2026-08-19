@@ -3,6 +3,8 @@ import {
   Bot,
   User,
   Sparkles,
+  Camera,
+  ShoppingBag,
   ChevronDown,
   ChevronUp,
   AlertTriangle,
@@ -15,10 +17,14 @@ import {
   PhoneCall,
   ExternalLink
 } from './icons';
-import type { ChatMessage, CustomerServicePublicChatResponse, TroubleshootStep } from '../types';
+import type { ChatMessage, CustomerServicePublicChatResponse } from '../types';
 import { LightMarkdown } from '../utils/markdown';
-import { DiagnosticGuideTree } from './DiagnosticGuideTree';
-import { ErrorCodeQuickSearch } from './ErrorCodeQuickSearch';
+import { extractTroubleshootSteps } from '../utils/troubleshoot';
+import {
+  checkHighDangerWarning,
+  getMatchedSafetyRule,
+  classifyCitationType
+} from '../utils/safety';
 import { TroubleshootCard } from './TroubleshootCard';
 import { SafetyAlertCard } from './SafetyAlertCard';
 
@@ -38,51 +44,13 @@ interface MessageListProps {
     faultSummary?: string,
     steps?: { title: string; completed: boolean }[]
   ) => void;
+  onOpenQuoteDrawer?: (
+    citations: CustomerServicePublicChatResponse['citations'],
+    messageIndex: number
+  ) => void;
   onRetryMessage?: (assistantIndex: number) => void;
   loading?: boolean;
 }
-
-/** 智能从助手文本中提取排查步骤 */
-const extractTroubleshootSteps = (content: string): TroubleshootStep[] => {
-  if (!content) return [];
-
-  const steps: TroubleshootStep[] = [];
-  const lines = content.split('\n');
-
-  let stepCounter = 1;
-  for (const line of lines) {
-    const trimmed = line.trim();
-    // 匹配如: "1. 检查电源线", "步骤 1: 重启设备", "第1步：清理卡纸", "- [ ] 步骤一"
-    const stepMatch =
-      trimmed.match(
-        /^(?:(?:步骤|第)?\s*(\d+|[一二三四五六七八九十])\s*[、.：:]\s*|\d+\.\s+)(.+)$/
-      ) || trimmed.match(/^-\s*\[\s*\]\s*(.+)$/);
-
-    if (stepMatch) {
-      const stepText = (stepMatch[2] || stepMatch[1] || '').trim();
-      if (stepText.length >= 4 && stepText.length <= 150) {
-        const isDanger = /高压|断电|触电|拔掉插头|切断电源|危险|开箱|拆机|拆卸/i.test(stepText);
-        steps.push({
-          id: `step-${stepCounter}`,
-          index: stepCounter,
-          title: stepText.replace(/\*\*/g, ''),
-          completed: false,
-          isDanger
-        });
-        stepCounter++;
-      }
-    }
-  }
-
-  // 只有当识别到 2 个或以上有效步骤时才激活排查卡片
-  return steps.length >= 2 ? steps : [];
-};
-
-/** 检测文本中是否包含高危安全阻断级关键词 */
-const checkHighDangerWarning = (content: string, safetyWarning?: string): boolean => {
-  const target = `${safetyWarning || ''} ${content}`;
-  return /高压电|带电拆机|触电危险|严禁拆卸|强电总成|压缩机高压|主板强电|漏电触电/i.test(target);
-};
 
 export const MessageList: React.FC<MessageListProps> = ({
   messages,
@@ -93,6 +61,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   onFeedback,
   onOpenFeedbackModal,
   onOpenHumanHandoff,
+  onOpenQuoteDrawer,
   onRetryMessage,
   loading
 }) => {
@@ -113,49 +82,75 @@ export const MessageList: React.FC<MessageListProps> = ({
   return (
     <div className="cs-chat-scroll">
       <div className="cs-chat-container">
-        {/* 欢迎语与场景化诊断引导区 */}
+        {/* 欢迎语与场景化极简场景卡 (FastGPT Native DesktopHomeHero & QuickApps) */}
         {messages.length === 0 && (
-          <>
-            <div className="cs-welcome-hero">
-              <div className="cs-welcome-title">
-                <div className="cs-brand-logo" style={{ width: 34, height: 34 }}>
-                  <Sparkles size={18} />
-                </div>
-                <span>{welcomeText || '您好！我是您的无人设备智能客服专家'}</span>
-              </div>
-              <div className="cs-welcome-desc">
-                为您提供 7×24 小时无人设备（拍照机 /
-                售货机）故障排查、常见问题解答、错误代码速查与人工转接支持。
-              </div>
-
-              {recommendedQuestions.length > 0 && (
-                <div style={{ marginTop: 4 }}>
-                  <div className="cs-recommended-title">快捷咨询问题</div>
-                  <div className="cs-recommended-wrap" style={{ marginTop: 8 }}>
-                    {recommendedQuestions.map((q, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        className="cs-recommended-pill"
-                        onClick={() => onSelectQuestion(q)}
-                      >
-                        <Sparkles size={13} style={{ color: 'var(--cs-primary)' }} />
-                        <span>{q}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+          <div className="cs-native-hero">
+            <div className="cs-native-hero-icon">
+              <Bot size={34} />
             </div>
+            <h1 className="cs-native-hero-title">{welcomeText || '企业产品智能客服'}</h1>
+            <p className="cs-native-hero-subtitle">
+              专为自助拍照机、智能售货机等无人设备打造的 7×24 小时排障与售后支持门户
+            </p>
 
-            {/* 场景化引导树 (拍照机/售货机专区) */}
-            <DiagnosticGuideTree onSelectGuide={(prompt) => onSelectQuestion(prompt)} />
+            {/* 44px 极简场景推荐卡 (对标 FastGPT QuickApps) */}
+            <div className="cs-quickapps-row">
+              <div
+                className="cs-quickapp-chip"
+                onClick={() => onSelectQuestion('拍照机相纸卡在出片口或切刀处卡阻，如何安全排障？')}
+                role="button"
+                tabIndex={0}
+              >
+                <div className="cs-quickapp-avatar photo">
+                  <Camera size={14} />
+                </div>
+                <span className="cs-quickapp-text">拍照机 卡纸/切刀阻滞排查</span>
+              </div>
 
-            {/* 错误代码速查小工具 */}
-            <ErrorCodeQuickSearch
-              onSearchErrorCode={(_, prompt) => onSelectQuestion(prompt || _)}
-            />
-          </>
+              <div
+                className="cs-quickapp-chip"
+                onClick={() =>
+                  onSelectQuestion('售货机用户已扣款但货道电机未掉货，如何应急处理并退款？')
+                }
+                role="button"
+                tabIndex={0}
+              >
+                <div className="cs-quickapp-avatar vending">
+                  <ShoppingBag size={14} />
+                </div>
+                <span className="cs-quickapp-text">售货机 扣款未掉货应急处理</span>
+              </div>
+
+              <div
+                className="cs-quickapp-chip"
+                onClick={() =>
+                  onSelectQuestion('设备屏幕显示错误代码 E-01 或 V-101，具体代表什么故障？')
+                }
+                role="button"
+                tabIndex={0}
+              >
+                <div className="cs-quickapp-avatar tool">
+                  <Sparkles size={14} />
+                </div>
+                <span className="cs-quickapp-text">错误代码秒查 (E-01 / V-101)</span>
+              </div>
+
+              {recommendedQuestions.map((q, idx) => (
+                <div
+                  key={idx}
+                  className="cs-quickapp-chip"
+                  onClick={() => onSelectQuestion(q)}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <div className="cs-quickapp-avatar">
+                    <Sparkles size={13} />
+                  </div>
+                  <span className="cs-quickapp-text">{q}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* 消息列表 */}
@@ -180,6 +175,18 @@ export const MessageList: React.FC<MessageListProps> = ({
           const extractedSteps =
             !msg.processing && msg.content ? extractTroubleshootSteps(msg.content) : [];
           const isHighDanger = checkHighDangerWarning(msg.content, msg.response?.safetyWarning);
+          const matchedSafetyRule = isHighDanger
+            ? getMatchedSafetyRule(msg.content, msg.response?.safetyWarning)
+            : null;
+
+          const textBeforeSteps =
+            extractedSteps.length > 0
+              ? (
+                  msg.content.split(
+                    /\n(?=(?:步骤|第|step)?\s*(\d+|[一二三四五六七八九十])\s*[\.、:：\-\s]|\d+[\.、\)]|- \[\s*[xX ]?\s*\])/i
+                  )[0] || ''
+                ).trim()
+              : msg.content;
 
           return (
             <div key={index} className="cs-message-row cs-message-assistant">
@@ -193,11 +200,13 @@ export const MessageList: React.FC<MessageListProps> = ({
                   {isHighDanger && (
                     <SafetyAlertCard
                       level="danger"
-                      title="⚠️ 阻断级高危电气安全警示"
+                      title="阻断级高危电气安全警示"
                       message={
                         msg.response?.safetyWarning ||
+                        matchedSafetyRule?.warningMessage ||
                         '检测到排查涉及高压电源、带电拆机或强电回路。严禁普通用户自行带电拆卸外壳，以免发生触电危险！'
                       }
+                      prohibitedActions={matchedSafetyRule?.prohibitedActions}
                       phone={msg.response?.humanContact?.phone}
                       onContactSupport={
                         onOpenHumanHandoff
@@ -221,7 +230,9 @@ export const MessageList: React.FC<MessageListProps> = ({
 
                   {/* 核心内容展示或加载中状态 */}
                   {msg.content ? (
-                    <LightMarkdown content={msg.content} isStreaming={msg.processing} />
+                    textBeforeSteps ? (
+                      <LightMarkdown content={textBeforeSteps} isStreaming={msg.processing} />
+                    ) : null
                   ) : (
                     <div className="cs-thinking-indicator">
                       <div className="cs-spinner" />
@@ -279,13 +290,19 @@ export const MessageList: React.FC<MessageListProps> = ({
                     </div>
                   )}
 
-                  {/* 知识库引用折叠卡片 */}
+                  {/* 结构化知识库引用折叠卡片 (4大资料类型分类透出) */}
                   {msg.response?.citations && msg.response.citations.length > 0 && (
                     <div className="cs-citations-accordion">
                       <button
                         type="button"
                         className="cs-citations-trigger"
-                        onClick={() => toggleCitation(index)}
+                        onClick={() => {
+                          if (onOpenQuoteDrawer && msg.response?.citations) {
+                            onOpenQuoteDrawer(msg.response.citations, index);
+                          } else {
+                            toggleCitation(index);
+                          }
+                        }}
                       >
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                           <BookOpen size={14} />
@@ -296,19 +313,44 @@ export const MessageList: React.FC<MessageListProps> = ({
 
                       {isCitationOpen && (
                         <div className="cs-citations-list">
-                          {msg.response.citations.map((cite, cIdx) => (
-                            <div key={cIdx} className="cs-citation-item">
-                              <div className="cs-citation-header">
-                                <span className="cs-citation-title">{cite.title}</span>
-                                {cite.score !== undefined && cite.score !== null && (
-                                  <span className="cs-citation-score">
-                                    匹配度 {Math.round(cite.score * 100)}%
-                                  </span>
-                                )}
+                          {msg.response.citations.map((cite, cIdx) => {
+                            const classification = classifyCitationType(cite.title, cite.summary);
+                            return (
+                              <div
+                                key={cIdx}
+                                className="cs-citation-item"
+                                style={{
+                                  backgroundColor: classification.typeBg,
+                                  borderColor: classification.borderColor
+                                }}
+                              >
+                                <div className="cs-citation-header">
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <span
+                                      className="cs-citation-title"
+                                      style={{ color: classification.typeColor }}
+                                    >
+                                      {cite.title}
+                                    </span>
+                                  </div>
+                                  {cite.score !== undefined && cite.score !== null && (
+                                    <span
+                                      className="cs-citation-score"
+                                      style={{ color: classification.typeColor }}
+                                    >
+                                      匹配度 {Math.round(cite.score * 100)}%
+                                    </span>
+                                  )}
+                                </div>
+                                <div
+                                  className="cs-citation-summary"
+                                  style={{ color: classification.typeColor }}
+                                >
+                                  {cite.summary}
+                                </div>
                               </div>
-                              <div className="cs-citation-summary">{cite.summary}</div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>

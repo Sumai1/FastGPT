@@ -14,6 +14,9 @@ import { getWebReqUrl } from '@fastgpt/web/common/system/utils';
 import MyImage from '@fastgpt/web/components/common/Image/MyImage';
 import { LOGO_ICON } from '@fastgpt/global/common/system/constants';
 
+import { useCustomerServicePermissions } from '@/pageComponents/customerService/useCustomerServicePermissions';
+import { CustomerServiceMemberRoleEnum } from '@fastgpt/global/core/customerService/constants';
+
 export enum NavbarTypeEnum {
   normal = 'normal',
   small = 'small'
@@ -43,9 +46,83 @@ const Navbar = ({ unread }: { unread: number }) => {
   const { userInfo } = useUserStore();
   const { gitStar, feConfigs } = useSystemStore();
   const { lastChatAppId, lastPane } = useChatStore();
+  const { role, isTeamOwner, capabilities } = useCustomerServicePermissions();
 
-  const navbarList = useMemo(
-    () => [
+  const isAdmin =
+    isTeamOwner ||
+    role === CustomerServiceMemberRoleEnum.customerServiceAdmin ||
+    capabilities.manageProjects ||
+    userInfo?.username === 'root';
+  const isReviewerOnly = !isAdmin && role === CustomerServiceMemberRoleEnum.knowledgeReviewer;
+  const isEditorOnly = !isAdmin && role === CustomerServiceMemberRoleEnum.knowledgeEditor;
+
+  const navbarList = useMemo(() => {
+    // 审核员：仅展示【知识审核】与【账号】，隐藏【对话/门户】、【工作台】与【知识库】
+    if (isReviewerOnly) {
+      return [
+        {
+          label: '知识审核',
+          icon: 'common/audit',
+          activeIcon: 'common/audit',
+          link: `/dataset/reviewer`,
+          activeLink: ['/dataset/reviewer']
+        },
+        {
+          label: t('common:navbar.Account'),
+          icon: 'navbar/userLight',
+          activeIcon: 'navbar/userFill',
+          link: '/account/info',
+          activeLink: [
+            '/account/bill',
+            '/account/info',
+            '/account/customDomain',
+            '/account/team',
+            '/account/usage',
+            '/account/thirdParty',
+            '/account/apikey',
+            '/account/setting',
+            '/account/inform',
+            '/account/promotion',
+            '/account/model'
+          ]
+        }
+      ];
+    }
+
+    // 采编员：直接展示【知识库】、【账号】，隐藏【对话/门户】与【工作台】
+    if (isEditorOnly) {
+      return [
+        {
+          label: t('common:navbar.Datasets'),
+          icon: 'navbar/datasetLight',
+          activeIcon: 'navbar/datasetFill',
+          link: `/dataset/list`,
+          activeLink: ['/dataset/list', '/dataset/detail']
+        },
+        {
+          label: t('common:navbar.Account'),
+          icon: 'navbar/userLight',
+          activeIcon: 'navbar/userFill',
+          link: '/account/info',
+          activeLink: [
+            '/account/bill',
+            '/account/info',
+            '/account/customDomain',
+            '/account/team',
+            '/account/usage',
+            '/account/thirdParty',
+            '/account/apikey',
+            '/account/setting',
+            '/account/inform',
+            '/account/promotion',
+            '/account/model'
+          ]
+        }
+      ];
+    }
+
+    // 管理员与默认成员
+    return [
       {
         label: t('common:navbar.Chat'),
         icon: 'navbar/chatLight',
@@ -77,7 +154,13 @@ const Navbar = ({ unread }: { unread: number }) => {
         icon: 'navbar/datasetLight',
         activeIcon: 'navbar/datasetFill',
         link: `/dataset/list`,
-        activeLink: ['/dataset/list', '/dataset/detail', '/dataset/editor', '/dataset/reviewer']
+        activeLink: [
+          '/dataset/list',
+          '/dataset/detail',
+          '/dataset/product',
+          '/dataset/operations',
+          '/dataset/reviewer'
+        ]
       },
       {
         label: t('common:navbar.Account'),
@@ -109,9 +192,8 @@ const Navbar = ({ unread }: { unread: number }) => {
             }
           ]
         : [])
-    ],
-    [lastChatAppId, lastPane, t, userInfo?.username]
-  );
+    ];
+  }, [isReviewerOnly, isEditorOnly, lastChatAppId, lastPane, t, userInfo?.username]);
 
   const isDashboardPage = useMemo(() => {
     return router.pathname.startsWith('/dashboard');

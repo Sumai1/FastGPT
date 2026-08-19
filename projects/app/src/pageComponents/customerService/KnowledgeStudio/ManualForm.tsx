@@ -44,6 +44,10 @@ import MyIcon from '@fastgpt/web/components/common/Icon';
 interface ManualFormProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultDataset?: SelectedDatasetType;
+  defaultDatasetId?: string;
+  defaultDatasetName?: string;
+  onSuccess?: () => void;
 }
 
 const defaultSteps: StructuredManualStep[] = [
@@ -72,14 +76,32 @@ const defaultSteps: StructuredManualStep[] = [
   }
 ];
 
-export const ManualForm: React.FC<ManualFormProps> = ({ isOpen, onClose }) => {
+export const ManualForm: React.FC<ManualFormProps> = ({
+  isOpen,
+  onClose,
+  defaultDataset,
+  defaultDatasetId,
+  defaultDatasetName,
+  onSuccess
+}) => {
   const toast = useToast();
   const { catalog, createKnowledge, loadData } = useCustomerServiceContext();
   const [submitting, setSubmitting] = useState(false);
 
   // Form Basic Info
   const [title, setTitle] = useState('');
-  const [dataset, setDataset] = useState<SelectedDatasetType>();
+  const [dataset, setDataset] = useState<SelectedDatasetType | undefined>(
+    defaultDataset
+      ? defaultDataset
+      : defaultDatasetId
+        ? {
+            datasetId: defaultDatasetId,
+            name: defaultDatasetName || '当前知识库',
+            avatar: 'core/dataset/fileCollection',
+            vectorModel: { model: '' }
+          }
+        : undefined
+  );
   const [modelId, setModelId] = useState('');
   const [audience, setAudience] = useState<CustomerServiceAudienceEnum>(
     CustomerServiceAudienceEnum.public
@@ -214,6 +236,7 @@ ${escalationConditions.trim() || '常规排查无效时请转接人工客服。'
           audienceLevel: audience,
           modelIds: modelId ? [modelId] : [],
           templateData: {
+            markdown: generatedMarkdown,
             purpose: `${selectedModel?.name || '设备'}标准日常维护与操作流程`,
             safetyWarnings: prerequisites || '操作前务必先切断主电源，佩戴绝缘安全手套。',
             toolsRequired: '标准维护钥匙、十字螺丝刀、防静电刷',
@@ -231,6 +254,7 @@ ${escalationConditions.trim() || '常规排查无效时请转接人工客服。'
 
       toast({ status: 'success', title: '操作说明书已成功生成并登记为草稿' });
       await loadData();
+      onSuccess?.();
       onClose();
     } catch (err) {
       toast({

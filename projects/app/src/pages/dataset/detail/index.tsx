@@ -15,6 +15,7 @@ import {
   DatasetPageContext,
   DatasetPageContextProvider
 } from '@/web/core/dataset/context/datasetPageContext';
+import { CustomerServiceProvider } from '@/pageComponents/customerService/context';
 import CollectionPageContextProvider from '@/pageComponents/dataset/detail/CollectionCard/Context';
 import { useContextSelector } from 'use-context-selector';
 import NextHead from '@/components/common/NextHead';
@@ -125,7 +126,9 @@ const Detail = ({ datasetId, currentTab }: Props) => {
 
 const Render = (data: Props) => (
   <DatasetPageContextProvider datasetId={data.datasetId}>
-    <Detail {...data} />
+    <CustomerServiceProvider>
+      <Detail {...data} />
+    </CustomerServiceProvider>
   </DatasetPageContextProvider>
 );
 export default Render;
@@ -138,7 +141,7 @@ export async function getServerSideProps(context: any) {
     props: {
       currentTab,
       datasetId,
-      ...(await serviceSideProps(context, ['dataset', 'file', 'user']))
+      ...(await serviceSideProps(context, ['dataset', 'file', 'user', 'customer_service']))
     }
   };
 }

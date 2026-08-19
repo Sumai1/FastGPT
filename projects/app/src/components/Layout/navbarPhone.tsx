@@ -7,14 +7,90 @@ import Badge from '../Badge';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import { useUserStore } from '@/web/support/user/useUserStore';
 
+import { useCustomerServicePermissions } from '@/pageComponents/customerService/useCustomerServicePermissions';
+import { CustomerServiceMemberRoleEnum } from '@fastgpt/global/core/customerService/constants';
+
 const NavbarPhone = ({ unread }: { unread: number }) => {
   const router = useRouter();
   const { userInfo } = useUserStore();
   const { t } = useTranslation();
   const { lastChatAppId, lastPane } = useChatStore();
+  const { role, isTeamOwner, capabilities } = useCustomerServicePermissions();
 
-  const navbarList = useMemo(
-    () => [
+  const isAdmin =
+    isTeamOwner ||
+    role === CustomerServiceMemberRoleEnum.customerServiceAdmin ||
+    capabilities.manageProjects ||
+    userInfo?.username === 'root';
+  const isReviewerOnly = !isAdmin && role === CustomerServiceMemberRoleEnum.knowledgeReviewer;
+  const isEditorOnly = !isAdmin && role === CustomerServiceMemberRoleEnum.knowledgeEditor;
+
+  const navbarList = useMemo(() => {
+    // 审核员：仅展示【知识审核】与【账号】
+    if (isReviewerOnly) {
+      return [
+        {
+          label: '知识审核',
+          icon: 'common/audit',
+          activeIcon: 'common/audit',
+          link: `/dataset/reviewer`,
+          activeLink: ['/dataset/reviewer'],
+          unread: 0
+        },
+        {
+          label: t('common:navbar.Account'),
+          icon: 'support/user/userLight',
+          activeIcon: 'support/user/userFill',
+          link: '/account/info',
+          activeLink: [
+            '/account/bill',
+            '/account/info',
+            '/account/team',
+            '/account/usage',
+            '/account/apikey',
+            '/account/setting',
+            '/account/inform',
+            '/account/promotion',
+            '/account/model'
+          ],
+          unread
+        }
+      ];
+    }
+
+    // 采编员：直接展示【知识库】、【账号】
+    if (isEditorOnly) {
+      return [
+        {
+          label: t('common:navbar.Datasets'),
+          icon: 'core/dataset/datasetLight',
+          activeIcon: 'core/dataset/datasetFill',
+          link: `/dataset/list`,
+          activeLink: ['/dataset/list', '/dataset/detail'],
+          unread: 0
+        },
+        {
+          label: t('common:navbar.Account'),
+          icon: 'support/user/userLight',
+          activeIcon: 'support/user/userFill',
+          link: '/account/info',
+          activeLink: [
+            '/account/bill',
+            '/account/info',
+            '/account/team',
+            '/account/usage',
+            '/account/apikey',
+            '/account/setting',
+            '/account/inform',
+            '/account/promotion',
+            '/account/model'
+          ],
+          unread
+        }
+      ];
+    }
+
+    return [
       {
         label: t('common:navbar.Chat'),
         icon: 'core/chat/chatLight',
@@ -45,7 +121,13 @@ const NavbarPhone = ({ unread }: { unread: number }) => {
         icon: 'core/dataset/datasetLight',
         activeIcon: 'core/dataset/datasetFill',
         link: `/dataset/list`,
-        activeLink: ['/dataset/list', '/dataset/detail', '/dataset/editor', '/dataset/reviewer'],
+        activeLink: [
+          '/dataset/list',
+          '/dataset/detail',
+          '/dataset/product',
+          '/dataset/operations',
+          '/dataset/reviewer'
+        ],
         unread: 0
       },
       {
@@ -77,9 +159,8 @@ const NavbarPhone = ({ unread }: { unread: number }) => {
             }
           ]
         : [])
-    ],
-    [lastChatAppId, lastPane, t, unread, userInfo?.username]
-  );
+    ];
+  }, [isReviewerOnly, isEditorOnly, lastChatAppId, lastPane, t, unread, userInfo?.username]);
 
   return (
     <>
